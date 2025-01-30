@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ExpenseLense"
+rootProject.name = "ExpenseLens"
 include(":app")
  

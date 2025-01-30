@@ -1,4 +1,4 @@
-package com.section11.expenselense
+package com.section11.expenselens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,14 +11,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.section11.expenselense.ui.theme.ExpenseLenseTheme
+import com.section11.expenselens.ui.theme.ExpenseLensTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ExpenseLenseTheme {
+            ExpenseLensTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",
@@ -41,7 +41,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    ExpenseLenseTheme {
+    ExpenseLensTheme {
         Greeting("Android")
     }
 }

@@ -12,11 +12,11 @@ plugins {
 }
 
 android {
-    namespace = "com.section11.expenselense"
+    namespace = "com.section11.expenselens"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.section11.expenselense"
+        applicationId = "com.section11.expenselens"
         minSdk = 29
         targetSdk = 34
         versionCode = 1

@@ -1,4 +1,4 @@
-package com.section11.expenselense
+package com.section11.expenselens
 
 import org.junit.Test
 
