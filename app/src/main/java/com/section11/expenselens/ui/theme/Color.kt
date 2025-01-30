@@ -1,4 +1,4 @@
-package com.section11.expenselense.ui.theme
+package com.section11.expenselens.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
