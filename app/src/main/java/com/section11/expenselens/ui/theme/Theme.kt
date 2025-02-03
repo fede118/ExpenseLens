@@ -8,6 +8,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -32,6 +34,8 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+val LocalDimens = staticCompositionLocalOf { Dimens() }
+
 @Composable
 fun ExpenseLensTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -49,9 +53,15 @@ fun ExpenseLensTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val dimens = Dimens()
+
+    CompositionLocalProvider(
+        LocalDimens provides dimens,
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
