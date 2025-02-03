@@ -1,0 +1,97 @@
+package com.section11.expenselens.domain.models
+
+import com.google.gson.GsonBuilder
+
+data class ReceiptInformation(
+    val total: String,
+    val estimatedCategory: Category?
+) {
+    companion object {
+        private const val TOTAL_EXAMPLE = "$100.00"
+        fun generateJsonStructure(): String {
+            val exampleInstance = ReceiptInformation(TOTAL_EXAMPLE, Category.GROCERIES)
+            val gson = GsonBuilder().setPrettyPrinting().create()
+            val json = gson.toJson(exampleInstance)
+
+            return json
+        }
+    }
+}
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FIELD)
+annotation class CategoryDescription(val description: String)
+
+enum class Category {
+
+    @CategoryDescription("""
+        HOME includes: 
+        -Rent or mortgage payments, property taxes, homeowner's/renter's insurance.
+        -Utilities: Electricity, gas, water, sewer, trash/recycling, internet, phone (landline or mobile).
+        - Home Maintenance & Repairs: Costs for fixing appliances, plumbing issues, landscaping, etc.
+        - Cleaning Supplies & Household Goods: Detergent, cleaning tools, light bulbs, batteries, etc.
+    """)
+    HOME,
+
+    @CategoryDescription("""
+        TRANSPORTATION includes Car payments, gas, public transportation fares, car insurance, vehicle maintenance, parking fees.
+    """)
+    TRANSPORTATION,
+
+    @CategoryDescription("""
+        GROCERIES includes: All food and drink purchases, including groceries, takeout, and restaurant meals.
+    """)
+    GROCERIES,
+
+    @CategoryDescription("""
+       HEALTH_CARE includes: Doctor visits, prescriptions, health insurance premiums, dental care, vision care. 
+    """)
+    HEALTH_CARE,
+
+    @CategoryDescription("""
+        FINANCIAL includes:  Debt Payments: Credit cards, student loans, personal loans, other loan repayments.
+        - Savings & Investments: Contributions to retirement accounts, emergency funds, or other investment vehicles.
+    """)
+    FINANCIAL,
+
+    @CategoryDescription("""
+        ENTERTAINMENT includes: Movies, concerts, streaming subscriptions, dining out, hobbies.
+        - Travel & Vacations: Costs associated with trips, including transportation, accommodation, and activities.
+        - Dine out, Take out, restaurant meals, drinks at a bar, etc
+    """)
+    ENTERTAINMENT,
+
+    @CategoryDescription("""
+        PERSONAL includes: Purchases of clothes, shoes, Haircuts, cosmetics, other personal grooming expenses.
+        - Gym memberships
+    """)
+    PERSONAL,
+
+    @CategoryDescription("""
+        EDUCATION includes: Tuition, books, school supplies, tutoring, etc.
+    """)
+    EDUCATION,
+
+    @CategoryDescription("""
+        PET_CARE includes: Food, vet visits, grooming, pet toys.
+    """)
+    PET_CARE,
+
+    @CategoryDescription("""
+        MISCELLANEOUS includes: Unexpected expenses, small purchases, gifts, etc.
+    """)
+    MISCELLANEOUS;
+
+    companion object {
+        fun getCategoryDescriptions(): String {
+            return Category.entries.joinToString("\n\n") { category ->
+                val description = category::class.java
+                    .getField(category.name)
+                    .getAnnotation(CategoryDescription::class.java)
+                    ?.description ?: "No description available"
+
+                "**[${category.name}] **: ${description.trimIndent()}"
+            }
+        }
+    }
+}
