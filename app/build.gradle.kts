@@ -1,5 +1,6 @@
 import org.xml.sax.InputSource
 import java.io.StringReader
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -13,7 +14,7 @@ plugins {
 
 android {
     namespace = "com.section11.expenselens"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.section11.expenselens"
@@ -23,6 +24,17 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { stream ->
+                localProperties.load(stream)
+            }
+        }
+        buildFeatures.buildConfig = true
+        buildConfigField("String", "GEMINI_BASE_URL", "\"${project.findProperty("geminiApiBeseUrl") ?: ""}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["geminiApiKey"]}\"")
     }
 
     buildTypes {
@@ -64,10 +76,22 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.text.recognition)
+    implementation(libs.retrofit2.retrofit)
+    implementation(libs.converter.gson)
 
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -113,7 +137,6 @@ tasks.create("jacocoTestReport", JacocoReport::class.java) {
         "**/previewsrepositories/**/*.*",
         "**/composables/**", // exclude files in composable folders
         "**/*Composable*.*", // exclude files with "composable" in their name
-        "**/*Composable*.*", // exclude files with "composable" in their name
         "**/ComposableSingletons*.*", // Exclude ComposableSingletons
         "**/*Application*.*", // Exclude Application classes
         "**/*Activity*.*", // Exclude all activities
@@ -136,7 +159,7 @@ tasks.create("jacocoTestReport", JacocoReport::class.java) {
         fileTree(
             mapOf(
                 "dir" to "${layout.buildDirectory.get()}",
-                "includes" to listOf("/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+                "includes" to listOf("/jacoco/testDebugUnitTest.exec")
             )
         )
     )
