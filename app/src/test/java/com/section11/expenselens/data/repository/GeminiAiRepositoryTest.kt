@@ -39,9 +39,9 @@ class GeminiAiRepositoryTest {
         whenever(mockResponse.body()).thenReturn(expectedResponse)
         whenever(mockService.generateContent(any(), any())).thenReturn(mockResponse)
 
-        repository.getReceiptInformation(extractedText)
+        repository.getExpenseInfo(extractedText)
 
-        verify(geminiResponseMapper).toReceiptInformation(expectedResponse)
+        verify(geminiResponseMapper).toExpenseInformation(expectedResponse)
     }
 
     @Test(expected = ApiErrorException::class)
@@ -52,7 +52,7 @@ class GeminiAiRepositoryTest {
         whenever(mockResponse.code()).thenReturn(400)
         whenever(mockService.generateContent(any(), any())).thenReturn(mockResponse)
 
-        repository.getReceiptInformation(extractedText)
+        repository.getExpenseInfo(extractedText)
     }
 
     @Test(expected = ResponseBodyNullException::class)
@@ -63,7 +63,7 @@ class GeminiAiRepositoryTest {
         whenever(mockResponse.body()).thenReturn(null)
         whenever(mockService.generateContent(any(), any())).thenReturn(mockResponse)
 
-        repository.getReceiptInformation(extractedText)
+        repository.getExpenseInfo(extractedText)
     }
 
     private fun getGeminiResponse(responseText: String): GeminiResponse {

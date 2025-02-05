@@ -1,20 +1,27 @@
 package com.section11.expenselens.domain.models
 
-import com.google.gson.GsonBuilder
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-data class ReceiptInformation(
-    val total: String,
+@Parcelize
+data class ExpenseInformation(
+    val total: String?,
     val estimatedCategory: Category?
-) {
-    companion object {
-        private const val TOTAL_EXAMPLE = "$100.00"
-        fun generateJsonStructure(): String {
-            val exampleInstance = ReceiptInformation(TOTAL_EXAMPLE, Category.GROCERIES)
-            val gson = GsonBuilder().setPrettyPrinting().create()
-            val json = gson.toJson(exampleInstance)
+) : Parcelable {
+    override fun hashCode(): Int {
+        return super.hashCode()
+    }
 
-            return json
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ExpenseInformation
+
+        if (total != other.total) return false
+        if (estimatedCategory != other.estimatedCategory) return false
+
+        return true
     }
 }
 
