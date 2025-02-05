@@ -1,27 +1,28 @@
 package com.section11.expenselens.ui.camera.composables
 
 import android.Manifest
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Log
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,38 +30,54 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.section11.expenselens.ui.navigation.NavigationEvent
+import com.section11.expenselens.framework.di.ImageCaptureEntryPoint
+import com.section11.expenselens.ui.camera.CameraPreviewViewModel.CameraPreviewUiState.ShowCameraPreview
+import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
+import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnCaptureImageTapped
+import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnImageCaptureError
 import com.section11.expenselens.ui.theme.ExpenseLensTheme
 import com.section11.expenselens.ui.theme.LocalDimens
+import com.section11.expenselens.ui.theme.gray30
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
-import java.io.File
-import java.util.concurrent.Executors
+import com.section11.expenselens.ui.utils.UiState
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CameraScreenContent(
+    cameraPreviewUiState: StateFlow<UiState>,
     modifier: Modifier = Modifier,
-    onNavigationEvent: (NavigationEvent) -> Unit
+    onUiEvent: (CameraPreviewEvents) -> Unit
 ) {
+    val cameraState by cameraPreviewUiState.collectAsState()
+    val appContext = LocalContext.current.applicationContext
+    val imageCapture = remember { EntryPointAccessors.fromApplication(
+            context = appContext,
+            entryPoint = ImageCaptureEntryPoint::class.java
+        ).getImageCapture()
+    }
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
     if (cameraPermissionState.status.isGranted) {
-        FullScreenCameraView(modifier.fillMaxSize()) { extractedText ->
-            onNavigationEvent(NavigationEvent.TextExtractedFromImage(extractedText))
-            Log.d("Camera", "Image captured: $extractedText")
-        }
+        FullScreenCameraView(
+            modifier = modifier.fillMaxSize(),
+            imageCapture = imageCapture
+        ) { onEvent -> onUiEvent(onEvent) }
     } else {
         RequestCameraPermission(cameraPermissionState)
     }
 
+    if (cameraState is UiState.Loading) {
+        Box(Modifier.fillMaxSize().background(gray30)) {
+            CircularProgressIndicator(Modifier.align(Alignment.Center))
+        }
+    }
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -73,29 +90,28 @@ fun RequestCameraPermission(cameraPermissionState: PermissionState) {
     }
 }
 
-@Suppress("SwallowedException") // TODO: I need to create an event class to return errors
 @Composable
-fun FullScreenCameraView(modifier: Modifier = Modifier, onTextExtracted: (String) -> Unit) {
+fun FullScreenCameraView(
+    modifier: Modifier = Modifier,
+    imageCapture: ImageCapture,
+    onEvent: (CameraPreviewEvents) -> Unit
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val imageCapture = remember { ImageCapture.Builder().build() }
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
 
     AndroidView(
-        factory = { ctx ->
-            PreviewView(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-                scaleType = PreviewView.ScaleType.FILL_CENTER // Ensure proper scaling
+        factory = { androidViewContext ->
+            PreviewView(androidViewContext).apply {
+                layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                scaleType = FILL_CENTER
             }
         },
         modifier = modifier,
         update = { previewView ->
             val cameraProvider = cameraProviderFuture.get()
             val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider) // Ensure this is set
+                it.surfaceProvider = previewView.surfaceProvider
             }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -108,55 +124,21 @@ fun FullScreenCameraView(modifier: Modifier = Modifier, onTextExtracted: (String
                     preview,
                     imageCapture
                 )
-            } catch (exc: UnsupportedOperationException) {
-                /* no op */
+            } catch (exception: UnsupportedOperationException) {
+                onEvent(OnImageCaptureError(exception.message))
             }
         }
     )
 
-    CaptureImageButton(
-        imageCapture,
-        context,
-        onImageCaptured = { bitmap ->
-            processImage(bitmap) { extractedText ->
-                onTextExtracted(extractedText)
-            }
-            Log.e("Camera", "Image captured")
-        }
-    ) { onError ->
-        Log.e("Camera", "Image capture failed", onError)
-    }
+    CaptureImageButton { event -> onEvent(event) }
 }
 
 @Composable
-fun CaptureImageButton(
-    imageCapture: ImageCapture,
-    context: Context,
-    onImageCaptured: (Bitmap) -> Unit,
-    onError: (Exception) -> Unit
-) {
+fun CaptureImageButton(onEvent: (CameraPreviewEvents) -> Unit) {
     val dimens = LocalDimens.current
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         FloatingActionButton(
-            onClick = {
-                val file = File(context.externalCacheDir, "${System.currentTimeMillis()}.jpg")
-                val outputOptions = ImageCapture.OutputFileOptions.Builder(file).build()
-
-                imageCapture.takePicture(
-                    outputOptions,
-                    ContextCompat.getMainExecutor(context),
-                    object : ImageCapture.OnImageSavedCallback {
-                        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                            onImageCaptured(bitmap)
-                        }
-
-                        override fun onError(exception: ImageCaptureException) {
-                            onError(exception)
-                        }
-                    }
-                )
-            },
+            onClick = { onEvent(OnCaptureImageTapped) },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(dimens.m2),
@@ -171,31 +153,13 @@ fun CaptureImageButton(
     }
 }
 
-private fun processImage(bitmap: Bitmap, onResult: (String) -> Unit) {
-    val inputImage = InputImage.fromBitmap(bitmap, 0)
-    val recognizer = TextRecognition.getClient(
-        TextRecognizerOptions.Builder()
-            .setExecutor(Executors.newSingleThreadExecutor())
-            .build()
-    )
-
-    recognizer.process(inputImage)
-        .addOnSuccessListener { visionText ->
-            val extractedText = visionText.text
-            onResult(extractedText)
-        }
-        .addOnFailureListener { e ->
-            // TODO: do more than Log the error
-            Log.e("MLKit", "Text recognition failed", e)
-        }
-}
-
 @DarkAndLightPreviews
 @Composable
 fun CameraScreenContentPreview() {
+    val status = remember { ShowCameraPreview }
     ExpenseLensTheme {
         Surface {
-            CameraScreenContent(onNavigationEvent = {})
+            CameraScreenContent(MutableStateFlow(status)) {}
         }
     }
 }

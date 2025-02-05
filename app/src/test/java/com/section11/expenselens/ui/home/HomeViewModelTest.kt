@@ -1,8 +1,7 @@
 package com.section11.expenselens.ui.home
 
-import com.section11.expenselens.domain.models.Category
-import com.section11.expenselens.domain.models.ReceiptInformation
-import com.section11.expenselens.domain.usecase.ReceiptInformationUseCase
+import com.section11.expenselens.framework.navigation.NavigationManager
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -14,20 +13,20 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.verify
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private val mockReceiptInformationUseCase: ReceiptInformationUseCase = mock()
+    private val navigationManager: NavigationManager = mock()
 
     private lateinit var viewModel: HomeViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = HomeViewModel(mockReceiptInformationUseCase, testDispatcher)
+        viewModel = HomeViewModel(navigationManager, testDispatcher)
     }
 
     @After
@@ -36,14 +35,12 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `when text extracted from image then should update Ui state`() = runTest {
-        whenever(mockReceiptInformationUseCase.getReceiptInfo("anyString")).thenReturn(
-            ReceiptInformation("total", Category.GROCERIES)
-        )
+    fun `when add expense tap event then should navigate to camera`() = runTest {
+        val expenseTapEvent = HomeViewModel.HomeEvent.AddExpenseTapped
 
-        viewModel.onTextExtractedFromImage("anyString")
+        viewModel.onUiEvent(expenseTapEvent)
         advanceUntilIdle()
 
-        assert(viewModel.uiState.value is HomeViewModel.HomeUiState.TextExtractedFromImage)
+        verify(navigationManager).navigate(NavigationEvent.NavigateToCameraScreen)
     }
 }

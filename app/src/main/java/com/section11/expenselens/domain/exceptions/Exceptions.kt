@@ -16,4 +16,4 @@ class ApiErrorException(
  */
 class ResponseBodyNullException(message: String = NULL_BODY_ERROR) : RuntimeException(message)
 
-class ReceiptInformationNotFoundException(message: String = NULL_BODY_ERROR) : RuntimeException(message)
+class ExpenseInformationNotFoundException(message: String = NULL_BODY_ERROR) : RuntimeException(message)

@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.android.hilt)
     alias(libs.plugins.jacoco)
+    kotlin("plugin.parcelize")
 }
 
 android {
@@ -91,6 +92,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockk.android)
+    testImplementation(libs.mockk.agent)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -144,6 +147,8 @@ tasks.create("jacocoTestReport", JacocoReport::class.java) {
         "**/*state*.*", // Exclude files with "state" in the name (case-insensitive)
         "**/*State*.*", // Covers capitalized "State"
         "**/*UiState*.*", // Exclude specific pattern for "UiState" files
+        "**/framework/deserializer/*.*", // Exclude deserializers"
+        "**/ExpenseLensImageCapture.*", // Exclude expenseLensImageCapture since its a wrapper of ImageCapture because it cannot be mocked, ergo I cannot test it
         "**/META-INF/**/*.*" // Exclude META-INF
     )
     val debugTree = fileTree("/build/tmp/kotlin-classes/debug") {
