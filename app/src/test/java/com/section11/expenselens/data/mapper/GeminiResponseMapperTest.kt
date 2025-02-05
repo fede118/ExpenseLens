@@ -6,9 +6,9 @@ import com.section11.expenselens.data.dto.response.GeminiResponse
 import com.section11.expenselens.data.dto.response.GeminiResponse.Candidate
 import com.section11.expenselens.data.dto.response.GeminiResponse.Candidate.Content
 import com.section11.expenselens.data.dto.response.GeminiResponse.Candidate.Content.Part
-import com.section11.expenselens.domain.exceptions.ReceiptInformationNotFoundException
+import com.section11.expenselens.domain.exceptions.ExpenseInformationNotFoundException
 import com.section11.expenselens.domain.models.Category
-import com.section11.expenselens.domain.models.ReceiptInformation
+import com.section11.expenselens.domain.models.ExpenseInformation
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.anyString
@@ -32,33 +32,33 @@ class GeminiResponseMapperTest {
     fun `mapper calls gson fromJson with expected string value`() {
         val expectedString = "```json\n{\n  \"estimatedCategory\": groceries,\n  \"total\": \$125.01\n}\n```\n"
         val response = getGeminiResponse(expectedString)
-        whenever(gsonMock.fromJson(anyString(), eq(ReceiptInformation::class.java)))
-            .thenReturn(ReceiptInformation("$125.01", Category.GROCERIES))
+        whenever(gsonMock.fromJson(anyString(), eq(ExpenseInformation::class.java)))
+            .thenReturn(ExpenseInformation("$125.01", Category.GROCERIES))
 
-        mapper.toReceiptInformation(response)
+        mapper.toExpenseInformation(response)
 
-        verify(gsonMock).fromJson(anyString(), eq(ReceiptInformation::class.java))
+        verify(gsonMock).fromJson(anyString(), eq(ExpenseInformation::class.java))
     }
 
-    @Test(expected = ReceiptInformationNotFoundException::class)
+    @Test(expected = ExpenseInformationNotFoundException::class)
     fun `gson throws JsonSyntaxException should be caught as receiptInformation not found`() {
         val expectedString = "```json\n{\n  \"estimatedCategory\": groceries,\n  \"total\": \$125.01\n}\n```\n"
         val response = getGeminiResponse(expectedString)
-        whenever(gsonMock.fromJson(anyString(), eq(ReceiptInformation::class.java)))
+        whenever(gsonMock.fromJson(anyString(), eq(ExpenseInformation::class.java)))
             .thenThrow(JsonSyntaxException("Invalid JSON"))
 
-        mapper.toReceiptInformation(response)
+        mapper.toExpenseInformation(response)
 
-        verify(gsonMock).fromJson(anyString(), eq(ReceiptInformation::class.java))
+        verify(gsonMock).fromJson(anyString(), eq(ExpenseInformation::class.java))
     }
 
-    @Test(expected = ReceiptInformationNotFoundException::class)
+    @Test(expected = ExpenseInformationNotFoundException::class)
     fun `mapper with invalid json throws exception`() {
         val response = getGeminiResponse("invalid json")
 
-        mapper.toReceiptInformation(response)
+        mapper.toExpenseInformation(response)
 
-        verify(gsonMock).fromJson(anyString(), eq(ReceiptInformation::class.java))
+        verify(gsonMock).fromJson(anyString(), eq(ExpenseInformation::class.java))
     }
 
     private fun getGeminiResponse(responseText: String): GeminiResponse {

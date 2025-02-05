@@ -5,7 +5,7 @@ import com.section11.expenselens.BuildConfig
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
 import com.section11.expenselens.data.repository.GeminiAiRepository
 import com.section11.expenselens.data.service.GeminiService
-import com.section11.expenselens.domain.repository.ReceiptInfoExtractorRepository
+import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,7 +17,7 @@ import retrofit2.Retrofit
 class RepositoryModule {
 
     @Provides
-    fun provideGeminiAiRepository(retrofit: Retrofit, gson: Gson): ReceiptInfoExtractorRepository {
+    fun provideGeminiAiRepository(retrofit: Retrofit, gson: Gson): ExpenseInfoExtractorRepository {
         return GeminiAiRepository(
             retrofit.create(GeminiService::class.java),
             BuildConfig.GEMINI_API_KEY,
