@@ -3,6 +3,7 @@ accompanistPermissions = "0.32.0"
 agp = "8.7.3"
 cameraCore = "1.4.1"
 converterGson = "2.9.0"
+firebaseBom = "33.8.0"
 kotlin = "2.1.0"
 coreKtx = "1.9.0"
 junit = "4.13.2"
@@ -21,6 +22,7 @@ androidx-hilt-navigation-compose = "1.2.0"
 retrofitVersion = "2.9.0"
 textRecognition = "16.0.1"
 kotlinx-coroutines = "1.10.0"
+google-services = "4.4.2"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -30,6 +32,8 @@ androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", versi
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
@@ -62,5 +66,6 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 detekt-gradle-plugin = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-android-hilt = { id ="com.google.dagger.hilt.android", version.ref = "hilt" }
+android-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 jacoco = { id = "jacoco" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }

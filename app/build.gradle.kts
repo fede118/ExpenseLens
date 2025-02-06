@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.android.hilt)
     alias(libs.plugins.jacoco)
+    alias(libs.plugins.google.services)
     kotlin("plugin.parcelize")
 }
 
@@ -17,22 +18,32 @@ android {
     namespace = "com.section11.expenselens"
     compileSdk = 35
 
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { stream ->
+            localProperties.load(stream)
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(localProperties["KEYSTORE_PATH"] ?: "")
+            storePassword = "${localProperties["KEYSTORE_PASSWORD"]}"
+            keyAlias = "${localProperties["KEY_ALIAS"]}"
+            keyPassword = "${localProperties["KEY_PASSWORD"]}"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.section11.expenselens"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
+        versionCode = 2
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val localProperties = Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localPropertiesFile.inputStream().use { stream ->
-                localProperties.load(stream)
-            }
-        }
         buildFeatures.buildConfig = true
         buildConfigField("String", "GEMINI_BASE_URL", "\"${project.findProperty("geminiApiBeseUrl") ?: ""}\"")
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["geminiApiKey"]}\"")
@@ -45,6 +56,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
+        }
+
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            isDebuggable = true
         }
     }
     compileOptions {
@@ -86,6 +104,8 @@ dependencies {
     implementation(libs.text.recognition)
     implementation(libs.retrofit2.retrofit)
     implementation(libs.converter.gson)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
     ksp(libs.hilt.compiler)
 
