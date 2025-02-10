@@ -17,6 +17,10 @@ data class Dimens(
     val m4: Dp = 32.dp,
     val m5: Dp = 40.dp,
     val m6: Dp = 48.dp,
+    val m7: Dp = 56.dp,
+    val m8: Dp = 64.dp,
+    val m9: Dp = 72.dp,
+    val m10: Dp = 80.dp,
 
     val textSmallest: TextUnit = 10.sp,
     val textVerySmall: TextUnit = 12.sp,

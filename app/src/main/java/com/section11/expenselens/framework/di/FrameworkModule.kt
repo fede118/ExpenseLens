@@ -13,7 +13,11 @@ import com.section11.expenselens.framework.deserializer.CategoryDeserializer
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManagerImpl
 import com.section11.expenselens.framework.utils.ExpenseLensImageCapture
+import com.section11.expenselens.framework.utils.GoogleTokenMapper
+import com.section11.expenselens.framework.utils.GoogleTokenMapperImpl
 import com.section11.expenselens.framework.utils.ImageCaptureWrapper
+import com.section11.expenselens.framework.utils.ResourceProvider
+import com.section11.expenselens.framework.utils.ResourceProviderImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -69,5 +73,15 @@ class FrameworkModule {
                 .setExecutor(Executors.newSingleThreadExecutor())
                 .build()
         )
+    }
+
+    @Provides
+    fun provideResourceProvider(@ApplicationContext context: Context): ResourceProvider {
+        return ResourceProviderImpl(context)
+    }
+
+    @Provides
+    fun provideGoogleTokenMapper(): GoogleTokenMapper {
+        return GoogleTokenMapperImpl()
     }
 }

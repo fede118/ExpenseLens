@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.section11.expenselens.ui.home.HomeViewModel.HomeEvent
 import com.section11.expenselens.ui.home.composables.HomeScreenContent
+import com.section11.expenselens.ui.home.event.HomeUiEvent
 import com.section11.expenselens.ui.theme.ExpenseLensTheme
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.UiState
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 fun HomeRoute(
     modifier: Modifier = Modifier,
     homeUiState: StateFlow<UiState>,
-    onEvent: (HomeEvent) -> Unit
+    onEvent: (HomeUiEvent) -> Unit
 ) {
     HomeScreenContent(modifier.fillMaxSize(), homeUiState) { event -> onEvent(event) }
 }
