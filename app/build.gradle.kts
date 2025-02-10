@@ -47,6 +47,7 @@ android {
         buildFeatures.buildConfig = true
         buildConfigField("String", "GEMINI_BASE_URL", "\"${project.findProperty("geminiApiBeseUrl") ?: ""}\"")
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["geminiApiKey"]}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${localProperties["googleWebClientId"]}\"")
     }
 
     buildTypes {
@@ -106,6 +107,12 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.coil.compose)
 
     ksp(libs.hilt.compiler)
 
@@ -115,6 +122,7 @@ dependencies {
     testImplementation(libs.mockk.android)
     testImplementation(libs.mockk.agent)
     testImplementation(libs.kotlinx.coroutines.test)
+//    testImplementation("org.robolectric:robolectric:4.6.1")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

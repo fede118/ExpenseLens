@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">ExpenseLens</string>
+
+    <string name="welcome_greeting">Hello, Welcome to ExpenseLens</string>
+
 </resources>
