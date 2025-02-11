@@ -9,13 +9,11 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -23,7 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,27 +35,26 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.section11.expenselens.framework.di.ImageCaptureEntryPoint
-import com.section11.expenselens.ui.camera.CameraPreviewViewModel.CameraPreviewUiState.ShowCameraPreview
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnCaptureImageTapped
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnImageCaptureError
+import com.section11.expenselens.ui.common.BlurredBackgroundExpenseLensLoader
 import com.section11.expenselens.ui.theme.ExpenseLensTheme
 import com.section11.expenselens.ui.theme.LocalDimens
-import com.section11.expenselens.ui.theme.gray30
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
-import com.section11.expenselens.ui.utils.UiState
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CameraScreenContent(
-    cameraPreviewUiState: StateFlow<UiState>,
     modifier: Modifier = Modifier,
+    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     onUiEvent: (CameraPreviewEvents) -> Unit
 ) {
-    val cameraState by cameraPreviewUiState.collectAsState()
     val appContext = LocalContext.current.applicationContext
     val imageCapture = remember { EntryPointAccessors.fromApplication(
             context = appContext,
@@ -63,6 +62,8 @@ fun CameraScreenContent(
         ).getImageCapture()
     }
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+
+    HandleDownStreamEvents(downstreamUiEvent)
 
     if (cameraPermissionState.status.isGranted) {
         FullScreenCameraView(
@@ -72,14 +73,25 @@ fun CameraScreenContent(
     } else {
         RequestCameraPermission(cameraPermissionState)
     }
-
-    if (cameraState is UiState.Loading) {
-        Box(Modifier.fillMaxSize().background(gray30)) {
-            CircularProgressIndicator(Modifier.align(Alignment.Center))
-        }
-    }
 }
 
+
+@Composable
+fun HandleDownStreamEvents(downstreamUiEvent: SharedFlow<DownstreamUiEvent>) {
+    val uiEvent by downstreamUiEvent.collectAsState(null)
+    var isLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(uiEvent) {
+        when(uiEvent) {
+            is Loading -> (uiEvent as? Loading)?.isLoading?.let { isLoading = it
+            }
+        }
+    }
+
+    if (isLoading) {
+        BlurredBackgroundExpenseLensLoader()
+    }
+
+}
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RequestCameraPermission(cameraPermissionState: PermissionState) {
@@ -156,10 +168,9 @@ fun CaptureImageButton(onEvent: (CameraPreviewEvents) -> Unit) {
 @DarkAndLightPreviews
 @Composable
 fun CameraScreenContentPreview() {
-    val status = remember { ShowCameraPreview }
     ExpenseLensTheme {
         Surface {
-            CameraScreenContent(MutableStateFlow(status)) {}
+            CameraScreenContent(downstreamUiEvent = MutableSharedFlow()) {}
         }
     }
 }

@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">ExpenseLens</string>
+
+    <string name="welcome_greeting">Hello, Welcome to ExpenseLens</string>
+
+    <!--  Home Screen Content  -->
+    <string name="home_screen_sign_out_success">Successfully signed out</string>
+
 </resources>

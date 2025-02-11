@@ -1,21 +1,19 @@
 package com.section11.expenselens.ui.camera
 
-import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.section11.expenselens.domain.usecase.ImageToTextUseCase
 import com.section11.expenselens.domain.usecase.ExpenseInformationUseCase
+import com.section11.expenselens.domain.usecase.ImageToTextUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
-import com.section11.expenselens.ui.camera.CameraPreviewViewModel.CameraPreviewUiState.ShowCameraPreview
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
-import com.section11.expenselens.ui.utils.UiState
-import com.section11.expenselens.ui.utils.UiState.Loading
+import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnCaptureImageTapped
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,33 +25,28 @@ class CameraPreviewViewModel @Inject constructor(
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiState>(ShowCameraPreview)
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private val _uiEvent = MutableSharedFlow<DownstreamUiEvent>()
+    val uiEvent: SharedFlow<DownstreamUiEvent> = _uiEvent
 
     fun onUiEvent(cameraPreviewEvent: CameraPreviewEvents) {
         when (cameraPreviewEvent) {
-            is CameraPreviewEvents.OnCaptureImageTapped -> onImageCaptureTap()
+            is OnCaptureImageTapped -> onImageCaptureTap()
         }
     }
 
     private fun onImageCaptureTap() {
-        _uiState.value = Loading
         imageToTextUseCase.takePicture { result ->
-            result.onSuccess { extractedText ->
-                viewModelScope.launch(dispatcher) {
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(Loading(true))
+                result.onSuccess { extractedText ->
                     val expenseInfo = expenseInformationUseCase.getExpenseInfo(extractedText)
                     navigationManager.navigate(NavigateToExpensePreview(extractedText, expenseInfo))
-                    _uiState.value = ShowCameraPreview
                 }
-            }
-            result.onFailure { error ->
-                _uiState.value = UiState.Error(error.message)
+                result.onFailure { error ->
+                    _uiEvent.emit(DownstreamUiEvent.Error(error.message))
+                }
+                _uiEvent.emit(Loading(false))
             }
         }
-    }
-
-    sealed class CameraPreviewUiState : UiState() {
-        data object ShowCameraPreview : CameraPreviewUiState()
-        data class Loading(val bitmap: Bitmap): CameraPreviewUiState()
     }
 }

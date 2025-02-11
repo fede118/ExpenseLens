@@ -39,7 +39,7 @@ android {
         applicationId = "com.section11.expenselens"
         minSdk = 29
         targetSdk = 34
-        versionCode = 2
+        versionCode = 3
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -47,6 +47,7 @@ android {
         buildFeatures.buildConfig = true
         buildConfigField("String", "GEMINI_BASE_URL", "\"${project.findProperty("geminiApiBeseUrl") ?: ""}\"")
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["geminiApiKey"]}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${localProperties["googleWebClientId"]}\"")
     }
 
     buildTypes {
@@ -106,6 +107,12 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.coil.compose)
 
     ksp(libs.hilt.compiler)
 
