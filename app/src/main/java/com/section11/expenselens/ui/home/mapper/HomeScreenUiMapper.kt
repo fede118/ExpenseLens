@@ -17,4 +17,8 @@ class HomeScreenUiMapper @Inject constructor(private val resourceProvider: Resou
             profilePic = userData.profilePic
         )
     }
+
+    fun getSignOutSuccessMessage(): String {
+        return resourceProvider.getString(R.string.home_screen_sign_out_success)
+    }
 }

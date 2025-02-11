@@ -40,13 +40,17 @@ fun ExpenseLensNavGraph(
     ) {
         composable(route = HOME_ROUTE) {
             val homeViewModel = getHomeViewModelFromParentEntry(navController)
-            HomeRoute(homeUiState = homeViewModel.uiState, onEvent = homeViewModel::onUiEvent)
+            HomeRoute(
+                homeUiState = homeViewModel.uiState,
+                downstreamUiEvent = homeViewModel.uiEvent,
+                onEvent = homeViewModel::onUiEvent
+            )
         }
 
         composable(route =  CAMERA_ROUTE) {  navStackEntry ->
             val cameraPreviewViewModel = hiltViewModel<CameraPreviewViewModel>(navStackEntry)
             CameraRoute(
-                cameraPreviewUiState = cameraPreviewViewModel.uiState,
+                downstreamUiEvent = cameraPreviewViewModel.uiEvent,
                 onEvent = cameraPreviewViewModel::onUiEvent
             )
         }

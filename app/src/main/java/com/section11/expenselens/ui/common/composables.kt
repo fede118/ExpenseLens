@@ -2,6 +2,7 @@ package com.section11.expenselens.ui.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,6 +25,7 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.section11.expenselens.ui.theme.ExpenseLensTheme
 import com.section11.expenselens.ui.theme.LocalDimens
+import com.section11.expenselens.ui.theme.gray30
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 
 @Composable
@@ -74,7 +77,9 @@ fun CardDialog(
         properties = DialogProperties(dismissOnClickOutside = true),
         title = {
             Column(
-                modifier = Modifier.padding(dimens.m2).fillMaxWidth(),
+                modifier = Modifier
+                    .padding(dimens.m2)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 content()
@@ -82,6 +87,18 @@ fun CardDialog(
         },
         confirmButton = {} // No need for buttons, dismiss outside
     )
+}
+
+@Composable
+fun ExpenseLensLoader(modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
+        CircularProgressIndicator(Modifier.align(Alignment.Center))
+    }
+}
+
+@Composable
+fun BlurredBackgroundExpenseLensLoader(modifier: Modifier = Modifier) {
+    ExpenseLensLoader(modifier.fillMaxWidth().background(gray30))
 }
 
 @DarkAndLightPreviews

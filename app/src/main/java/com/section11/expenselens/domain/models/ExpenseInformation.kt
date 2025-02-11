@@ -29,6 +29,12 @@ data class ExpenseInformation(
 @Target(AnnotationTarget.FIELD)
 annotation class CategoryDescription(val description: String)
 
+/**
+ * Enum class representing different categories of expenses.
+ *
+ * IMPORTANT: ADD [@CategoryDescription] since that description is what is used to estimate the
+ * category of the expense.
+ */
 enum class Category {
 
     @CategoryDescription("""
@@ -46,7 +52,7 @@ enum class Category {
     TRANSPORTATION,
 
     @CategoryDescription("""
-        GROCERIES includes: All food and drink purchases, including groceries, takeout, and restaurant meals.
+        GROCERIES includes: Includes super market purchases, veggies, bakeries, bread, dairy, frozen, etc.
     """)
     GROCERIES,
 
