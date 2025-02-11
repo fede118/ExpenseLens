@@ -4,14 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.section11.expenselens.ui.camera.composables.CameraScreenContent
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
-import com.section11.expenselens.ui.utils.UiState
-import kotlinx.coroutines.flow.StateFlow
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
 fun CameraRoute(
-    cameraPreviewUiState: StateFlow<UiState>,
     modifier: Modifier = Modifier,
+    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     onEvent: (CameraPreviewEvents) -> Unit
 ) {
-    CameraScreenContent(cameraPreviewUiState, modifier, onEvent)
+    CameraScreenContent(modifier, downstreamUiEvent, onEvent)
 }

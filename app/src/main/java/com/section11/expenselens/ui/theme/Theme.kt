@@ -3,12 +3,15 @@ package com.section11.expenselens.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 
@@ -35,9 +38,13 @@ private val LightColorScheme = lightColorScheme(
 )
 
 val LocalDimens = staticCompositionLocalOf { Dimens() }
+val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState> {
+    error("No SnackbarHostState provided!")
+}
 
 @Composable
 fun ExpenseLensTheme(
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
@@ -57,6 +64,7 @@ fun ExpenseLensTheme(
 
     CompositionLocalProvider(
         LocalDimens provides dimens,
+        LocalSnackbarHostState provides snackbarHostState
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

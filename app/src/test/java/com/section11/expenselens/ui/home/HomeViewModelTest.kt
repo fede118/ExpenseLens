@@ -3,19 +3,26 @@ package com.section11.expenselens.ui.home
 import android.content.Context
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
+import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
+import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
-import com.section11.expenselens.ui.home.event.HomeUiEvent.AddExpenseTapped
-import com.section11.expenselens.ui.home.event.HomeUiEvent.SignInTapped
-import com.section11.expenselens.ui.home.event.HomeUiEvent.SignOutTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -26,6 +33,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -89,8 +97,9 @@ class HomeViewModelTest {
     fun `when SignInTapped event and sign in successful then should update ui state`() = runTest {
         val mockContext: Context = mock()
         val mockUserData = UserData("id", "idToken", "name", "img")
+        val successSigning = SignInSuccess(mockUserData)
         whenever(googleSignInUseCase.signInToGoogle(mockContext))
-            .thenReturn(Result.success(mockUserData))
+            .thenReturn(Result.success(successSigning))
         val mockUiModel: UserInfoUiModel = mock()
         whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
 
@@ -98,6 +107,29 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         assertEquals(UserSignedIn(greeting, mockUiModel), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `when SignInTapped event and user cancels then should `() = runTest {
+        val mockContext: Context = mock()
+        whenever(googleSignInUseCase.signInToGoogle(mockContext))
+            .thenReturn(Result.success(SignInCancelled))
+
+        val job = launch {
+            viewModel.uiEvent.collectIndexed { index, value ->
+                if (index == 0) assert((value as? Loading)?.isLoading == true)
+                if (index == 1) assert((value as? Loading)?.isLoading == false)
+                cancel() // Cancel the coroutine after receiving the expected event
+            }
+        }
+
+        viewModel.onUiEvent(SignInTapped(mockContext))
+        advanceUntilIdle()
+
+        job.join() // Ensure the coroutine completes
+
+        assertTrue(viewModel.uiState.value is UserSignedOut)
+        verify(mapper, never()).getUserData(any())
     }
 
     @Test
@@ -114,8 +146,21 @@ class HomeViewModelTest {
 
     @Test
     fun `when SignOutTapped event then should update ui state`() = runTest {
+        whenever(mapper.getSignOutSuccessMessage()).thenReturn("sign out success")
+
+        val job = launch {
+            viewModel.uiEvent.collectIndexed { index, value ->
+                if (index == 0) assert((value as? Loading)?.isLoading == true)
+                if (index == 1) assert((value as? Loading)?.isLoading == false)
+                if (index == 3) assert((value as? ShowSnackBar)?.message == "sign out success")
+                cancel() // Cancel the coroutine after receiving the expected event
+            }
+        }
+
         viewModel.onUiEvent(SignOutTapped)
         advanceUntilIdle()
+
+        job.join() // Ensure the coroutine completes
 
         verify(googleSignInUseCase).signOut()
         assertTrue(viewModel.uiState.value is UserSignedOut)

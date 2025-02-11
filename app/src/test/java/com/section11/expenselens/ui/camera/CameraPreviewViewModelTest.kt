@@ -1,23 +1,24 @@
 package com.section11.expenselens.ui.camera
 
 import com.section11.expenselens.domain.models.ExpenseInformation
-import com.section11.expenselens.domain.usecase.ImageToTextUseCase
 import com.section11.expenselens.domain.usecase.ExpenseInformationUseCase
+import com.section11.expenselens.domain.usecase.ImageToTextUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
-import com.section11.expenselens.ui.camera.CameraPreviewViewModel.CameraPreviewUiState.ShowCameraPreview
-import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
-import com.section11.expenselens.ui.utils.UiState
+import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnCaptureImageTapped
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Error
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
@@ -37,10 +38,8 @@ class CameraPreviewViewModelTest {
 
     @Before
     fun setUp() {
-        // Set the main dispatcher to the test dispatcher
         Dispatchers.setMain(testDispatcher)
 
-        // Initialize the ViewModel with the mocked dependencies
         viewModel = CameraPreviewViewModel(
             imageToTextUseCase,
             expenseInformationUseCase,
@@ -51,12 +50,11 @@ class CameraPreviewViewModelTest {
 
     @After
     fun tearDown() {
-        // Reset the main dispatcher after the test
         Dispatchers.resetMain()
     }
 
     @Test
-    fun `onImageCaptureTap should update uiState to Loading and then to ShowCameraPreview on success`() = runTest {
+    fun `onImageCaptureTap should update uiState to Loading and the remove the loader`() = runTest {
         // Given
         val extractedText = "Extracted Text"
         val expenseInformation: ExpenseInformation = mock()
@@ -67,19 +65,14 @@ class CameraPreviewViewModelTest {
         whenever(expenseInformationUseCase.getExpenseInfo(extractedText)).thenReturn(expenseInformation)
 
         // When
-        viewModel.onUiEvent(CameraPreviewEvents.OnCaptureImageTapped)
+        viewModel.onUiEvent(OnCaptureImageTapped)
 
-        // Then
-        val loadingState = viewModel.uiState.first()
-        assertTrue(loadingState is UiState.Loading)
+        val event = viewModel.uiEvent.first()
+        assert((event as? Loading)?.isLoading == true)
         advanceUntilIdle()
-        val finalState = viewModel.uiState.first()
-        assertTrue(finalState is ShowCameraPreview)
 
         // Verify that navigationManager.navigate is called with the correct arguments
-        verify(navigationManager).navigate(
-            NavigateToExpensePreview(extractedText, expenseInformation)
-        )
+        verify(navigationManager).navigate(NavigateToExpensePreview(extractedText, expenseInformation))
     }
 
     @Test
@@ -91,13 +84,18 @@ class CameraPreviewViewModelTest {
             callback(Result.failure(Exception(errorMessage)))
         }
 
-        // When
-        viewModel.onUiEvent(CameraPreviewEvents.OnCaptureImageTapped)
-        advanceUntilIdle()
+        val job = launch {
+            viewModel.uiEvent.collect { result ->
+                if (result is Error) {
+                    assert(result.message == errorMessage)
+                    cancel() // Cancel the coroutine after receiving the expected event
+                }
+            }
+        }
 
-        // Then
-        val errorState = viewModel.uiState.first()
-        assertTrue(errorState is UiState.Error)
-        assertTrue((errorState as UiState.Error).message == errorMessage)
+        viewModel.onUiEvent(OnCaptureImageTapped)
+
+        advanceUntilIdle()
+        job.join() // Ensure the coroutine completes
     }
 }

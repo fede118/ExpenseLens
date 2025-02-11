@@ -13,11 +13,6 @@ class GeminiRequestBody(
         @Keep
         data class Part(
             val text: String
-        ) {
-            @Keep
-            data class ContentResponse(
-                val total: String
-            )
-        }
+        )
     }
 }
