@@ -1,5 +1,6 @@
 package com.section11.expenselens.ui.home
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
@@ -7,6 +8,8 @@ import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
+import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
@@ -87,6 +90,18 @@ class HomeViewModel @Inject constructor(
                     _uiEvent.emit(ShowSnackBar(mapper.getSignOutSuccessMessage()))
                 }
             }
+        }
+    }
+
+    fun dummyButtonForTesting(context: Context) {
+        val fakeRepo = FakeRepositoryForPreviews(context)
+        viewModelScope.launch {
+            navigationManager.navigate(
+                NavigateToExpensePreview(
+                    extractedText = fakeRepo.getExtractedText(),
+                    expenseInformation = fakeRepo.getExpenseInformation()
+                )
+            )
         }
     }
 

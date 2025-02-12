@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,11 +38,11 @@ import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnCaptureImageTapped
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnImageCaptureError
 import com.section11.expenselens.ui.common.BlurredBackgroundExpenseLensLoader
-import com.section11.expenselens.ui.theme.ExpenseLensTheme
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
+import com.section11.expenselens.ui.utils.Preview
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -168,9 +167,7 @@ fun CaptureImageButton(onEvent: (CameraPreviewEvents) -> Unit) {
 @DarkAndLightPreviews
 @Composable
 fun CameraScreenContentPreview() {
-    ExpenseLensTheme {
-        Surface {
-            CameraScreenContent(downstreamUiEvent = MutableSharedFlow()) {}
-        }
+    Preview {
+        CameraScreenContent(downstreamUiEvent = MutableSharedFlow()) {}
     }
 }

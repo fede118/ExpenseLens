@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
@@ -44,13 +43,13 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTappe
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
-import com.section11.expenselens.ui.theme.ExpenseLensTheme
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.theme.LocalSnackbarHostState
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
+import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.UiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -194,14 +193,12 @@ fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
 @DarkAndLightPreviews
 @Composable
 fun HomeScreenNoSignInPreview() {
-    ExpenseLensTheme {
-        Surface {
-            HomeScreenContent(
-                modifier = Modifier.fillMaxSize(),
-                homeUiState = MutableStateFlow(UserSignedOut("Test Greeting")),
-                downstreamUiEvent = MutableSharedFlow()
-            ) {}
-        }
+    Preview {
+        HomeScreenContent(
+            modifier = Modifier.fillMaxSize(),
+            homeUiState = MutableStateFlow(UserSignedOut("Test Greeting")),
+            downstreamUiEvent = MutableSharedFlow()
+        ) {}
     }
 }
 
@@ -214,13 +211,11 @@ fun HomeScreenSignedInPreview() {
             UserInfoUiModel("id", "Test User", "")
         )
     )
-    ExpenseLensTheme {
-        Surface {
-            HomeScreenContent(
-                modifier = Modifier.fillMaxSize(),
-                homeUiState = userSignedIn,
-                downstreamUiEvent = MutableSharedFlow()
-            ) {}
-        }
+    Preview {
+        HomeScreenContent(
+            modifier = Modifier.fillMaxSize(),
+            homeUiState = userSignedIn,
+            downstreamUiEvent = MutableSharedFlow()
+        ) {}
     }
 }

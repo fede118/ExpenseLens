@@ -35,7 +35,7 @@ annotation class CategoryDescription(val description: String)
  * IMPORTANT: ADD [@CategoryDescription] since that description is what is used to estimate the
  * category of the expense.
  */
-enum class Category {
+enum class Category(val displayName: String) {
 
     @CategoryDescription("""
         HOME includes: 
@@ -44,56 +44,56 @@ enum class Category {
         - Home Maintenance & Repairs: Costs for fixing appliances, plumbing issues, landscaping, etc.
         - Cleaning Supplies & Household Goods: Detergent, cleaning tools, light bulbs, batteries, etc.
     """)
-    HOME,
+    HOME("Home"),
 
     @CategoryDescription("""
         TRANSPORTATION includes Car payments, gas, public transportation fares, car insurance, vehicle maintenance, parking fees.
     """)
-    TRANSPORTATION,
+    TRANSPORTATION("Transportation"),
 
     @CategoryDescription("""
         GROCERIES includes: Includes super market purchases, veggies, bakeries, bread, dairy, frozen, etc.
     """)
-    GROCERIES,
+    GROCERIES("Groceries"),
 
     @CategoryDescription("""
        HEALTH_CARE includes: Doctor visits, prescriptions, health insurance premiums, dental care, vision care. 
     """)
-    HEALTH_CARE,
+    HEALTH_CARE("Health Care"),
 
     @CategoryDescription("""
         FINANCIAL includes:  Debt Payments: Credit cards, student loans, personal loans, other loan repayments.
         - Savings & Investments: Contributions to retirement accounts, emergency funds, or other investment vehicles.
     """)
-    FINANCIAL,
+    FINANCIAL("Financial"),
 
     @CategoryDescription("""
         ENTERTAINMENT includes: Movies, concerts, streaming subscriptions, dining out, hobbies.
         - Travel & Vacations: Costs associated with trips, including transportation, accommodation, and activities.
         - Dine out, Take out, restaurant meals, drinks at a bar, etc
     """)
-    ENTERTAINMENT,
+    ENTERTAINMENT("Entertainment"),
 
     @CategoryDescription("""
         PERSONAL includes: Purchases of clothes, shoes, Haircuts, cosmetics, other personal grooming expenses.
         - Gym memberships
     """)
-    PERSONAL,
+    PERSONAL("Personal"),
 
     @CategoryDescription("""
         EDUCATION includes: Tuition, books, school supplies, tutoring, etc.
     """)
-    EDUCATION,
+    EDUCATION("Education"),
 
     @CategoryDescription("""
         PET_CARE includes: Food, vet visits, grooming, pet toys.
     """)
-    PET_CARE,
+    PET_CARE("Pet Care"),
 
     @CategoryDescription("""
         MISCELLANEOUS includes: Unexpected expenses, small purchases, gifts, etc.
     """)
-    MISCELLANEOUS;
+    MISCELLANEOUS("Miscellaneous");
 
     companion object {
         fun getCategoryDescriptions(): String {
@@ -105,6 +105,10 @@ enum class Category {
 
                 "**[${category.name}] **: ${description.trimIndent()}"
             }
+        }
+
+        fun fromDisplayName(displayName: String): Category? {
+            return entries.find { it.displayName == displayName }
         }
     }
 }
