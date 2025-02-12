@@ -6,4 +6,12 @@
     <!--  Home Screen Content  -->
     <string name="home_screen_sign_out_success">Successfully signed out</string>
 
+    <!--  Expense Review Screen  -->
+    <string name="expense_review_screen_total_title">Total</string>
+    <string name="expense_review_screen_category_title">Category</string>
+    <string name="expense_review_screen_select_category">Select Category</string>
+    <string name="expense_review_screen_submit_expense">Submit Expense</string>
+
+    <!--  Common Strings  -->
+    <string name="dollar_sign">$</string>
 </resources>

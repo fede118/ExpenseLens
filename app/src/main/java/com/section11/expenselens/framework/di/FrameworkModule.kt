@@ -3,6 +3,7 @@ package com.section11.expenselens.framework.di
 import android.content.Context
 import androidx.camera.core.ImageCapture
 import androidx.core.content.ContextCompat
+import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.mlkit.vision.text.TextRecognition
@@ -83,5 +84,10 @@ class FrameworkModule {
     @Provides
     fun provideGoogleTokenMapper(): GoogleTokenMapper {
         return GoogleTokenMapperImpl()
+    }
+
+    @Provides
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
     }
 }

@@ -39,7 +39,7 @@ android {
         applicationId = "com.section11.expenselens"
         minSdk = 29
         targetSdk = 34
-        versionCode = 3
+        versionCode = 4
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -108,6 +108,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.auth.ktx)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
@@ -164,7 +165,7 @@ tasks.create("jacocoTestReport", JacocoReport::class.java) {
         "**/dto/**/*.*",
         "**/database/**/*.*",
         "**/navigation/**/*.*",
-        "**/previewsrepositories/**/*.*",
+        "**/previewrepository/**/*.*",
         "**/composables/**", // exclude files in composable folders
         "**/*Composable*.*", // exclude files with "composable" in their name
         "**/ComposableSingletons*.*", // Exclude ComposableSingletons

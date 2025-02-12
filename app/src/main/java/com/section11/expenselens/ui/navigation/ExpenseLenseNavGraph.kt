@@ -1,9 +1,21 @@
 package com.section11.expenselens.ui.navigation
 
 import android.os.Build
+import android.os.Bundle
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -23,6 +35,8 @@ import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Comp
 import com.section11.expenselens.ui.navigation.route.CameraRoute
 import com.section11.expenselens.ui.navigation.route.ExpenseReviewRoute
 import com.section11.expenselens.ui.navigation.route.HomeRoute
+import com.section11.expenselens.ui.review.ExpenseReviewViewModel
+import com.section11.expenselens.ui.theme.LocalDimens
 
 @Composable
 fun ExpenseLensNavGraph(
@@ -30,6 +44,7 @@ fun ExpenseLensNavGraph(
     navController: NavHostController = rememberNavController(),
     startDestination: String = HOME_ROUTE
 ) {
+    val context = LocalContext.current
     NavigationEffects(navController)
 
     NavHost(
@@ -38,6 +53,7 @@ fun ExpenseLensNavGraph(
         startDestination = startDestination,
         modifier = modifier
     ) {
+
         composable(route = HOME_ROUTE) {
             val homeViewModel = getHomeViewModelFromParentEntry(navController)
             HomeRoute(
@@ -45,6 +61,17 @@ fun ExpenseLensNavGraph(
                 downstreamUiEvent = homeViewModel.uiEvent,
                 onEvent = homeViewModel::onUiEvent
             )
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+                    Text("Just for development:", textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(LocalDimens.current.mHalf))
+                    Button(
+                        onClick = { homeViewModel.dummyButtonForTesting(context) }
+                    ) { Text("To ExpenseReview") }
+                }
+
+            }
         }
 
         composable(route =  CAMERA_ROUTE) {  navStackEntry ->
@@ -57,15 +84,15 @@ fun ExpenseLensNavGraph(
 
         composable(route = EXPENSE_REVIEW_ROUTE) { navStackEntry ->
             val args = navStackEntry.arguments
-            val expenseInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                args?.getParcelable(EXPENSE_INFORMATION_KEY, ExpenseInformation::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                args?.getParcelable(EXPENSE_INFORMATION_KEY) as? ExpenseInformation
-            }
-            val extractedTextFromImage = args?.getString(EXTRACTED_TEXT_KEY) ?: "No extracted text"
+            val expenseInfo = getExpenseInfo(args)
+            val extractedTextFromImage = args?.getString(EXTRACTED_TEXT_KEY)
+            val expenseReviewViewModel = hiltViewModel<ExpenseReviewViewModel>()
 
-            ExpenseReviewRoute(expenseInfo, extractedTextFromImage)
+            InitExpenseReviewViewModel(expenseReviewViewModel, expenseInfo, extractedTextFromImage)
+            ExpenseReviewRoute(
+                expenseReviewUiStateFlow = expenseReviewViewModel.uiState,
+                onEvent = expenseReviewViewModel::onUpstreamEvent
+            )
         }
     }
 }
@@ -76,4 +103,24 @@ fun getHomeViewModelFromParentEntry(navController: NavController): HomeViewModel
         navController.getBackStackEntry(NAV_GRAPH_ROUTE)
     }
     return hiltViewModel(parentEntry)
+}
+
+private fun getExpenseInfo(args: Bundle?): ExpenseInformation? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        args?.getParcelable(EXPENSE_INFORMATION_KEY, ExpenseInformation::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        args?.getParcelable(EXPENSE_INFORMATION_KEY) as? ExpenseInformation
+    }
+}
+
+@Composable
+fun InitExpenseReviewViewModel(
+    viewModel: ExpenseReviewViewModel,
+    expenseInformation: ExpenseInformation?,
+    extractedText: String?
+) {
+    LaunchedEffect(viewModel) {
+        viewModel.init(expenseInformation, extractedText)
+    }
 }
