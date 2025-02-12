@@ -7,14 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,10 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
-import com.section11.expenselens.ui.theme.ExpenseLensTheme
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.theme.gray30
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
+import com.section11.expenselens.ui.utils.Preview
 
 @Composable
 fun ProfileDialog(
@@ -69,17 +69,14 @@ fun CardDialog(
     onDismiss: () -> Unit,
     content: @Composable () -> Unit = {},
 ) {
-    val dimens = LocalDimens.current
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        modifier = modifier.padding(dimens.m2),
         properties = DialogProperties(dismissOnClickOutside = true),
         title = {
             Column(
-                modifier = Modifier
-                    .padding(dimens.m2)
-                    .fillMaxWidth(),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 content()
@@ -104,15 +101,13 @@ fun BlurredBackgroundExpenseLensLoader(modifier: Modifier = Modifier) {
 @DarkAndLightPreviews
 @Composable
 fun ProfileDialogPreview(modifier: Modifier = Modifier) {
-    ExpenseLensTheme {
-        Surface(modifier.fillMaxWidth()) {
-            ProfileDialog(
-                modifier = Modifier,
-                profileImageUrl = "",
-                userName = "Test User",
-                onDismiss = {},
-                onLogout = {}
-            )
-        }
+    Preview(modifier.fillMaxWidth()) {
+        ProfileDialog(
+            modifier = Modifier,
+            profileImageUrl = "",
+            userName = "Test User",
+            onDismiss = {},
+            onLogout = {}
+        )
     }
 }

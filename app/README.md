@@ -1,7 +1,6 @@
 ### TODO list
-- Sign in user to google (prerequisite to sharing a "household" expenses) - WIP
 - get gemini prompt from firebase instead of having it hardcoded, for flexibility
-  - Create household expense in firebase/integration:
+- Create household expense in firebase/integration:
     households (collection)
     |
     |-- householdId (document)
