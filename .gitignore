@@ -1,14 +1,12 @@
 *.iml
 .gradle
 /local.properties
-.idea
+.idea/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
-/.idea/.gitignore
 
 # Log/OS Files
 *.log
@@ -19,13 +17,6 @@ captures/
 .cxx/
 *.apk
 output.json
-
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
 
 # Keystore files
 *.jks
