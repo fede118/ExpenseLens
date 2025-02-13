@@ -1,10 +1,13 @@
 package com.section11.expenselens.ui.home
 
 import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
+import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
@@ -44,6 +47,8 @@ class HomeViewModelTest {
     private val navigationManager: NavigationManager = mock()
     private val mapper: HomeScreenUiMapper = mock()
     private val googleSignInUseCase: GoogleSignInUseCase = mock()
+    private val storeExpenseUseCase: StoreExpenseUseCase = mock()
+    private val firebaseAuth: FirebaseAuth  = mock()
     private val greeting = "hello"
 
     private lateinit var viewModel: HomeViewModel
@@ -52,7 +57,14 @@ class HomeViewModelTest {
     fun setup() {
         whenever(mapper.getGreeting()).thenReturn(greeting)
         Dispatchers.setMain(testDispatcher)
-        viewModel = HomeViewModel(navigationManager, googleSignInUseCase, mapper, testDispatcher)
+        viewModel = HomeViewModel(
+            navigationManager,
+            googleSignInUseCase,
+            storeExpenseUseCase,
+            firebaseAuth,
+            mapper,
+            testDispatcher
+        )
     }
 
     @After
@@ -66,8 +78,18 @@ class HomeViewModelTest {
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserInfoUiModel = mock()
         whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
+        val firebaseUser: FirebaseUser = mock()
+        whenever(firebaseUser.uid).thenReturn("uid")
+        whenever(firebaseAuth.currentUser).thenReturn(firebaseUser)
 
-        viewModel = HomeViewModel(navigationManager, googleSignInUseCase, mapper, testDispatcher)
+        viewModel = HomeViewModel(
+            navigationManager,
+            googleSignInUseCase,
+            storeExpenseUseCase,
+            firebaseAuth,
+            mapper,
+            testDispatcher
+        )
         advanceUntilIdle()
 
         assertEquals(UserSignedIn(greeting, mockUiModel), viewModel.uiState.value)
@@ -77,10 +99,40 @@ class HomeViewModelTest {
     fun `on init should get user information if null update uiState to user signed out`() = runTest {
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.failure(mock()))
 
-        viewModel = HomeViewModel(navigationManager, googleSignInUseCase, mapper, testDispatcher)
+        viewModel = HomeViewModel(
+            navigationManager,
+            googleSignInUseCase,
+            storeExpenseUseCase,
+            firebaseAuth,
+            mapper,
+            testDispatcher
+        )
         advanceUntilIdle()
 
         assertEquals(UserSignedOut(greeting), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `on init if user signed in then should try to get household`() = runTest {
+        val mockUserData = UserData("id", "idToken", "name", "img")
+        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
+        val mockUiModel: UserInfoUiModel = mock()
+        whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
+        val firebaseUser: FirebaseUser = mock()
+        whenever(firebaseUser.uid).thenReturn("uid")
+        whenever(firebaseAuth.currentUser).thenReturn(firebaseUser)
+
+        viewModel = HomeViewModel(
+            navigationManager,
+            googleSignInUseCase,
+            storeExpenseUseCase,
+            firebaseAuth,
+            mapper,
+            testDispatcher
+        )
+        advanceUntilIdle()
+
+        verify(storeExpenseUseCase).getCurrentHouseholdIdAndName(any())
     }
 
     @Test
@@ -110,11 +162,12 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `when SignInTapped event and user cancels then should `() = runTest {
+    fun `when SignInTapped event and user cancels then should hide loader`() = runTest {
         val mockContext: Context = mock()
         whenever(googleSignInUseCase.signInToGoogle(mockContext))
             .thenReturn(Result.success(SignInCancelled))
 
+        // Since this is a cold flow we need to start the collection before actually calling the viewModel method
         val job = launch {
             viewModel.uiEvent.collectIndexed { index, value ->
                 if (index == 0) assert((value as? Loading)?.isLoading == true)
@@ -148,6 +201,7 @@ class HomeViewModelTest {
     fun `when SignOutTapped event then should update ui state`() = runTest {
         whenever(mapper.getSignOutSuccessMessage()).thenReturn("sign out success")
 
+        // Since this is a cold flow we need to start the collection before actually calling the viewModel method
         val job = launch {
             viewModel.uiEvent.collectIndexed { index, value ->
                 if (index == 0) assert((value as? Loading)?.isLoading == true)

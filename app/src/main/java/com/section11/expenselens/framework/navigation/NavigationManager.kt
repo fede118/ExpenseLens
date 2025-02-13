@@ -1,6 +1,6 @@
 package com.section11.expenselens.framework.navigation
 
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent
 import com.section11.expenselens.ui.utils.UiEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,10 +13,11 @@ interface NavigationManager {
     suspend fun navigate(event: NavigationEvent)
 
     sealed class NavigationEvent : UiEvent() {
+        data object NavigateHome : NavigationEvent()
         data object NavigateToCameraScreen : NavigationEvent()
         data class NavigateToExpensePreview(
             val extractedText: String,
-            val expenseInformation: ExpenseInformation
+            val suggestedExpenseInformation: SuggestedExpenseInformation
         ) : NavigationEvent()
     }
 }

@@ -6,7 +6,7 @@ import com.section11.expenselens.data.dto.request.GeminiRequestBody.Content
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
 import com.section11.expenselens.data.service.GeminiService
 import com.section11.expenselens.domain.models.Category
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository
 import com.section11.expenselens.framework.networking.safeApiCall
 import javax.inject.Inject
@@ -17,7 +17,7 @@ class GeminiAiRepository @Inject constructor(
     private val geminiResponseMapper: GeminiResponseMapper
 ) : ExpenseInfoExtractorRepository {
 
-    override suspend fun getExpenseInfo(text: String): ExpenseInformation {
+    override suspend fun getExpenseInfo(text: String): SuggestedExpenseInformation {
         val requestBody = getGeminiRequestBody(EXPENSE_INFO_EXTRACTION_PROMPT + text)
         val response = safeApiCall {
             service.generateContent(requestBody, apiKey)
@@ -52,7 +52,7 @@ class GeminiAiRepository @Inject constructor(
             """
 
         private fun generateJsonStructure(): String {
-            val exampleInstance = ExpenseInformation(TOTAL_EXAMPLE, Category.GROCERIES)
+            val exampleInstance = SuggestedExpenseInformation(TOTAL_EXAMPLE, Category.GROCERIES)
             val gson = GsonBuilder().setPrettyPrinting().create()
             val json = gson.toJson(exampleInstance)
 

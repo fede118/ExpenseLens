@@ -19,10 +19,10 @@ fun HomeRoute(
     modifier: Modifier = Modifier,
     homeUiState: StateFlow<UiState>,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    onEvent: (HomeUpstreamEvent) -> Unit
+    onUpstreamEvent: (HomeUpstreamEvent) -> Unit
 ) {
     HomeScreenContent(modifier.fillMaxSize(), homeUiState, downstreamUiEvent) { event ->
-        onEvent(event)
+        onUpstreamEvent(event)
     }
 }
 

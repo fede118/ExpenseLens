@@ -2,13 +2,16 @@ package com.section11.expenselens.framework.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.section11.expenselens.BuildConfig
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
+import com.section11.expenselens.data.repository.FirestoreExpensesRepository
 import com.section11.expenselens.data.repository.GeminiAiRepository
 import com.section11.expenselens.data.repository.GoogleUserSessionRepository
 import com.section11.expenselens.data.service.GeminiService
 import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository
+import com.section11.expenselens.domain.repository.ExpensesRepository
 import com.section11.expenselens.domain.repository.UserSessionRepository
 import dagger.Module
 import dagger.Provides
@@ -45,5 +48,10 @@ class RepositoryModule {
             displayNamePrefKey,
             profilePicPrefKey
         )
+    }
+
+    @Provides
+    fun provideFirestoreExpensesRepository(firestore: FirebaseFirestore): ExpensesRepository {
+        return FirestoreExpensesRepository(firestore)
     }
 }

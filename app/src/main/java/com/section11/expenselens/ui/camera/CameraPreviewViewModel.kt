@@ -35,9 +35,11 @@ class CameraPreviewViewModel @Inject constructor(
     }
 
     private fun onImageCaptureTap() {
+        viewModelScope.launch(dispatcher) {
+            _uiEvent.emit(Loading(true))
+        }
         imageToTextUseCase.takePicture { result ->
             viewModelScope.launch(dispatcher) {
-                _uiEvent.emit(Loading(true))
                 result.onSuccess { extractedText ->
                     val expenseInfo = expenseInformationUseCase.getExpenseInfo(extractedText)
                     navigationManager.navigate(NavigateToExpensePreview(extractedText, expenseInfo))

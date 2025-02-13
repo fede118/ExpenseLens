@@ -1,6 +1,6 @@
 package com.section11.expenselens.ui.camera
 
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.usecase.ExpenseInformationUseCase
 import com.section11.expenselens.domain.usecase.ImageToTextUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
@@ -57,12 +57,12 @@ class CameraPreviewViewModelTest {
     fun `onImageCaptureTap should update uiState to Loading and the remove the loader`() = runTest {
         // Given
         val extractedText = "Extracted Text"
-        val expenseInformation: ExpenseInformation = mock()
+        val suggestedExpenseInformation: SuggestedExpenseInformation = mock()
         whenever(imageToTextUseCase.takePicture(any())).thenAnswer {
             val callback = it.getArgument<(Result<String>) -> Unit>(0)
             callback(Result.success(extractedText))
         }
-        whenever(expenseInformationUseCase.getExpenseInfo(extractedText)).thenReturn(expenseInformation)
+        whenever(expenseInformationUseCase.getExpenseInfo(extractedText)).thenReturn(suggestedExpenseInformation)
 
         // When
         viewModel.onUiEvent(OnCaptureImageTapped)
@@ -72,7 +72,7 @@ class CameraPreviewViewModelTest {
         advanceUntilIdle()
 
         // Verify that navigationManager.navigate is called with the correct arguments
-        verify(navigationManager).navigate(NavigateToExpensePreview(extractedText, expenseInformation))
+        verify(navigationManager).navigate(NavigateToExpensePreview(extractedText, suggestedExpenseInformation))
     }
 
     @Test
@@ -84,6 +84,7 @@ class CameraPreviewViewModelTest {
             callback(Result.failure(Exception(errorMessage)))
         }
 
+        // Since this is a cold flow we need to start the collection before actually calling the viewModel method
         val job = launch {
             viewModel.uiEvent.collect { result ->
                 if (result is Error) {
