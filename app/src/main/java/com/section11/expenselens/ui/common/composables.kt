@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -17,6 +18,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,9 +31,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.section11.expenselens.ui.theme.LocalDimens
-import com.section11.expenselens.ui.theme.gray30
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.Preview
+import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
 fun ProfileDialog(
@@ -94,8 +103,22 @@ fun ExpenseLensLoader(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BlurredBackgroundExpenseLensLoader(modifier: Modifier = Modifier) {
-    ExpenseLensLoader(modifier.fillMaxWidth().background(gray30))
+fun HandleDownstreamEvents(
+    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
+    modifier: Modifier = Modifier
+) {
+    var isLoading by remember { mutableStateOf(false) }
+    val uiEvent by downstreamUiEvent.collectAsState(null)
+
+    LaunchedEffect(uiEvent) {
+        when(uiEvent) {
+            is Loading -> (uiEvent as? Loading)?.isLoading?.let { isLoading = it }
+        }
+    }
+
+    if (isLoading) {
+        ExpenseLensLoader(modifier.fillMaxSize())
+    }
 }
 
 @DarkAndLightPreviews

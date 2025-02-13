@@ -1,5 +1,7 @@
 package com.section11.expenselens.ui.utils
 
+import androidx.compose.material3.SnackbarDuration
+
 abstract class UiEvent
 
 /**
@@ -8,7 +10,10 @@ abstract class UiEvent
 abstract class DownstreamUiEvent : UiEvent() {
     data class Loading(val isLoading: Boolean) : DownstreamUiEvent()
     data class Error(val message: String?) : DownstreamUiEvent()
-    data class ShowSnackBar(val message: String) : DownstreamUiEvent()
+    data class ShowSnackBar(
+        val message: String,
+        val duration: SnackbarDuration = SnackbarDuration.Short
+    ) : DownstreamUiEvent()
 }
 
 /**

@@ -4,7 +4,10 @@ import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.auth.FirebaseAuth
 import com.section11.expenselens.BuildConfig
+import com.section11.expenselens.framework.utils.GoogleTokenMapper
+import com.section11.expenselens.framework.utils.GoogleTokenMapperImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,5 +38,15 @@ class GoogleSessionFrameworkModule {
     @Provides
     fun providesGoogleCredentialManager(@ApplicationContext context: Context): CredentialManager {
         return CredentialManager.create(context)
+    }
+
+    @Provides
+    fun provideGoogleTokenMapper(): GoogleTokenMapper {
+        return GoogleTokenMapperImpl()
+    }
+
+    @Provides
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
     }
 }

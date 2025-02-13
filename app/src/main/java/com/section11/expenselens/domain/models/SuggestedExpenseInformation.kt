@@ -4,7 +4,7 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class ExpenseInformation(
+data class SuggestedExpenseInformation(
     val total: String?,
     val estimatedCategory: Category?
 ) : Parcelable {
@@ -16,7 +16,7 @@ data class ExpenseInformation(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as ExpenseInformation
+        other as SuggestedExpenseInformation
 
         if (total != other.total) return false
         if (estimatedCategory != other.estimatedCategory) return false

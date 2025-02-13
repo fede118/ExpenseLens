@@ -20,12 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +32,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import coil.compose.rememberAsyncImagePainter
-import com.section11.expenselens.ui.common.ExpenseLensLoader
+import com.section11.expenselens.ui.common.HandleDownstreamEvents
 import com.section11.expenselens.ui.common.ProfileDialog
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
@@ -44,18 +42,14 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.theme.LocalDimens
-import com.section11.expenselens.ui.theme.LocalSnackbarHostState
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
-import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
-import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
 import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.UiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreenContent(
@@ -66,9 +60,8 @@ fun HomeScreenContent(
 ) {
     val uiState by homeUiState.collectAsState()
     val dimens = LocalDimens.current
-    var showDialog by remember { mutableStateOf(false) }
 
-    HandleDownStreamEvents(downstreamUiEvent)
+    HandleDownstreamEvents(downstreamUiEvent)
 
     Box(
         modifier = modifier
@@ -87,29 +80,14 @@ fun HomeScreenContent(
             when (uiState) {
                 is UserSignedIn -> {
                     val user = (uiState as UserSignedIn).user
-                    ProfilePictureIcon(
-                        user = user,
-                        modifier = iconModifier.clickable { showDialog = true }
-                    )
-
-                    if (showDialog) {
-                        ProfileDialog(
-                            profileImageUrl = user.profilePic,
-                            userName = user.displayName,
-                            onDismiss = { showDialog = false },
-                            onLogout = {
-                                showDialog = false
-                                onEvent(SignOutTapped)
-                            }
-                        )
-                    }
-                    Greeting((uiState as UserSignedIn).greeting)
-                }
-                is UserSignedOut -> {
-                    GoogleSignInButton(iconModifier) { event ->
+                    SignedInUi(iconModifier, user, uiState) { event ->
                         onEvent(event)
                     }
-                    Greeting((uiState as UserSignedOut).greeting)
+                }
+                is UserSignedOut -> {
+                    LoggedOutUi(iconModifier, uiState as UserSignedOut) { event ->
+                        onEvent(event)
+                    }
                 }
             }
 
@@ -129,28 +107,45 @@ fun HomeScreenContent(
 }
 
 @Composable
-fun HandleDownStreamEvents(downstreamUiEvent: SharedFlow<DownstreamUiEvent>) {
-    var isLoading by remember { mutableStateOf(false) }
-    val uiEvent by downstreamUiEvent.collectAsState(null)
-    val rememberCoroutineScope = rememberCoroutineScope()
-    val snackbarHostState = LocalSnackbarHostState.current
+fun SignedInUi(
+    modifier: Modifier = Modifier,
+    user: UserInfoUiModel,
+    uiState: UiState,
+    onEvent: (HomeUpstreamEvent) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(uiEvent) {
-        when(uiEvent) {
-            is Loading -> (uiEvent as? Loading)?.isLoading?.let { isLoading = it }
-            is ShowSnackBar -> {
-                (uiEvent as? ShowSnackBar)?.message?.let { message ->
-                    rememberCoroutineScope.launch {
-                        snackbarHostState.showSnackbar(message)
-                    }
-                }
+    ProfilePictureIcon(
+        user = user,
+        modifier = modifier.clickable { showDialog = true }
+    )
+
+    if (showDialog) {
+        ProfileDialog(
+            profileImageUrl = user.profilePic,
+            userName = user.displayName,
+            onDismiss = { showDialog = false },
+            onLogout = {
+                showDialog = false
+                onEvent(SignOutTapped)
             }
-        }
+        )
     }
+    val userSignedInModel = (uiState as UserSignedIn)
+    Greeting("${userSignedInModel.greeting} \n" +
+            "Your household name is: ${userSignedInModel.householdName}")
+}
 
-    if (isLoading) {
-        ExpenseLensLoader(Modifier.fillMaxSize())
+@Composable
+fun LoggedOutUi(
+    modifier: Modifier = Modifier,
+    state: UserSignedOut,
+    onEvent: (HomeUpstreamEvent) -> Unit
+) {
+    GoogleSignInButton(modifier) { event ->
+        onEvent(event)
     }
+    Greeting(state.greeting)
 }
 
 @Composable

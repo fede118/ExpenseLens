@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.SharedFlow
 fun CameraRoute(
     modifier: Modifier = Modifier,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    onEvent: (CameraPreviewEvents) -> Unit
+    onUpstreamEvent: (CameraPreviewEvents) -> Unit
 ) {
-    CameraScreenContent(modifier, downstreamUiEvent, onEvent)
+    CameraScreenContent(modifier, downstreamUiEvent, onUpstreamEvent)
 }

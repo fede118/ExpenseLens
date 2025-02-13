@@ -5,17 +5,23 @@ import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 
 class ExpenseLensNavigationActions(private val navController: NavController) {
 
+    fun navigateHome() = navController.navigate(HOME_ROUTE) {
+        popUpTo(navController.graph.startDestinationId) {
+            inclusive = true
+        }
+    }
+
     fun navigateToCameraScreen() = navController.navigate(CAMERA_ROUTE)
 
-    fun navigateToExpensePreview(extractedText: String, expenseInformation: ExpenseInformation) {
+    fun navigateToExpensePreview(extractedText: String, suggestedExpenseInformation: SuggestedExpenseInformation) {
         navController.navigate(
             route = EXPENSE_REVIEW_ROUTE,
             args = bundleOf(
-                EXPENSE_INFORMATION_KEY to expenseInformation,
+                EXPENSE_INFORMATION_KEY to suggestedExpenseInformation,
                 EXTRACTED_TEXT_KEY to extractedText
             )
         )

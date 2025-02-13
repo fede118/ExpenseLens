@@ -1,8 +1,8 @@
 package com.section11.expenselens.domain.repository
 
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 
 interface ExpenseInfoExtractorRepository {
 
-    suspend fun getExpenseInfo(text: String): ExpenseInformation
+    suspend fun getExpenseInfo(text: String): SuggestedExpenseInformation
 }

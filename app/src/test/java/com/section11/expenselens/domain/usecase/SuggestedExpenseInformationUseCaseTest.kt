@@ -7,7 +7,7 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 
-class ExpenseInformationUseCaseTest {
+class SuggestedExpenseInformationUseCaseTest {
 
     private val mockRepository: ExpenseInfoExtractorRepository = mock()
 

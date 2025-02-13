@@ -3,9 +3,11 @@ package com.section11.expenselens.ui.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
+import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
@@ -36,6 +38,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val navigationManager: NavigationManager,
     private val googleSignInUseCase: GoogleSignInUseCase,
+    private val storeExpenseUseCase: StoreExpenseUseCase,
+    private val firebaseAuth: FirebaseAuth,
     private val mapper: HomeScreenUiMapper,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
@@ -51,9 +55,12 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch(dispatcher) {
             val userData = googleSignInUseCase.getCurrentUser().getOrNull()
-            if (userData != null) {
+            val user = firebaseAuth.currentUser
+            if (userData != null && user?.uid != null) {
+                val householdResult = storeExpenseUseCase.getCurrentHouseholdIdAndName(user.uid)
+                val householdName = householdResult.getOrNull()?.second
                 val userUiModel = mapper.getUserData(userData)
-                _uiState.value = UserSignedIn(greeting, userUiModel)
+                _uiState.value = UserSignedIn(greeting, userUiModel, householdName)
             } else {
                 _uiState.value = UserSignedOut(greeting)
             }
@@ -73,11 +80,7 @@ class HomeViewModel @Inject constructor(
                             val userUiModel = mapper.getUserData(signInResult.userData)
                             _uiState.value = UserSignedIn(greeting, userUiModel)
                         }
-                        is SignInCancelled -> {
-                            _uiEvent.emit(Loading(false))
-
-                        }
-
+                        is SignInCancelled -> _uiEvent.emit(Loading(false))
                         null -> _uiEvent.emit(ShowSnackBar("Something went wrong, try again"))
                     }
                     _uiEvent.emit(Loading(false))
@@ -99,14 +102,18 @@ class HomeViewModel @Inject constructor(
             navigationManager.navigate(
                 NavigateToExpensePreview(
                     extractedText = fakeRepo.getExtractedText(),
-                    expenseInformation = fakeRepo.getExpenseInformation()
+                    suggestedExpenseInformation = fakeRepo.getExpenseInformation()
                 )
             )
         }
     }
 
     sealed class HomeUiState : UiState() {
-        data class UserSignedIn(val greeting: String, val user: UserInfoUiModel) : HomeUiState()
+        data class UserSignedIn(
+            val greeting: String,
+            val user: UserInfoUiModel,
+            val householdName: String? = null
+        ) : HomeUiState()
         data class UserSignedOut(val greeting: String) : HomeUiState()
     }
 }

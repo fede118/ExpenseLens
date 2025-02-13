@@ -2,7 +2,7 @@ package com.section11.expenselens.ui.review.mapper
 
 import com.section11.expenselens.R
 import com.section11.expenselens.domain.models.Category
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.DropdownMenu
@@ -34,7 +34,7 @@ class ExpenseReviewScreenUiMapperTest {
     @Test
     fun `mapExpenseInfoToUiModel should return correct UI model when expense information is provided`() {
         // Given
-        val expenseInfo = ExpenseInformation(
+        val expenseInfo = SuggestedExpenseInformation(
             estimatedCategory = Category.HOME,
             total = "$100"
         )
@@ -61,7 +61,7 @@ class ExpenseReviewScreenUiMapperTest {
     @Test
     fun `mapExpenseInfoToUiModel should return default category when estimatedCategory is null`() {
         // Given
-        val expenseInfo = ExpenseInformation(
+        val expenseInfo = SuggestedExpenseInformation(
             estimatedCategory = null,
             total = "$200"
         )
