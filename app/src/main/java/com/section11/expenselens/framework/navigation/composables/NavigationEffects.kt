@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.section11.expenselens.framework.di.NavManagerEntryPoint
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions
@@ -26,10 +27,11 @@ fun NavigationEffects(navController: NavController) {
     LaunchedEffect(navManager.navigationEvent) {
         navManager.navigationEvent.collect { event ->
             when(event) {
+                is NavigateHome -> navActions.navigateHome()
                 is NavigateToCameraScreen -> navActions.navigateToCameraScreen()
                 is NavigateToExpensePreview -> navActions.navigateToExpensePreview(
                     event.extractedText,
-                    event.expenseInformation
+                    event.suggestedExpenseInformation
                 )
             }
         }

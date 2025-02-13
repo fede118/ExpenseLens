@@ -3,7 +3,7 @@ package com.section11.expenselens.framework.di
 import android.content.Context
 import androidx.camera.core.ImageCapture
 import androidx.core.content.ContextCompat
-import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.mlkit.vision.text.TextRecognition
@@ -14,8 +14,6 @@ import com.section11.expenselens.framework.deserializer.CategoryDeserializer
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManagerImpl
 import com.section11.expenselens.framework.utils.ExpenseLensImageCapture
-import com.section11.expenselens.framework.utils.GoogleTokenMapper
-import com.section11.expenselens.framework.utils.GoogleTokenMapperImpl
 import com.section11.expenselens.framework.utils.ImageCaptureWrapper
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.framework.utils.ResourceProviderImpl
@@ -82,12 +80,7 @@ class FrameworkModule {
     }
 
     @Provides
-    fun provideGoogleTokenMapper(): GoogleTokenMapper {
-        return GoogleTokenMapperImpl()
-    }
-
-    @Provides
-    fun provideFirebaseAuth(): FirebaseAuth {
-        return FirebaseAuth.getInstance()
+    fun provideFirestore(): FirebaseFirestore {
+        return FirebaseFirestore.getInstance()
     }
 }

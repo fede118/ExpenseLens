@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.section11.expenselens.R
 import com.section11.expenselens.domain.models.Category
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.utils.ResourceProviderImpl
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.DropdownMenu
@@ -19,7 +19,7 @@ class FakeRepositoryForPreviews(context: Context) {
 
     fun getExtractedText(): String = loremIpsum
 
-    fun getExpenseInformation() = ExpenseInformation(
+    fun getExpenseInformation() = SuggestedExpenseInformation(
         total = "$500.00",
         estimatedCategory = Category.ENTERTAINMENT
     )

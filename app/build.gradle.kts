@@ -18,20 +18,14 @@ android {
     namespace = "com.section11.expenselens"
     compileSdk = 35
 
-    val localProperties = Properties()
-    val localPropertiesFile = rootProject.file("local.properties")
-    if (localPropertiesFile.exists()) {
-        localPropertiesFile.inputStream().use { stream ->
-            localProperties.load(stream)
-        }
-    }
+    val localProperties = getLocalProperties()
 
     signingConfigs {
         create("release") {
-            storeFile = file(localProperties["KEYSTORE_PATH"] ?: "")
-            storePassword = "${localProperties["KEYSTORE_PASSWORD"]}"
-            keyAlias = "${localProperties["KEY_ALIAS"]}"
-            keyPassword = "${localProperties["KEY_PASSWORD"]}"
+            storeFile = file(localProperties["KEYSTORE_PATH"] as String? ?: "")
+            storePassword = localProperties["KEYSTORE_PASSWORD"] as String? ?: ""
+            keyAlias = localProperties["KEY_ALIAS"] as String? ?: ""
+            keyPassword = localProperties["KEY_PASSWORD"] as String? ?: ""
         }
     }
 
@@ -45,9 +39,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildFeatures.buildConfig = true
-        buildConfigField("String", "GEMINI_BASE_URL", "\"${project.findProperty("geminiApiBeseUrl") ?: ""}\"")
-        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["geminiApiKey"]}\"")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${localProperties["googleWebClientId"]}\"")
+        buildConfigField("String", "GEMINI_BASE_URL", "\"${project.findProperty("GEMINI_API_BASE_URL") ?: ""}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties["GEMINI_API_KEY"]}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${localProperties["GOOGLE_WEB_CLIENT_ID"]}\"")
     }
 
     buildTypes {
@@ -84,6 +78,23 @@ android {
     }
 }
 
+private fun getLocalProperties(): Properties {
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { stream ->
+            localProperties.load(stream)
+        }
+    } else {
+        // Use environment variables if local.properties file does not exist
+        localProperties["KEYSTORE_PATH"] = System.getenv("KEYSTORE_PATH")
+        localProperties["KEYSTORE_PASSWORD"] = System.getenv("KEYSTORE_PASSWORD")
+        localProperties["KEY_ALIAS"] = System.getenv("KEY_ALIAS")
+        localProperties["KEY_PASSWORD"] = System.getenv("KEY_PASSWORD")
+    }
+    return localProperties
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -109,6 +120,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
@@ -172,6 +184,7 @@ tasks.create("jacocoTestReport", JacocoReport::class.java) {
         "**/*Application*.*", // Exclude Application classes
         "**/*Activity*.*", // Exclude all activities
         "**/ui/theme/*.*", // Exclude ui theme
+        "**/ui/utils/*.*", // Exclude ui theme
         "**/*state*.*", // Exclude files with "state" in the name (case-insensitive)
         "**/*State*.*", // Covers capitalized "State"
         "**/*UiState*.*", // Exclude specific pattern for "UiState" files

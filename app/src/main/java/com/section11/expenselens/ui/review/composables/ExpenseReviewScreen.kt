@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.section11.expenselens.R
 import com.section11.expenselens.ui.common.CardDialog
+import com.section11.expenselens.ui.common.HandleDownstreamEvents
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent
@@ -42,19 +43,25 @@ import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.TextInput
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.UiState
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun ExpenseReviewScreen(
     modifier: Modifier = Modifier,
     expenseReviewUiStateFlow: StateFlow<UiState>,
+    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     onUpstreamUiEvent: (ExpenseReviewUpstreamEvent) -> Unit = {}
 ) {
     val dimens = LocalDimens.current
     val expenseReviewUiState by expenseReviewUiStateFlow.collectAsState()
+
+   HandleDownstreamEvents(downstreamUiEvent)
 
     when (expenseReviewUiState) {
         is ShowExpenseReview -> ExpenseReviewSection(
@@ -242,7 +249,8 @@ fun ExpenseReviewPreview(modifier: Modifier = Modifier) {
             modifier = modifier,
             expenseReviewUiStateFlow = MutableStateFlow(
                 ShowExpenseReview(fakeRepo.getExpenseReviewUiModel())
-            )
+            ),
+            downstreamUiEvent = MutableSharedFlow()
         )
     }
 }

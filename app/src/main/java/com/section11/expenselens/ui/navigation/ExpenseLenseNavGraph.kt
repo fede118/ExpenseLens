@@ -11,7 +11,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,7 +25,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.section11.expenselens.domain.models.ExpenseInformation
+import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.navigation.composables.NavigationEffects
 import com.section11.expenselens.ui.camera.CameraPreviewViewModel
 import com.section11.expenselens.ui.home.HomeViewModel
@@ -37,6 +40,11 @@ import com.section11.expenselens.ui.navigation.route.ExpenseReviewRoute
 import com.section11.expenselens.ui.navigation.route.HomeRoute
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel
 import com.section11.expenselens.ui.theme.LocalDimens
+import com.section11.expenselens.ui.theme.LocalSnackbarHostState
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.launch
 
 @Composable
 fun ExpenseLensNavGraph(
@@ -56,10 +64,12 @@ fun ExpenseLensNavGraph(
 
         composable(route = HOME_ROUTE) {
             val homeViewModel = getHomeViewModelFromParentEntry(navController)
+            InterceptShowSnackBarDownStreamEvents(homeViewModel.uiEvent)
+
             HomeRoute(
                 homeUiState = homeViewModel.uiState,
                 downstreamUiEvent = homeViewModel.uiEvent,
-                onEvent = homeViewModel::onUiEvent
+                onUpstreamEvent = homeViewModel::onUiEvent
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
@@ -78,7 +88,7 @@ fun ExpenseLensNavGraph(
             val cameraPreviewViewModel = hiltViewModel<CameraPreviewViewModel>(navStackEntry)
             CameraRoute(
                 downstreamUiEvent = cameraPreviewViewModel.uiEvent,
-                onEvent = cameraPreviewViewModel::onUiEvent
+                onUpstreamEvent = cameraPreviewViewModel::onUiEvent
             )
         }
 
@@ -88,11 +98,29 @@ fun ExpenseLensNavGraph(
             val extractedTextFromImage = args?.getString(EXTRACTED_TEXT_KEY)
             val expenseReviewViewModel = hiltViewModel<ExpenseReviewViewModel>()
 
+            InterceptShowSnackBarDownStreamEvents(expenseReviewViewModel.uiEvent)
+
             InitExpenseReviewViewModel(expenseReviewViewModel, expenseInfo, extractedTextFromImage)
             ExpenseReviewRoute(
                 expenseReviewUiStateFlow = expenseReviewViewModel.uiState,
-                onEvent = expenseReviewViewModel::onUpstreamEvent
+                downstreamUiEvent = expenseReviewViewModel.uiEvent,
+                onUpstreamEvent = expenseReviewViewModel::onUpstreamEvent
             )
+        }
+    }
+}
+
+@Composable
+fun InterceptShowSnackBarDownStreamEvents(event: SharedFlow<DownstreamUiEvent>) {
+    val uiEvent by event.collectAsState(null)
+    val rememberCoroutineScope = rememberCoroutineScope()
+    val snackbarHostState = LocalSnackbarHostState.current
+
+    if (uiEvent is ShowSnackBar) {
+        (uiEvent as? ShowSnackBar)?.run {
+            rememberCoroutineScope.launch {
+                snackbarHostState.showSnackbar(message, duration = duration)
+            }
         }
     }
 }
@@ -105,22 +133,22 @@ fun getHomeViewModelFromParentEntry(navController: NavController): HomeViewModel
     return hiltViewModel(parentEntry)
 }
 
-private fun getExpenseInfo(args: Bundle?): ExpenseInformation? {
+private fun getExpenseInfo(args: Bundle?): SuggestedExpenseInformation? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        args?.getParcelable(EXPENSE_INFORMATION_KEY, ExpenseInformation::class.java)
+        args?.getParcelable(EXPENSE_INFORMATION_KEY, SuggestedExpenseInformation::class.java)
     } else {
         @Suppress("DEPRECATION")
-        args?.getParcelable(EXPENSE_INFORMATION_KEY) as? ExpenseInformation
+        args?.getParcelable(EXPENSE_INFORMATION_KEY) as? SuggestedExpenseInformation
     }
 }
 
 @Composable
 fun InitExpenseReviewViewModel(
     viewModel: ExpenseReviewViewModel,
-    expenseInformation: ExpenseInformation?,
+    suggestedExpenseInformation: SuggestedExpenseInformation?,
     extractedText: String?
 ) {
     LaunchedEffect(viewModel) {
-        viewModel.init(expenseInformation, extractedText)
+        viewModel.init(suggestedExpenseInformation, extractedText)
     }
 }
