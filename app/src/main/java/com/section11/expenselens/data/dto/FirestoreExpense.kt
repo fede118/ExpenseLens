@@ -10,6 +10,7 @@ data class FirestoreExpense(
     val total: Double = 0.0,
     val date: Timestamp = Timestamp.now(),
     val userId: String = "",
+    val userDisplayName: String? = "",
     val note: String? = null,
     val distributedExpense: Map<String, Double>? = null
 )

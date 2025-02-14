@@ -2,8 +2,8 @@ package com.section11.expenselens.ui.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
+import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
@@ -39,7 +39,7 @@ private const val SUBMIT_EXPENSE_ERROR = "Couldn't submit expense, try again lat
 class ExpenseReviewViewModel @Inject constructor(
     private val expenseReviewUiMapper: ExpenseReviewScreenUiMapper,
     private val storeExpenseUseCase: StoreExpenseUseCase,
-    private val firebaseAuth: FirebaseAuth,
+    private val signInUseCase: GoogleSignInUseCase,
     private val navigationManager: NavigationManager,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
@@ -61,10 +61,10 @@ class ExpenseReviewViewModel @Inject constructor(
             is ExpenseSubmitted -> {
                 viewModelScope.launch(dispatcher) {
                     _uiEvent.emit(Loading(true))
-                    val userId = firebaseAuth.currentUser?.uid
-                    if (userId != null) {
+                    val user = signInUseCase.getCurrentUser().getOrNull()
+                    if (user != null) {
                         val expense = expenseReviewUiMapper.toConsolidatedExpense(event)
-                        val result = storeExpenseUseCase.addExpense(userId, expense)
+                        val result = storeExpenseUseCase.addExpense(user, expense)
                         _uiEvent.emit(Loading(false))
                         handleExpenseSubmission(result)
                     } else {

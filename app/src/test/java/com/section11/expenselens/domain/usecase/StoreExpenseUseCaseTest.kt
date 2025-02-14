@@ -5,6 +5,7 @@ import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.domain.exceptions.HouseholdNotFoundException
 import com.section11.expenselens.domain.models.Category.HOME
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
+import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.repository.ExpensesRepository
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -66,6 +67,9 @@ class StoreExpenseUseCaseTest {
     fun `addExpense successfully adds expense when household ID is provided`() = runTest {
         // Given
         val userId = "user123"
+        val userMock: UserData = mock()
+        whenever(userMock.id).thenReturn(userId)
+        whenever(userMock.displayName).thenReturn("Test User")
         val householdId = "household456"
         val expense = ConsolidatedExpenseInformation(
             total = 100.0,
@@ -75,11 +79,11 @@ class StoreExpenseUseCaseTest {
             distributedExpense = mapOf(userId to 50.0)
         )
 
-        whenever(mockRepository.addExpenseToHousehold(userId, householdId, expense))
+        whenever(mockRepository.addExpenseToHousehold(userMock, householdId, expense))
             .thenReturn(Result.success(Unit))
 
         // When
-        val result = useCase.addExpense(userId, expense, householdId)
+        val result = useCase.addExpense(userMock, expense, householdId)
 
         // Then
         assertTrue(result.isSuccess)
@@ -89,6 +93,9 @@ class StoreExpenseUseCaseTest {
     fun `addExpense retrieves household ID before adding expense`() = runTest {
         // Given
         val userId = "user123"
+        val userMock: UserData = mock()
+        whenever(userMock.id).thenReturn(userId)
+        whenever(userMock.displayName).thenReturn("Test User")
         val householdId = "household456"
         val expense = ConsolidatedExpenseInformation(
             total = 100.0,
@@ -99,11 +106,11 @@ class StoreExpenseUseCaseTest {
         )
 
         whenever(mockRepository.getHousehold(TEST_HOUSEHOLD_NAME)).thenReturn(householdId)
-        whenever(mockRepository.addExpenseToHousehold(userId, householdId, expense))
+        whenever(mockRepository.addExpenseToHousehold(userMock, householdId, expense))
             .thenReturn(Result.success(Unit))
 
         // When
-        val result = useCase.addExpense(userId, expense)
+        val result = useCase.addExpense(userMock, expense)
 
         // Then
         assertTrue(result.isSuccess)
@@ -114,6 +121,9 @@ class StoreExpenseUseCaseTest {
     fun `addExpense fails if no household is found`() = runTest {
         // Given
         val userId = "user123"
+        val userMock: UserData = mock()
+        whenever(userMock.id).thenReturn(userId)
+        whenever(userMock.displayName).thenReturn("Test User")
         val expense = ConsolidatedExpenseInformation(
             total = 100.0,
             category = HOME,
@@ -125,7 +135,7 @@ class StoreExpenseUseCaseTest {
         whenever(mockRepository.getHousehold(TEST_HOUSEHOLD_NAME)).thenReturn(null)
 
         // When
-        val result = useCase.addExpense(userId, expense)
+        val result = useCase.addExpense(userMock, expense)
 
         // Then
         assertTrue(result.isFailure)

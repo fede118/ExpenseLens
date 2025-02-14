@@ -13,6 +13,7 @@ import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold.Companion.NAME_FIELD
 import com.section11.expenselens.domain.models.Category.HOME
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
+import com.section11.expenselens.domain.models.UserData
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
@@ -103,7 +104,11 @@ class FirestoreExpensesRepositoryTest {
     @Test
     fun `addExpenseToHousehold returns success when added successfully`() = runTest {
         // Given
+        val userData: UserData = mock()
         val userId = "user123"
+        val userName = "username"
+        whenever(userData.id).thenReturn(userId)
+        whenever(userData.displayName).thenReturn(userName)
         val householdId = "household456"
         val expense = ConsolidatedExpenseInformation(
             total = 100.0,
@@ -123,7 +128,7 @@ class FirestoreExpensesRepositoryTest {
         whenever(mockCollection.add(any())).thenReturn(mockTask)
 
         // When
-        val result = repository.addExpenseToHousehold(userId, householdId, expense)
+        val result = repository.addExpenseToHousehold(userData, householdId, expense)
 
         // Then
         assertTrue(result.isSuccess)
