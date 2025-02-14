@@ -3,7 +3,6 @@ package com.section11.expenselens.ui.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
@@ -41,7 +40,6 @@ class HomeViewModel @Inject constructor(
     private val navigationManager: NavigationManager,
     private val googleSignInUseCase: GoogleSignInUseCase,
     private val storeExpenseUseCase: StoreExpenseUseCase,
-    private val firebaseAuth: FirebaseAuth,
     private val mapper: HomeScreenUiMapper,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
@@ -58,9 +56,8 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             _uiEvent.emit(Loading(true))
             val userData = googleSignInUseCase.getCurrentUser().getOrNull()
-            val user = firebaseAuth.currentUser
-            if (userData != null && user?.uid != null) {
-                val householdResult = storeExpenseUseCase.getCurrentHouseholdIdAndName(user.uid)
+            if (userData != null) {
+                val householdResult = storeExpenseUseCase.getCurrentHouseholdIdAndName(userData.id)
                 val householdName = householdResult.getOrNull()?.second
                 val userUiModel = mapper.getUserData(userData)
                 _uiState.value = UserSignedIn(greeting, userUiModel, householdName)

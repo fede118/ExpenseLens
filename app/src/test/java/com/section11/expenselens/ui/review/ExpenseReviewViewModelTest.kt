@@ -1,10 +1,10 @@
 package com.section11.expenselens.ui.review
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
+import com.section11.expenselens.domain.models.UserData
+import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
@@ -45,7 +45,7 @@ class ExpenseReviewViewModelTest {
     
     private val expenseReviewUiMapper: ExpenseReviewScreenUiMapper = mock()
     private val storeExpenseUseCase: StoreExpenseUseCase = mock()
-    private val firebaseAuth: FirebaseAuth = mock()
+    private val signInUseCase: GoogleSignInUseCase = mock()
     private val navigationManager: NavigationManager = mock()
     private val dispatcher = StandardTestDispatcher()
 
@@ -58,7 +58,7 @@ class ExpenseReviewViewModelTest {
         viewModel = ExpenseReviewViewModel(
             expenseReviewUiMapper,
             storeExpenseUseCase,
-            firebaseAuth,
+            signInUseCase,
             navigationManager,
             dispatcher
         )
@@ -178,14 +178,14 @@ class ExpenseReviewViewModelTest {
             getListOfRows()
         )
         val expense = mock<ConsolidatedExpenseInformation>()
-        mockFirebaseUserSuccess()
+        val userMock = mockUserData()
         whenever(expenseReviewUiMapper.toConsolidatedExpense(any())).thenReturn(expense)
         whenever(storeExpenseUseCase.addExpense(any(), any(), anyOrNull())).thenReturn(Result.success(Unit))
 
         viewModel.onUpstreamEvent(ExpenseSubmitted(expenseReviewUiModel))
 
         advanceUntilIdle()
-        verify(storeExpenseUseCase).addExpense("user_id", expense)
+        verify(storeExpenseUseCase).addExpense(userMock, expense)
         verify(navigationManager).navigate(NavigateHome)
     }
 
@@ -218,10 +218,14 @@ class ExpenseReviewViewModelTest {
         verify(navigationManager).navigate(NavigateHome)
     }
 
-    private fun mockFirebaseUserSuccess(id: String = "user_id") {
-        val mockUser: FirebaseUser = mock()
-        whenever(mockUser.uid).thenReturn(id)
-        whenever(firebaseAuth.currentUser).thenReturn(mockUser)
+    private fun mockUserData(id: String = "user_id", displayName: String = "display_name"): UserData {
+        val mockUser: UserData = mock()
+        whenever(mockUser.id).thenReturn(id)
+        whenever(mockUser.displayName).thenReturn(displayName)
+        runTest {
+            whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUser))
+        }
+        return mockUser
     }
 
     private fun getListOfRows(): List<ReviewRow> {

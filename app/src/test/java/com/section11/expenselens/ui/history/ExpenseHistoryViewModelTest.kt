@@ -1,9 +1,8 @@
 package com.section11.expenselens.ui.history
 
-
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.section11.expenselens.data.dto.FirestoreExpense
+import com.section11.expenselens.domain.models.UserData
+import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,15 +24,17 @@ class ExpenseHistoryViewModelTest {
 
     private lateinit var viewModel: ExpenseHistoryViewModel
     private val storeExpensesUseCase: StoreExpenseUseCase = mock()
-    private val firebaseAuth: FirebaseAuth = mock()
-    private val firebaseUser: FirebaseUser = mock()
+    private val signInUseCase: GoogleSignInUseCase = mock()
+    private val userData: UserData = mock()
     private val dispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        whenever(firebaseAuth.currentUser).thenReturn(firebaseUser)
-        whenever(firebaseUser.uid).thenReturn("user123")
+        whenever(userData.id).thenReturn("user123")
+        runTest {
+            whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(userData))
+        }
     }
 
     @After
@@ -56,7 +57,7 @@ class ExpenseHistoryViewModelTest {
             .thenReturn(Result.success(expenses))
 
         // When
-        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, firebaseAuth, dispatcher)
+        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, signInUseCase, dispatcher)
         advanceUntilIdle()
 
         // Then
@@ -70,7 +71,7 @@ class ExpenseHistoryViewModelTest {
             .thenReturn(Result.failure(Exception("Household not found")))
 
         // When
-        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, firebaseAuth, dispatcher)
+        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, signInUseCase, dispatcher)
         advanceUntilIdle()
 
         // Then
@@ -80,10 +81,10 @@ class ExpenseHistoryViewModelTest {
     @Test
     fun `uiState remains empty when user is null`() = runTest {
         // Given
-        whenever(firebaseAuth.currentUser).thenReturn(null)
+        whenever(signInUseCase.getCurrentUser()).thenReturn(null)
 
         // When
-        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, firebaseAuth, dispatcher)
+        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, signInUseCase, dispatcher)
         advanceUntilIdle()
 
         // Then

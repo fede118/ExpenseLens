@@ -9,6 +9,7 @@ import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
 import com.section11.expenselens.data.dto.FirestoreHousehold.Companion.NAME_FIELD
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
+import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.repository.ExpensesRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -61,13 +62,13 @@ class FirestoreExpensesRepository @Inject constructor(
 
             Result.success(householdId to householdName)
         } catch (exception: FirebaseFirestoreException) {
-            Log.e("FirebaseFirestoreException", exception.stackTraceToString())
+            Log.e(FirebaseFirestoreException::class.simpleName, exception.stackTraceToString())
             Result.failure(exception)
         }
     }
 
     override suspend fun addExpenseToHousehold(
-        userId: String,
+        userData: UserData,
         householdId: String,
         expense: ConsolidatedExpenseInformation
     ): Result<Unit> {
@@ -75,7 +76,8 @@ class FirestoreExpensesRepository @Inject constructor(
             total = expense.total,
             category = expense.category.displayName,
             date = Timestamp(expense.date),
-            userId = userId,
+            userId = userData.id,
+            userDisplayName = userData.displayName,
             note = expense.note,
             distributedExpense = expense.distributedExpense
         )
