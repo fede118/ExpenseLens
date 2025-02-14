@@ -8,7 +8,7 @@ class ExpenseInformationUseCase @Inject constructor(
     private val expenseInfoExtractorRepository: ExpenseInfoExtractorRepository
 ) {
 
-    suspend fun getExpenseInfo(extractedText: String): SuggestedExpenseInformation {
+    suspend fun getExpenseInfo(extractedText: String): Result<SuggestedExpenseInformation> {
         return expenseInfoExtractorRepository.getExpenseInfo(extractedText)
     }
 }

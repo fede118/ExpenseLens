@@ -2,12 +2,14 @@ package com.section11.expenselens.ui.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,11 +17,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,14 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
+import com.section11.expenselens.R
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
-import com.section11.expenselens.ui.utils.DownstreamUiEvent
-import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.Preview
-import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
 fun ProfileDialog(
@@ -43,7 +47,8 @@ fun ProfileDialog(
     profileImageUrl: String?,
     userName: String?,
     onDismiss: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    content: @Composable () -> Unit = {}
 ) {
     val dimens = LocalDimens.current
 
@@ -63,6 +68,8 @@ fun ProfileDialog(
         userName?.let { Text(text = it, style = MaterialTheme.typography.headlineSmall) }
 
         Spacer(modifier = Modifier.height(dimens.m2))
+
+        content()
 
         // Logout Button
         Button(onClick = { onLogout() }) {
@@ -102,22 +109,52 @@ fun ExpenseLensLoader(modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HandleDownstreamEvents(
-    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    modifier: Modifier = Modifier
+fun ExpenseLensDatePicker(
+    modifier: Modifier = Modifier,
+    selectedDate: String = String(),
+    onValueChange: (selectedDateMillis: Long) -> Unit = {}
 ) {
-    var isLoading by remember { mutableStateOf(false) }
-    val uiEvent by downstreamUiEvent.collectAsState(null)
+    val dimens = LocalDimens.current
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
 
-    LaunchedEffect(uiEvent) {
-        when(uiEvent) {
-            is Loading -> (uiEvent as? Loading)?.isLoading?.let { isLoading = it }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(dimens.m2),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Button(onClick = { showDatePicker = true }) {
+            Text(text = stringResource(R.string.date_picker_title))
         }
-    }
 
-    if (isLoading) {
-        ExpenseLensLoader(modifier.fillMaxSize())
+        Spacer(modifier = Modifier.height(dimens.m2))
+
+        Text(text = stringResource(R.string.date_picker_selected_label, selectedDate))
+
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showDatePicker = false
+                            datePickerState.selectedDateMillis?.let { onValueChange(it) }
+                        }
+                    ) {
+                        Text(stringResource(R.string.string_ok_caps))
+                    }
+                }
+            ) {
+                DatePicker(
+                    state = datePickerState,
+                    showModeToggle = true
+                )
+            }
+        }
     }
 }
 

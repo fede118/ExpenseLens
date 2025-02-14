@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,8 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import coil.compose.rememberAsyncImagePainter
+import com.section11.expenselens.R
 import com.section11.expenselens.ui.common.HandleDownstreamEvents
 import com.section11.expenselens.ui.common.ProfileDialog
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
@@ -40,6 +43,7 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.ToExpensesHistoryTapped
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
@@ -61,12 +65,10 @@ fun HomeScreenContent(
     val uiState by homeUiState.collectAsState()
     val dimens = LocalDimens.current
 
-    HandleDownstreamEvents(downstreamUiEvent)
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(dimens.m2) // Add some padding to avoid screen edges
+            .padding(dimens.m2)
     ) {
         Column(
             modifier = Modifier
@@ -103,6 +105,8 @@ fun HomeScreenContent(
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = "Add Expense")
         }
+
+        HandleDownstreamEvents(downstreamUiEvent)
     }
 }
 
@@ -129,11 +133,22 @@ fun SignedInUi(
                 showDialog = false
                 onEvent(SignOutTapped)
             }
-        )
+        ) {
+            Column {
+                Button(
+                    onClick = { onEvent(ToExpensesHistoryTapped) },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text(stringResource(R.string.home_screen_expense_history_label))
+                }
+            }
+        }
     }
     val userSignedInModel = (uiState as UserSignedIn)
     Greeting("${userSignedInModel.greeting} \n" +
-            "Your household name is: ${userSignedInModel.householdName}")
+             stringResource(R.string.home_screen_household_name_prefix)
+            + userSignedInModel.householdName
+    )
 }
 
 @Composable
@@ -170,7 +185,7 @@ fun GoogleSignInButton(modifier: Modifier = Modifier, onEvent: (HomeUpstreamEven
     val colorScheme = MaterialTheme.colorScheme
     Image(
         imageVector = Icons.Default.AccountCircle,
-        contentDescription = "Profile Picture",
+        contentDescription = stringResource(R.string.home_screen_profile_pic_content_description),
         modifier = modifier.clickable { onEvent(SignInTapped(context)) },
         colorFilter = ColorFilter.tint(colorScheme.contentColorFor(colorScheme.background))
     )
@@ -180,7 +195,7 @@ fun GoogleSignInButton(modifier: Modifier = Modifier, onEvent: (HomeUpstreamEven
 fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
     Image(
         painter = rememberAsyncImagePainter(user.profilePic),
-        contentDescription = "Profile Picture",
+        contentDescription = stringResource(R.string.home_screen_sign_in_icon_content_description),
         modifier = modifier
     )
 }

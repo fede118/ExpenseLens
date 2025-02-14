@@ -62,7 +62,8 @@ class CameraPreviewViewModelTest {
             val callback = it.getArgument<(Result<String>) -> Unit>(0)
             callback(Result.success(extractedText))
         }
-        whenever(expenseInformationUseCase.getExpenseInfo(extractedText)).thenReturn(suggestedExpenseInformation)
+        whenever(expenseInformationUseCase.getExpenseInfo(extractedText))
+            .thenReturn(Result.success(suggestedExpenseInformation))
 
         // When
         viewModel.onUiEvent(OnCaptureImageTapped)

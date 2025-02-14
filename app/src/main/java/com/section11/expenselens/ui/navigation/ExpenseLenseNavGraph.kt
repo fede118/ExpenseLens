@@ -28,14 +28,17 @@ import androidx.navigation.compose.rememberNavController
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.navigation.composables.NavigationEffects
 import com.section11.expenselens.ui.camera.CameraPreviewViewModel
+import com.section11.expenselens.ui.history.ExpenseHistoryViewModel
 import com.section11.expenselens.ui.home.HomeViewModel
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.CAMERA_ROUTE
+import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.EXPENSES_HISTORY_ROUTE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.EXPENSE_INFORMATION_KEY
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.EXPENSE_REVIEW_ROUTE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.EXTRACTED_TEXT_KEY
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.HOME_ROUTE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.NAV_GRAPH_ROUTE
 import com.section11.expenselens.ui.navigation.route.CameraRoute
+import com.section11.expenselens.ui.navigation.route.ExpenseHistoryRoute
 import com.section11.expenselens.ui.navigation.route.ExpenseReviewRoute
 import com.section11.expenselens.ui.navigation.route.HomeRoute
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel
@@ -106,6 +109,12 @@ fun ExpenseLensNavGraph(
                 downstreamUiEvent = expenseReviewViewModel.uiEvent,
                 onUpstreamEvent = expenseReviewViewModel::onUpstreamEvent
             )
+        }
+
+        composable(route = EXPENSES_HISTORY_ROUTE) {
+            val expenseHistoryViewModel = hiltViewModel<ExpenseHistoryViewModel>()
+
+            ExpenseHistoryRoute(expenseHistoryViewModel.uiState)
         }
     }
 }

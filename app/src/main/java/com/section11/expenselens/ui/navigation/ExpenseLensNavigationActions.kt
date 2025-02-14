@@ -17,6 +17,8 @@ class ExpenseLensNavigationActions(private val navController: NavController) {
 
     fun navigateToCameraScreen() = navController.navigate(CAMERA_ROUTE)
 
+    fun navigateToExpensesHistory() = navController.navigate(EXPENSES_HISTORY_ROUTE)
+
     fun navigateToExpensePreview(extractedText: String, suggestedExpenseInformation: SuggestedExpenseInformation) {
         navController.navigate(
             route = EXPENSE_REVIEW_ROUTE,
@@ -46,5 +48,6 @@ class ExpenseLensNavigationActions(private val navController: NavController) {
         const val EXPENSE_INFORMATION_KEY = "expenseInformation"
         const val EXTRACTED_TEXT_KEY = "extractedText"
         const val EXPENSE_REVIEW_ROUTE = "expenseReview"
+        const val EXPENSES_HISTORY_ROUTE = "expensesHistory"
     }
 }

@@ -76,7 +76,7 @@ class FirestoreExpensesRepository @Inject constructor(
             category = expense.category.displayName,
             date = Timestamp(expense.date),
             userId = userId,
-            note = expense.note ?: String(),
+            note = expense.note,
             distributedExpense = expense.distributedExpense
         )
         return try {

@@ -4,14 +4,27 @@
     <string name="welcome_greeting">Hello, Welcome to ExpenseLens</string>
 
     <!--  Home Screen Content  -->
+    <string name="home_screen_household_name_prefix">Your household name is:\n</string>
+    <string name="home_screen_expense_history_label">My expenses</string>
     <string name="home_screen_sign_out_success">Successfully signed out</string>
+    <string name="home_screen_profile_pic_content_description">Profile Picture</string>
+    <string name="home_screen_sign_in_icon_content_description">Sign in</string>
 
     <!--  Expense Review Screen  -->
     <string name="expense_review_screen_total_title">Total</string>
     <string name="expense_review_screen_category_title">Category</string>
     <string name="expense_review_screen_select_category">Select Category</string>
     <string name="expense_review_screen_submit_expense">Submit Expense</string>
+    <string name="expense_review_screen_no_date">No date found on image, please select one</string>
+    <string name="expense_review_screen_note_title">Add note</string>
+
+    <!--  Expenses History Screen  -->
+    <string name="expenses_history_title">Expenses History</string>
 
     <!--  Common Strings  -->
     <string name="dollar_sign">$</string>
+    <string name="date_picker_title">Expense Date</string>"
+    <string name="date_picker_selected_label">Selected Date: %s</string>
+    <string name="string_ok_caps">OK</string>
+
 </resources>
