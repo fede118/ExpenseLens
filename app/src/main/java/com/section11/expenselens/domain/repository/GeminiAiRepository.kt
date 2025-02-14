@@ -4,5 +4,5 @@ import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 
 interface ExpenseInfoExtractorRepository {
 
-    suspend fun getExpenseInfo(text: String): SuggestedExpenseInformation
+    suspend fun getExpenseInfo(text: String): Result<SuggestedExpenseInformation>
 }

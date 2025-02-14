@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
@@ -29,18 +30,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import com.section11.expenselens.R
+import com.section11.expenselens.framework.utils.toDateString
 import com.section11.expenselens.ui.common.CardDialog
+import com.section11.expenselens.ui.common.ExpenseLensDatePicker
 import com.section11.expenselens.ui.common.HandleDownstreamEvents
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.ExpenseSubmitted
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.UserInputEvent
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow
-import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.DropdownMenu
-import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.TextInput
+import com.section11.expenselens.ui.review.model.ReviewRowType.DatePickerType
+import com.section11.expenselens.ui.review.model.ReviewRowType.DropdownMenuType
+import com.section11.expenselens.ui.review.model.ReviewRowType.MoneyInputType
+import com.section11.expenselens.ui.review.model.ReviewRowType.TextInputType
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
@@ -61,7 +68,7 @@ fun ExpenseReviewScreen(
     val dimens = LocalDimens.current
     val expenseReviewUiState by expenseReviewUiStateFlow.collectAsState()
 
-   HandleDownstreamEvents(downstreamUiEvent)
+    HandleDownstreamEvents(downstreamUiEvent)
 
     when (expenseReviewUiState) {
         is ShowExpenseReview -> ExpenseReviewSection(
@@ -87,8 +94,8 @@ fun ExpenseReviewSection(
     ) {
         items(expenseReviewUiModel.reviewRows) { item ->
             Spacer(modifier.height(dimens.m1))
-            ReviewSectionRow(reviewRow = item) { id, newValue ->
-                onUpstreamUiEvent(UserInputEvent(id, newValue))
+            ReviewSectionRow(reviewRow = item) { section, newValue ->
+                onUpstreamUiEvent(UserInputEvent(section, newValue))
             }
         }
         item { Spacer(modifier = Modifier.padding(dimens.m2)) }
@@ -123,7 +130,7 @@ fun ExpenseReviewSection(
 fun ReviewSectionRow(
     modifier: Modifier = Modifier,
     reviewRow: ReviewRow,
-    onRowValueChanged: (String, String) -> Unit
+    onRowValueChanged: (ExpenseReviewSections, String) -> Unit
 ) {
     val dimens = LocalDimens.current
 
@@ -132,26 +139,41 @@ fun ReviewSectionRow(
             .fillMaxWidth()
             .padding(horizontal = dimens.m2)
     ) {
-        when(reviewRow.type) {
-            is DropdownMenu -> {
+        when(reviewRow.section.viewType) {
+            is DatePickerType -> ExpenseLensDatePicker(selectedDate = reviewRow.value) { selectedDate ->
+                onRowValueChanged(reviewRow.section, selectedDate.toDateString())
+            }
+            is DropdownMenuType -> {
                 RowDropDownMenu(
                     title = reviewRow.title,
                     currentValue = reviewRow.value,
-                    dropDownMenu = reviewRow.type
+                    options = reviewRow.section.viewType.options
                 ) { newValue ->
-                    onRowValueChanged(reviewRow.id, newValue)
+                    onRowValueChanged(reviewRow.section, newValue)
                 }
             }
-            is TextInput -> {
+            MoneyInputType -> {
                 OutlinedTextField(
                     value = reviewRow.value,
                     onValueChange = { newValue ->
-                        onRowValueChanged(reviewRow.id, newValue)
+                        onRowValueChanged(reviewRow.section, newValue)
                     },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(1f),
                     label = { Text(text = reviewRow.title) },
                     singleLine = true,
                     leadingIcon = { Text(stringResource((R.string.dollar_sign))) }
+                )
+            }
+            TextInputType -> {
+                OutlinedTextField(
+                    value = reviewRow.value,
+                    onValueChange = { newValue ->
+                        onRowValueChanged(reviewRow.section, newValue)
+                    },
+                    modifier = Modifier.fillMaxWidth(1f),
+                    label = { Text(text = reviewRow.title) },
+                    singleLine = true,
                 )
             }
         }
@@ -164,7 +186,7 @@ fun RowDropDownMenu(
     modifier: Modifier = Modifier,
     title: String,
     currentValue: String,
-    dropDownMenu: DropdownMenu,
+    options: List<String>,
     onValueChange: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -193,7 +215,7 @@ fun RowDropDownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            dropDownMenu.options.forEach {
+            options.forEach {
                 DropdownMenuItem(
                     text = { Text(it) },
                     onClick = {

@@ -9,6 +9,7 @@ import com.section11.expenselens.framework.di.NavManagerEntryPoint
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions
 import dagger.hilt.android.EntryPointAccessors
 
@@ -33,6 +34,7 @@ fun NavigationEffects(navController: NavController) {
                     event.extractedText,
                     event.suggestedExpenseInformation
                 )
+                is NavigateToExpensesHistory -> navActions.navigateToExpensesHistory()
             }
         }
     }

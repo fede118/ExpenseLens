@@ -7,32 +7,29 @@ import com.section11.expenselens.domain.exceptions.ExpenseInformationNotFoundExc
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import java.util.regex.Pattern
 import javax.inject.Inject
+import kotlin.Result.Companion.failure
+import kotlin.Result.Companion.success
 
 private const val ERROR_PARSING_JSON = "Error parsing JSON"
 private const val GEMINI_RESPONSE = "Gemini response: "
 
 class GeminiResponseMapper @Inject constructor(private val gson: Gson) {
 
-    @Suppress("SwallowedException") // TODO: I need to add a Result class to handle errors
-    fun toExpenseInformation(geminiResponse: GeminiResponse): SuggestedExpenseInformation {
+    fun toExpenseInformation(geminiResponse: GeminiResponse): Result<SuggestedExpenseInformation> {
         val geminiResponseText = geminiResponse.candidates.first().content.parts.first().text
 
         val jsonRegex = Pattern.compile("```json\\n(.*)\\n```", Pattern.DOTALL) // Regex to find the JSON
         val matcher = jsonRegex.matcher(geminiResponseText)
 
-        if (matcher.find()) {
+        return if (matcher.find()) {
             val jsonString = matcher.group(1)
             try {
-                return gson.fromJson(jsonString, SuggestedExpenseInformation::class.java)
-
+                success(gson.fromJson(jsonString, SuggestedExpenseInformation::class.java))
             } catch (e: JsonSyntaxException) {
-                throw ExpenseInformationNotFoundException(ERROR_PARSING_JSON + e.message)
+                failure(ExpenseInformationNotFoundException(ERROR_PARSING_JSON + e.message))
             }
-
         } else {
-            throw ExpenseInformationNotFoundException(GEMINI_RESPONSE + geminiResponseText)
+            failure(ExpenseInformationNotFoundException(GEMINI_RESPONSE + geminiResponseText))
         }
     }
 }
-
-

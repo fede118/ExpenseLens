@@ -5,6 +5,7 @@ import com.section11.expenselens.data.dto.request.GeminiRequestBody
 import com.section11.expenselens.data.dto.request.GeminiRequestBody.Content
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
 import com.section11.expenselens.data.service.GeminiService
+import com.section11.expenselens.domain.Constants.EXPECTED_DATE_FORMAT
 import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository
@@ -17,7 +18,7 @@ class GeminiAiRepository @Inject constructor(
     private val geminiResponseMapper: GeminiResponseMapper
 ) : ExpenseInfoExtractorRepository {
 
-    override suspend fun getExpenseInfo(text: String): SuggestedExpenseInformation {
+    override suspend fun getExpenseInfo(text: String): Result<SuggestedExpenseInformation> {
         val requestBody = getGeminiRequestBody(EXPENSE_INFO_EXTRACTION_PROMPT + text)
         val response = safeApiCall {
             service.generateContent(requestBody, apiKey)
@@ -42,7 +43,9 @@ class GeminiAiRepository @Inject constructor(
             $jsonStructure
             ```
             WHERE:
-            - total: a representation of the total in that text including gratuity/tips if it applies.
+            - total: OPTIONAL, a representation of the total in that text including gratuity/tips if it applies.
+            - date: OPTIONAL, the date of the transaction if shown on the receipt with the format 
+              $EXPECTED_DATE_FORMAT, if its not clear, then null
             - category: OPTIONAL, the best estimation of the Category of the receipt. Based on the following categories:
             $categoriesToString.
             IMPORTANT: the category must be in lowercase
@@ -52,7 +55,7 @@ class GeminiAiRepository @Inject constructor(
             """
 
         private fun generateJsonStructure(): String {
-            val exampleInstance = SuggestedExpenseInformation(TOTAL_EXAMPLE, Category.GROCERIES)
+            val exampleInstance = SuggestedExpenseInformation(TOTAL_EXAMPLE, Category.GROCERIES, EXPECTED_DATE_FORMAT)
             val gson = GsonBuilder().setPrettyPrinting().create()
             val json = gson.toJson(exampleInstance)
 

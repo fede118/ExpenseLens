@@ -12,10 +12,10 @@ import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewU
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.ExpenseSubmitted
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.UserInputEvent
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.CATEGORY_SELECTION
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.TOTAL
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow
-import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.DropdownMenu
-import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.TextInput
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
 import junit.framework.Assert.assertEquals
@@ -72,7 +72,10 @@ class ExpenseReviewViewModelTest {
     @Test
     fun `init should set ShowExpenseReview state with mapped UI model`() = runTest {
         // Given
-        val expenseInfo = SuggestedExpenseInformation(estimatedCategory = Category.HOME, total = "$100")
+        val expenseInfo = SuggestedExpenseInformation(
+            estimatedCategory = Category.HOME, total = "$100",
+            date = "12/12/2021"
+        )
         val extractedText = "Some extracted text"
         val expectedUiModel = ExpenseReviewUiModel(extractedText, emptyList())
 
@@ -108,10 +111,9 @@ class ExpenseReviewViewModelTest {
         // Given
         val extractedText = "Extracted text"
         val initialReviewRow = ReviewRow(
-            id = "category",
+            section = CATEGORY_SELECTION,
             title = "Category",
-            value = "Home",
-            type = DropdownMenu(emptyList())
+            value = "Home"
         )
         val initialUiModel = ExpenseReviewUiModel(extractedText, listOf(initialReviewRow))
         val expectedUpdatedRow = initialReviewRow.copy(value = "Transportation")
@@ -123,7 +125,7 @@ class ExpenseReviewViewModelTest {
         viewModel.init(null, "Extracted text")
         viewModel.onUpstreamEvent(
             UserInputEvent(
-                "category",
+                CATEGORY_SELECTION,
                 "Transportation"
             )
         )
@@ -138,16 +140,14 @@ class ExpenseReviewViewModelTest {
         // Given
         val extractedText = "Extracted text"
         val reviewRow1 = ReviewRow(
-            id = "category",
+            section = CATEGORY_SELECTION,
             title = "Category",
-            value = "Home",
-            type = DropdownMenu(emptyList())
+            value = "Home"
         )
         val reviewRow2 = ReviewRow(
-            id = "total",
+            section = TOTAL,
             title = "Total",
-            value = "100",
-            type = TextInput
+            value = "100"
         )
         val initialUiModel = ExpenseReviewUiModel(
             "Extracted text",
@@ -163,7 +163,7 @@ class ExpenseReviewViewModelTest {
         ).thenReturn(initialUiModel)
 
         viewModel.init(null, extractedText)
-        viewModel.onUpstreamEvent(UserInputEvent("category", "Transportation"))
+        viewModel.onUpstreamEvent(UserInputEvent(CATEGORY_SELECTION, "Transportation"))
 
         // Then
         val result = viewModel.uiState.value
@@ -186,7 +186,7 @@ class ExpenseReviewViewModelTest {
 
         advanceUntilIdle()
         verify(storeExpenseUseCase).addExpense("user_id", expense)
-        verify(navigationManager).navigate(NavigationManager.NavigationEvent.NavigateHome)
+        verify(navigationManager).navigate(NavigateHome)
     }
 
     @Test
@@ -227,16 +227,14 @@ class ExpenseReviewViewModelTest {
     private fun getListOfRows(): List<ReviewRow> {
         return listOf(
             ReviewRow(
-                id = "category",
+                section = CATEGORY_SELECTION,
                 title = "Category",
-                value = "Home",
-                type = DropdownMenu(emptyList())
+                value = "Home"
             ),
             ReviewRow(
-                id = "total",
+                section = TOTAL,
                 title = "Total",
-                value = "100",
-                type = TextInput
+                value = "100"
             )
         )
     }
