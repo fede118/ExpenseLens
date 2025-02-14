@@ -2,8 +2,8 @@ package com.section11.expenselens.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.section11.expenselens.data.dto.FirestoreExpense
+import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ExpenseHistoryViewModel @Inject constructor(
     private val storeExpensesUseCase: StoreExpenseUseCase,
-    private val firebaseAuth: FirebaseAuth,
+    private val useCase: GoogleSignInUseCase,
     dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -24,15 +24,21 @@ class ExpenseHistoryViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(dispatcher) {
-            val userId = firebaseAuth.currentUser?.uid
-            if (userId != null) {
-                val householdIdResult = storeExpensesUseCase.getCurrentHouseholdIdAndName(userId)
+            val user = useCase.getCurrentUser().getOrNull()
+            if (user != null) {
+                val householdIdResult = storeExpensesUseCase.getCurrentHouseholdIdAndName(user.id)
                 val householdId = householdIdResult.getOrNull()?.first
                 if (householdId != null) {
-                    val expense = storeExpensesUseCase.getAllExpensesFromHousehold(householdId)
+                    val expenses = storeExpensesUseCase.getAllExpensesFromHousehold(householdId)
 
-                    expense.getOrNull()?.let {
-                        _uiState.value = it
+                    expenses.getOrNull()?.let { expensesList ->
+                        _uiState.value = expensesList.map {
+                            if (it.userDisplayName.isNullOrEmpty()) {
+                                it.copy(userDisplayName = null)
+                            } else {
+                                it
+                            }
+                        }
                     }
                 }
             }

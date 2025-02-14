@@ -67,6 +67,13 @@ fun ExpenseItem(expense: FirestoreExpense) {
             text = "Date: ${expense.date.toFormattedString()}",
             style = MaterialTheme.typography.bodySmall
         )
+        expense.userDisplayName?.let { userName ->
+            Text(
+                text = "Submitted by: $userName",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
         expense.note?.let {
             Text(
                 text = "Note: $it",

@@ -1,8 +1,6 @@
 package com.section11.expenselens.ui.home
 
 import android.content.Context
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
@@ -48,7 +46,6 @@ class HomeViewModelTest {
     private val mapper: HomeScreenUiMapper = mock()
     private val googleSignInUseCase: GoogleSignInUseCase = mock()
     private val storeExpenseUseCase: StoreExpenseUseCase = mock()
-    private val firebaseAuth: FirebaseAuth  = mock()
     private val greeting = "hello"
 
     private lateinit var viewModel: HomeViewModel
@@ -61,7 +58,6 @@ class HomeViewModelTest {
             navigationManager,
             googleSignInUseCase,
             storeExpenseUseCase,
-            firebaseAuth,
             mapper,
             testDispatcher
         )
@@ -78,15 +74,14 @@ class HomeViewModelTest {
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserInfoUiModel = mock()
         whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
-        val firebaseUser: FirebaseUser = mock()
-        whenever(firebaseUser.uid).thenReturn("uid")
-        whenever(firebaseAuth.currentUser).thenReturn(firebaseUser)
+        val user: UserData = mock()
+        whenever(user.id).thenReturn("uid")
+        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
 
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
             storeExpenseUseCase,
-            firebaseAuth,
             mapper,
             testDispatcher
         )
@@ -103,7 +98,6 @@ class HomeViewModelTest {
             navigationManager,
             googleSignInUseCase,
             storeExpenseUseCase,
-            firebaseAuth,
             mapper,
             testDispatcher
         )
@@ -118,15 +112,14 @@ class HomeViewModelTest {
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserInfoUiModel = mock()
         whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
-        val firebaseUser: FirebaseUser = mock()
-        whenever(firebaseUser.uid).thenReturn("uid")
-        whenever(firebaseAuth.currentUser).thenReturn(firebaseUser)
+        val user: UserData = mock()
+        whenever(user.id).thenReturn("uid")
+        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
 
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
             storeExpenseUseCase,
-            firebaseAuth,
             mapper,
             testDispatcher
         )

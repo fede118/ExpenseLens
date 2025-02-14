@@ -2,6 +2,7 @@ package com.section11.expenselens.domain.repository
 
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
+import com.section11.expenselens.domain.models.UserData
 
 interface ExpensesRepository {
 
@@ -10,7 +11,7 @@ interface ExpensesRepository {
     suspend fun createHousehold(householdName: String, userId: String): Result<Pair<String, String>>
 
     suspend fun addExpenseToHousehold(
-        userId: String,
+        userData: UserData,
         householdId: String,
         expense: ConsolidatedExpenseInformation
     ): Result<Unit>
