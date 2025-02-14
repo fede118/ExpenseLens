@@ -11,6 +11,7 @@ import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
@@ -18,6 +19,7 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.ToExpensesHistoryTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
@@ -54,6 +56,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(dispatcher) {
+            _uiEvent.emit(Loading(true))
             val userData = googleSignInUseCase.getCurrentUser().getOrNull()
             val user = firebaseAuth.currentUser
             if (userData != null && user?.uid != null) {
@@ -64,6 +67,7 @@ class HomeViewModel @Inject constructor(
             } else {
                 _uiState.value = UserSignedOut(greeting)
             }
+            _uiEvent.emit(Loading(false))
         }
     }
 
@@ -71,29 +75,34 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             when(homeEvent) {
                 is AddExpenseTapped -> navigationManager.navigate(NavigateToCameraScreen)
-                is SignInTapped -> {
-                    _uiEvent.emit(Loading(true))
-                    val signInResult = googleSignInUseCase.signInToGoogle(homeEvent.context).getOrNull()
-                    val greeting = mapper.getGreeting()
-                    when(signInResult) {
-                        is SignInSuccess -> {
-                            val userUiModel = mapper.getUserData(signInResult.userData)
-                            _uiState.value = UserSignedIn(greeting, userUiModel)
-                        }
-                        is SignInCancelled -> _uiEvent.emit(Loading(false))
-                        null -> _uiEvent.emit(ShowSnackBar("Something went wrong, try again"))
-                    }
-                    _uiEvent.emit(Loading(false))
-                }
-                is SignOutTapped -> {
-                    _uiEvent.emit(Loading(true))
-                    googleSignInUseCase.signOut()
-                    _uiState.value = UserSignedOut(greeting)
-                    _uiEvent.emit(Loading(false))
-                    _uiEvent.emit(ShowSnackBar(mapper.getSignOutSuccessMessage()))
-                }
+                is SignInTapped -> handleSignInEvent(homeEvent)
+                is SignOutTapped -> handleSignOutEvent()
+                is ToExpensesHistoryTapped -> navigationManager.navigate(NavigateToExpensesHistory)
             }
         }
+    }
+
+    private suspend fun handleSignInEvent(event: SignInTapped) {
+        _uiEvent.emit(Loading(true))
+        val signInResult = googleSignInUseCase.signInToGoogle(event.context).getOrNull()
+        val greeting = mapper.getGreeting()
+        when(signInResult) {
+            is SignInSuccess -> {
+                val userUiModel = mapper.getUserData(signInResult.userData)
+                _uiState.value = UserSignedIn(greeting, userUiModel)
+            }
+            is SignInCancelled -> _uiEvent.emit(Loading(false))
+            null -> _uiEvent.emit(ShowSnackBar("Something went wrong, try again"))
+        }
+        _uiEvent.emit(Loading(false))
+    }
+
+    private suspend fun handleSignOutEvent() {
+        _uiEvent.emit(Loading(true))
+        googleSignInUseCase.signOut()
+        _uiState.value = UserSignedOut(greeting)
+        _uiEvent.emit(Loading(false))
+        _uiEvent.emit(ShowSnackBar(mapper.getSignOutSuccessMessage()))
     }
 
     fun dummyButtonForTesting(context: Context) {

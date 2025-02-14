@@ -4,8 +4,10 @@ import com.section11.expenselens.R
 import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.utils.ResourceProvider
-import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
-import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow.ReviewRowType.DropdownMenu
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.CATEGORY_SELECTION
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.DATE_SELECTION
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.TOTAL
 import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -18,25 +20,40 @@ class ExpenseReviewScreenUiMapperTest {
 
     private lateinit var mapper: ExpenseReviewScreenUiMapper
 
+    private val categoryTitle = "Category"
+    private val selectCategoryLabel = "Select a category"
+    private val totalTitle = "total"
+    private val dollarSign = "$"
+    private val datePickerTitle = "Date"
+    private val noteTitle = "note"
+    private val noDateFallback = "no date fallback"
+
     @Before
     fun setUp() {
         whenever(resourceProvider.getString(R.string.expense_review_screen_category_title))
-            .thenReturn("Category")
+            .thenReturn(categoryTitle)
         whenever(resourceProvider.getString(R.string.expense_review_screen_select_category))
-            .thenReturn("Select a category")
+            .thenReturn(selectCategoryLabel)
         whenever(resourceProvider.getString(R.string.expense_review_screen_total_title))
-            .thenReturn("Total")
+            .thenReturn(totalTitle)
         whenever(resourceProvider.getString(R.string.dollar_sign))
-            .thenReturn("$")
+            .thenReturn(dollarSign)
+        whenever(resourceProvider.getString(R.string.date_picker_title)).thenReturn(datePickerTitle)
+        whenever(resourceProvider.getString(R.string.expense_review_screen_note_title))
+            .thenReturn(noteTitle)
         mapper = ExpenseReviewScreenUiMapper(resourceProvider)
+        whenever(resourceProvider.getString(R.string.expense_review_screen_no_date))
+            .thenReturn(noDateFallback)
     }
 
     @Test
     fun `mapExpenseInfoToUiModel should return correct UI model when expense information is provided`() {
         // Given
+        val totalWithoutDollarSign = "100"
         val expenseInfo = SuggestedExpenseInformation(
             estimatedCategory = Category.HOME,
-            total = "$100"
+            total = "$${totalWithoutDollarSign}",
+            date = "12/12/2024"
         )
         val extractedText = "Some extracted text"
 
@@ -45,17 +62,29 @@ class ExpenseReviewScreenUiMapperTest {
 
         // Then
         assertEquals(extractedText, result.extractedText)
-        assertEquals(2, result.reviewRows.size)
+        assertEquals(ExpenseReviewSections.entries.size, result.reviewRows.size)
 
-        val categoryRow = result.reviewRows[0]
-        assertEquals("Category", categoryRow.title)
-        assertEquals("Home", categoryRow.value)
-        assert(categoryRow.type is DropdownMenu)
+        result.reviewRows.forEach {
+            when (it.section) {
+                CATEGORY_SELECTION -> {
+                    assertEquals(categoryTitle, it.title)
+                    assertEquals(expenseInfo.estimatedCategory?.displayName, it.value)
+                }
 
-        val totalRow = result.reviewRows[1]
-        assertEquals("Total", totalRow.title)
-        assertEquals("100", totalRow.value) // Dollar sign removed
-        assert(totalRow.type is ExpenseReviewUiModel.ReviewRow.ReviewRowType.TextInput)
+                DATE_SELECTION -> {
+                    assertEquals(datePickerTitle, it.title)
+                    assertEquals(expenseInfo.date, it.value)// dollar sign removed
+                }
+                TOTAL -> {
+                    assertEquals(totalTitle, it.title)
+                    assertEquals(totalWithoutDollarSign, it.value)
+                }
+                ExpenseReviewSections.ADD_NOTE -> {
+                    assertEquals(noteTitle, it.title)
+                    assert(it.value.isEmpty())
+                }
+            }
+        }
     }
 
     @Test
@@ -63,33 +92,48 @@ class ExpenseReviewScreenUiMapperTest {
         // Given
         val expenseInfo = SuggestedExpenseInformation(
             estimatedCategory = null,
-            total = "$200"
+            total = "$200",
+            date = "15/01/2025"
         )
 
         // When
         val result = mapper.mapExpenseInfoToUiModel(expenseInfo, extractedText = null)
 
         // Then
-        assertEquals(2, result.reviewRows.size)
-
-        val categoryRow = result.reviewRows[0]
+        assertEquals(ExpenseReviewSections.entries.size, result.reviewRows.size)
+        val categoryRow = result.reviewRows.first { it.section == CATEGORY_SELECTION }
         assertEquals("Select a category", categoryRow.value) // Default fallback
-
-        val totalRow = result.reviewRows[1]
-        assertEquals("200", totalRow.value) // Dollar sign removed
     }
 
     @Test
     fun `mapExpenseInfoToUiModel should handle null expense info gracefully`() {
-        val expectedCategory = "Select a category"
+        val extractedText = "Some extracted text"
 
         // When
-        val result = mapper.mapExpenseInfoToUiModel(null, extractedText = "Extracted text")
+        val result = mapper.mapExpenseInfoToUiModel(null, extractedText)
 
         // Then
-        assertEquals("Extracted text", result.extractedText)
-        assertEquals(result.reviewRows.size, 2) // Rows are added as default, just with no value
-        assertEquals(result.reviewRows[0].value, expectedCategory)
-        assertEquals(result.reviewRows[1].value, "")
+        assertEquals(extractedText, result.extractedText)
+        result.reviewRows.forEach {
+            when (it.section) {
+                CATEGORY_SELECTION -> {
+                    assertEquals(categoryTitle, it.title)
+                    assertEquals(selectCategoryLabel, it.value) // fallback string i ui mapper
+                }
+
+                DATE_SELECTION -> {
+                    assertEquals(datePickerTitle, it.title)
+                    assertEquals(noDateFallback, it.value)
+                }
+                TOTAL -> {
+                    assertEquals(totalTitle, it.title)
+                    assertEquals("", it.value)
+                }
+                ExpenseReviewSections.ADD_NOTE -> {
+                    assertEquals(noteTitle, it.title)
+                    assert(it.value.isEmpty())
+                }
+            }
+        }
     }
 }

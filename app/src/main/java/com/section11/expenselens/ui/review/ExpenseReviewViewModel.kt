@@ -11,6 +11,7 @@ import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewU
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.ExpenseSubmitted
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.UserInputEvent
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper
+import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
@@ -102,7 +103,7 @@ class ExpenseReviewViewModel @Inject constructor(
         return currentState.copy(
             expenseReviewUiModel = currentState.expenseReviewUiModel.copy(
                 reviewRows = currentState.expenseReviewUiModel.reviewRows.map { row ->
-                    if (row.id == userInputEvent.id){
+                    if (row.section == userInputEvent.section){
                         row.copy(value = userInputEvent.newValue)
                     } else {
                         row
@@ -117,7 +118,10 @@ class ExpenseReviewViewModel @Inject constructor(
     }
 
     sealed class ExpenseReviewUpstreamEvent: UpstreamUiEvent() {
-        data class UserInputEvent(val id: String, val newValue: String): ExpenseReviewUpstreamEvent()
+        data class UserInputEvent(
+            val section: ExpenseReviewSections,
+            val newValue: String
+        ): ExpenseReviewUpstreamEvent()
 
         data class ExpenseSubmitted(
             val expenseReviewUiModel: ExpenseReviewUiModel

@@ -8,4 +8,5 @@ sealed class HomeUpstreamEvent : UpstreamUiEvent() {
     // Shouldn't be passing context around
     data class SignInTapped(val context: Context): HomeUpstreamEvent()
     data object SignOutTapped : HomeUpstreamEvent()
+    data object ToExpensesHistoryTapped : HomeUpstreamEvent()
 }
