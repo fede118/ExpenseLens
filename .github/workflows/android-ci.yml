@@ -1,7 +1,7 @@
 name: Android-CI
 on:
   pull_request:
-    branches: [ "development", "main" ]
+    branches: [ "development", "master" ]
 jobs:
   android-ci:
     runs-on: ubuntu-latest
