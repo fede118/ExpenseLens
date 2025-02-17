@@ -18,7 +18,7 @@ class FakeRepositoryForPreviews(context: Context) {
     fun getExtractedText(): String = loremIpsum
 
     fun getExpenseInformation() = SuggestedExpenseInformation(
-        total = "$500.00",
+        total = 500.00,
         estimatedCategory = Category.ENTERTAINMENT,
         date = "15/03/2025"
     )

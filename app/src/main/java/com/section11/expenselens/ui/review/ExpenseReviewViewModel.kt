@@ -13,6 +13,7 @@ import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewU
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
+import com.section11.expenselens.ui.review.validator.ExpenseValidator
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
@@ -41,6 +42,7 @@ class ExpenseReviewViewModel @Inject constructor(
     private val storeExpenseUseCase: StoreExpenseUseCase,
     private val signInUseCase: GoogleSignInUseCase,
     private val navigationManager: NavigationManager,
+    private val expenseValidator: ExpenseValidator,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -51,9 +53,20 @@ class ExpenseReviewViewModel @Inject constructor(
     val uiEvent: SharedFlow<DownstreamUiEvent> = _uiEvent
 
     fun init(suggestedExpenseInformation: SuggestedExpenseInformation?, extractedText: String?) {
-        _uiState.value = ShowExpenseReview(
-            expenseReviewUiMapper.mapExpenseInfoToUiModel(suggestedExpenseInformation, extractedText)
-        )
+        if (suggestedExpenseInformation != null) {
+            _uiState.value = ShowExpenseReview(
+                expenseReviewUiMapper.mapExpenseInfoToUiModel(
+                    suggestedExpenseInformation,
+                    extractedText
+                )
+            )
+        } else {
+            val (errorMessage, uiModel) = expenseReviewUiMapper.getNoExpenseFoundMessageAndUiModel()
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(ShowSnackBar(errorMessage))
+            }
+            _uiState.value = ShowExpenseReview(uiModel)
+        }
     }
 
     fun onUpstreamEvent(event: ExpenseReviewUpstreamEvent) {
@@ -63,19 +76,27 @@ class ExpenseReviewViewModel @Inject constructor(
                     _uiEvent.emit(Loading(true))
                     val user = signInUseCase.getCurrentUser().getOrNull()
                     if (user != null) {
-                        val expense = expenseReviewUiMapper.toConsolidatedExpense(event)
-                        val result = storeExpenseUseCase.addExpense(user, expense)
-                        _uiEvent.emit(Loading(false))
-                        handleExpenseSubmission(result)
+                        val consolidateExpenseResult = expenseValidator.validateExpense(event)
+                        consolidateExpenseResult.onFailure {
+                            _uiEvent.emit(ShowSnackBar(getFieldValidationErrorMessage(it)))
+                        }
+                        consolidateExpenseResult.onSuccess { expense ->
+                            val result = storeExpenseUseCase.addExpense(user, expense)
+                            handleExpenseSubmission(result)
+                        }
                     } else {
-                        _uiEvent.emit(Loading(false))
                         _uiEvent.emit(ShowSnackBar(AUTHENTICATION_ERROR))
                         navigationManager.navigate(NavigateHome)
                     }
+                    _uiEvent.emit(Loading(false))
                 }
             }
             is UserInputEvent -> updateExpenseReviewWithNewValues(event)
         }
+    }
+
+    private fun getFieldValidationErrorMessage(exception: Throwable): String {
+        return expenseReviewUiMapper.getErrorMessageFromExpenseValidationException(exception)
     }
 
     private suspend fun handleExpenseSubmission(result: Result<Unit>) {
