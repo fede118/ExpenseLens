@@ -17,6 +17,11 @@
     <string name="expense_review_screen_submit_expense">Submit Expense</string>
     <string name="expense_review_screen_no_date">No date found on image, please select one</string>
     <string name="expense_review_screen_note_title">Add note</string>
+    <string name="expense_review_screen_no_expense_found">Error when getting expense information, please fill out manually, or go back and try again.</string>
+    <string name="expense_review_screen_error_in_total">Something went wrong when validating the total, please double check value and try again.</string>
+    <string name="expense_review_screen_error_in_date">Something went wrong when validating the date, please double check value and try again.</string>
+    <string name="expense_review_screen_error_in_category">Something went wrong when validating the category, please double check value and try again.</string>
+    <string name="expense_review_screen_error_when_submitting">Couldn\'t validate one or more fields, please double check values.</string>"
 
     <!--  Expenses History Screen  -->
     <string name="expenses_history_title">Expenses History</string>

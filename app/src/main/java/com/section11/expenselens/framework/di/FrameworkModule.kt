@@ -17,6 +17,7 @@ import com.section11.expenselens.framework.utils.ExpenseLensImageCapture
 import com.section11.expenselens.framework.utils.ImageCaptureWrapper
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.framework.utils.ResourceProviderImpl
+import com.section11.expenselens.ui.review.validator.ExpenseValidator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -82,5 +83,10 @@ class FrameworkModule {
     @Provides
     fun provideFirestore(): FirebaseFirestore {
         return FirebaseFirestore.getInstance()
+    }
+
+    @Provides
+    fun provideExpenseValidator(): ExpenseValidator {
+        return ExpenseValidator()
     }
 }

@@ -16,6 +16,7 @@ import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.Ex
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.TOTAL
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel.ReviewRow
+import com.section11.expenselens.ui.review.validator.ExpenseValidator
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
 import junit.framework.Assert.assertEquals
@@ -42,11 +43,12 @@ private const val UNAUTHENTICATED_ERROR = "Authentication Error occurred, please
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpenseReviewViewModelTest {
-    
+
     private val expenseReviewUiMapper: ExpenseReviewScreenUiMapper = mock()
     private val storeExpenseUseCase: StoreExpenseUseCase = mock()
     private val signInUseCase: GoogleSignInUseCase = mock()
     private val navigationManager: NavigationManager = mock()
+    private val expenseValidator: ExpenseValidator = mock()
     private val dispatcher = StandardTestDispatcher()
 
     private lateinit var viewModel: ExpenseReviewViewModel
@@ -60,6 +62,7 @@ class ExpenseReviewViewModelTest {
             storeExpenseUseCase,
             signInUseCase,
             navigationManager,
+            expenseValidator,
             dispatcher
         )
     }
@@ -73,7 +76,7 @@ class ExpenseReviewViewModelTest {
     fun `init should set ShowExpenseReview state with mapped UI model`() = runTest {
         // Given
         val expenseInfo = SuggestedExpenseInformation(
-            estimatedCategory = Category.HOME, total = "$100",
+            estimatedCategory = Category.HOME, total = 100.00,
             date = "12/12/2021"
         )
         val extractedText = "Some extracted text"
@@ -92,18 +95,31 @@ class ExpenseReviewViewModelTest {
     }
 
     @Test
-    fun `init with null expenseInfo should set ShowExpenseReview`() = runTest {
+    fun `init with null expenseInfo should set ShowExpenseReview with default values`() = runTest {
         val expectedExtractedText = "Extracted text"
+        val errorMessage = "errorMessage"
+        val expenseReviewUiModel = ExpenseReviewUiModel(
+            expectedExtractedText,
+            getListOfRows()
+        )
         whenever(
-            expenseReviewUiMapper.mapExpenseInfoToUiModel(null, expectedExtractedText)
-        ).thenReturn(mock())
+            expenseReviewUiMapper.getNoExpenseFoundMessageAndUiModel()
+        ).thenReturn(errorMessage to expenseReviewUiModel)
 
+
+        val job = launch {
+            viewModel.uiEvent.collectIndexed { _, value ->
+                assert(value is ShowSnackBar)
+                assertEquals((value as ShowSnackBar).message, errorMessage)
+                cancel() // Cancel the coroutine after receiving the expected event
+            }
+        }
         // When
         viewModel.init(null, expectedExtractedText)
 
-        // Then
-        verify(expenseReviewUiMapper)
-            .mapExpenseInfoToUiModel(null, expectedExtractedText)
+        job.join() // Ensure the coroutine completes
+
+        verify(expenseReviewUiMapper).getNoExpenseFoundMessageAndUiModel()
     }
 
     @Test
@@ -119,8 +135,8 @@ class ExpenseReviewViewModelTest {
         val expectedUpdatedRow = initialReviewRow.copy(value = "Transportation")
         val expectedUiModel = initialUiModel.copy(reviewRows = listOf(expectedUpdatedRow))
         whenever(
-            expenseReviewUiMapper.mapExpenseInfoToUiModel(null, extractedText)
-        ).thenReturn(initialUiModel)
+            expenseReviewUiMapper.getNoExpenseFoundMessageAndUiModel()
+        ).thenReturn("errorMessage" to initialUiModel)
 
         viewModel.init(null, "Extracted text")
         viewModel.onUpstreamEvent(
@@ -153,14 +169,13 @@ class ExpenseReviewViewModelTest {
             "Extracted text",
             listOf(reviewRow1, reviewRow2)
         )
-
+        whenever(
+            expenseReviewUiMapper.getNoExpenseFoundMessageAndUiModel()
+        ).thenReturn("errorMessage" to initialUiModel)
         val expectedUpdatedRow1 = reviewRow1.copy(value = "Transportation")
         val expectedUiModel = initialUiModel.copy(
             reviewRows = listOf(expectedUpdatedRow1, reviewRow2)
         )
-        whenever(
-            expenseReviewUiMapper.mapExpenseInfoToUiModel(null, extractedText)
-        ).thenReturn(initialUiModel)
 
         viewModel.init(null, extractedText)
         viewModel.onUpstreamEvent(UserInputEvent(CATEGORY_SELECTION, "Transportation"))
@@ -179,7 +194,7 @@ class ExpenseReviewViewModelTest {
         )
         val expense = mock<ConsolidatedExpenseInformation>()
         val userMock = mockUserData()
-        whenever(expenseReviewUiMapper.toConsolidatedExpense(any())).thenReturn(expense)
+        whenever(expenseValidator.validateExpense(any())).thenReturn(Result.success(expense))
         whenever(storeExpenseUseCase.addExpense(any(), any(), anyOrNull())).thenReturn(Result.success(Unit))
 
         viewModel.onUpstreamEvent(ExpenseSubmitted(expenseReviewUiModel))
@@ -197,7 +212,7 @@ class ExpenseReviewViewModelTest {
             getListOfRows()
         )
         val expense = mock<ConsolidatedExpenseInformation>()
-        whenever(expenseReviewUiMapper.toConsolidatedExpense(any())).thenReturn(expense)
+        whenever(expenseValidator.validateExpense(any())).thenReturn(Result.success(expense))
         whenever(storeExpenseUseCase.addExpense(any(), any(), anyOrNull())).thenReturn(Result.success(Unit))
 
         // Since this is a cold flow we need to start the collection before actually calling the viewModel method

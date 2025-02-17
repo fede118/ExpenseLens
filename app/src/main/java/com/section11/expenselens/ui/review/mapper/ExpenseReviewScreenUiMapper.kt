@@ -2,11 +2,8 @@ package com.section11.expenselens.ui.review.mapper
 
 import com.section11.expenselens.R
 import com.section11.expenselens.domain.models.Category
-import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.utils.ResourceProvider
-import com.section11.expenselens.framework.utils.toDate
-import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.ExpenseSubmitted
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.ADD_NOTE
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.CATEGORY_SELECTION
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper.ExpenseReviewSections.DATE_SELECTION
@@ -18,7 +15,9 @@ import com.section11.expenselens.ui.review.model.ReviewRowType.DatePickerType
 import com.section11.expenselens.ui.review.model.ReviewRowType.DropdownMenuType
 import com.section11.expenselens.ui.review.model.ReviewRowType.MoneyInputType
 import com.section11.expenselens.ui.review.model.ReviewRowType.TextInputType
-import java.util.Date
+import com.section11.expenselens.ui.review.validator.InvalidExpenseCategoryException
+import com.section11.expenselens.ui.review.validator.InvalidExpenseDateException
+import com.section11.expenselens.ui.review.validator.InvalidExpenseTotalException
 import java.util.Locale
 import javax.inject.Inject
 
@@ -27,7 +26,7 @@ class ExpenseReviewScreenUiMapper @Inject constructor(
 ) {
 
     fun mapExpenseInfoToUiModel(
-        suggestedExpenseInformation: SuggestedExpenseInformation?,
+        suggestedExpenseInformation: SuggestedExpenseInformation,
         extractedText: String?
     ): ExpenseReviewUiModel {
         val reviewRows = mutableListOf<ReviewRow>()
@@ -43,7 +42,7 @@ class ExpenseReviewScreenUiMapper @Inject constructor(
 
     private fun MutableList<ReviewRow>.addSection(
         section: ExpenseReviewSections,
-        suggestedExpenseInformation: SuggestedExpenseInformation?
+        suggestedExpenseInformation: SuggestedExpenseInformation
     ) {
         add(
             ReviewRow(
@@ -64,18 +63,18 @@ class ExpenseReviewScreenUiMapper @Inject constructor(
     }
 
     private fun ExpenseReviewSections.getSectionValue(
-        expenseInfo: SuggestedExpenseInformation?
+        expenseInfo: SuggestedExpenseInformation
     ): String {
         return when(this) {
             CATEGORY_SELECTION -> getCategorySectionValue(expenseInfo)
-            DATE_SELECTION -> expenseInfo?.date ?: getString(R.string.expense_review_screen_no_date)
-            TOTAL -> getTotalValue(expenseInfo)
+            DATE_SELECTION -> expenseInfo.date ?: getString(R.string.expense_review_screen_no_date)
+            TOTAL -> expenseInfo.total.toString()
             ADD_NOTE -> String()
         }
     }
 
-    private fun getCategorySectionValue(expenseInfo: SuggestedExpenseInformation?): String {
-        val estimatedCategoryName = expenseInfo?.estimatedCategory?.displayName
+    private fun getCategorySectionValue(expenseInfo: SuggestedExpenseInformation): String {
+        val estimatedCategoryName = expenseInfo.estimatedCategory?.displayName
         val categoriesDisplayNameList = Category.entries.map { it.displayName }
 
         val preselectedCategory: String = estimatedCategoryName?.let {
@@ -89,50 +88,28 @@ class ExpenseReviewScreenUiMapper @Inject constructor(
         return preselectedCategory
     }
 
-    /**
-     * The service returns the total as a string with the dollar sign.
-     * But we want to show the $ icon in the UI. So we remove it. Maybe we should have the service
-     * return a double with just the value
-     */
-    private fun getTotalValue(expenseInfo: SuggestedExpenseInformation?): String {
-        val dollarSing = getString(R.string.dollar_sign)
-        return expenseInfo?.total.orEmpty().replace(dollarSing, String())
-    }
-
     private fun getString(id: Int) = resourceProvider.getString(id)
 
     private fun Char.capitalize() = titlecase(Locale.getDefault())
 
-    fun toConsolidatedExpense(event: ExpenseSubmitted): ConsolidatedExpenseInformation {
-        // TODO find a better way to do this. This shouldn't be null at this point
-        // none of this fields. I need a validator class before submitting the expense
-        var total = 0.00
-        var category: Category = Category.MISCELLANEOUS
-        var date = Date()
-        var note = String()
-        event.expenseReviewUiModel.reviewRows.forEach { row ->
-            when (row.section) {
-                CATEGORY_SELECTION -> Category.fromDisplayName(row.value)?.let { category = it }
-                DATE_SELECTION -> {
-                    row.value.let {
-                        date = it.toDate() ?: throw IllegalArgumentException("Invalid date format")
-                    }
-                }
-                TOTAL -> row.value.currencyStringToDouble()?.let { total = it }
-                ADD_NOTE -> row.value.let { note = it }
-            }
-        }
-
-        return ConsolidatedExpenseInformation(
-            total = total,
-            category = category,
-            date = date,
-            note = note
+    fun getNoExpenseFoundMessageAndUiModel(): Pair<String, ExpenseReviewUiModel> {
+        val message = getString(R.string.expense_review_screen_no_expense_found)
+        val emptySuggestedExpenseInformation = SuggestedExpenseInformation(
+            date = null,
+            total = 0.00,
+            estimatedCategory = null,
         )
+        val uiModel = mapExpenseInfoToUiModel(emptySuggestedExpenseInformation, null)
+        return message to uiModel
     }
 
-    private fun String.currencyStringToDouble(): Double? {
-        return this.replace(Regex("[^0-9.-]"), "").toDoubleOrNull()
+    fun getErrorMessageFromExpenseValidationException(exception: Throwable): String {
+        return when(exception) {
+            is InvalidExpenseCategoryException -> getString(R.string.expense_review_screen_error_in_category)
+            is InvalidExpenseDateException -> getString(R.string.expense_review_screen_error_in_date)
+            is InvalidExpenseTotalException -> getString(R.string.expense_review_screen_error_in_total)
+            else -> getString(R.string.expense_review_screen_error_when_submitting)
+        }
     }
 
     /**

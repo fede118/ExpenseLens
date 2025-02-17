@@ -32,7 +32,7 @@ class GeminiAiRepository @Inject constructor(
     }
 
     companion object {
-        private const val TOTAL_EXAMPLE = "\$xxx.xx"
+        private const val TOTAL_EXAMPLE = 100.00
         private var jsonStructure: String = generateJsonStructure()
         private var categoriesToString = Category.getCategoryDescriptions()
         private var EXPENSE_INFO_EXTRACTION_PROMPT: String = """
@@ -43,7 +43,8 @@ class GeminiAiRepository @Inject constructor(
             $jsonStructure
             ```
             WHERE:
-            - total: OPTIONAL, a representation of the total in that text including gratuity/tips if it applies.
+            - total: Mandatory, a representation of the total in that text including gratuity/tips if it applies. 
+            If no total is found default value: 0.00
             - date: OPTIONAL, the date of the transaction if shown on the receipt with the format 
               $EXPECTED_DATE_FORMAT, if its not clear, then null
             - category: OPTIONAL, the best estimation of the Category of the receipt. Based on the following categories:
