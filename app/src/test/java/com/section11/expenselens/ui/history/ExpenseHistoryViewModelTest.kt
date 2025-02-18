@@ -2,6 +2,7 @@ package com.section11.expenselens.ui.history
 
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.domain.models.UserData
+import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import kotlinx.coroutines.Dispatchers
@@ -46,13 +47,14 @@ class ExpenseHistoryViewModelTest {
     fun `uiState contains expenses when household exists`() = runTest {
         // Given
         val householdId = "household123"
+        val userHouseHold = UserHousehold(householdId, "Test Household")
         val expenses = listOf(
             FirestoreExpense("Food", 100.0, mock(), "user123", "Dinner"),
             FirestoreExpense("Transport", 50.0, mock(), "user123", "Taxi")
         )
 
-        whenever(storeExpensesUseCase.getCurrentHouseholdIdAndName("user123"))
-            .thenReturn(Result.success(householdId to "Test Household"))
+        whenever(storeExpensesUseCase.getCurrentHousehold("user123"))
+            .thenReturn(userHouseHold)
         whenever(storeExpensesUseCase.getAllExpensesFromHousehold(householdId))
             .thenReturn(Result.success(expenses))
 
@@ -67,8 +69,8 @@ class ExpenseHistoryViewModelTest {
     @Test
     fun `uiState remains empty when household does not exist`() = runTest {
         // Given
-        whenever(storeExpensesUseCase.getCurrentHouseholdIdAndName("user123"))
-            .thenReturn(Result.failure(Exception("Household not found")))
+        whenever(storeExpensesUseCase.getCurrentHousehold("user123"))
+            .thenReturn(null)
 
         // When
         viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, signInUseCase, dispatcher)

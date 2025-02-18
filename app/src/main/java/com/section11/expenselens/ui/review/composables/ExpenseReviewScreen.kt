@@ -36,6 +36,7 @@ import com.section11.expenselens.framework.utils.toDateString
 import com.section11.expenselens.ui.common.CardDialog
 import com.section11.expenselens.ui.common.ExpenseLensDatePicker
 import com.section11.expenselens.ui.common.HandleDownstreamEvents
+import com.section11.expenselens.ui.common.MaxCharsOutlinedTextField
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent
@@ -166,14 +167,13 @@ fun ReviewSectionRow(
                 )
             }
             TextInputType -> {
-                OutlinedTextField(
+                MaxCharsOutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(1f),
                     value = reviewRow.value,
+                    title = reviewRow.title,
                     onValueChange = { newValue ->
                         onRowValueChanged(reviewRow.section, newValue)
-                    },
-                    modifier = Modifier.fillMaxWidth(1f),
-                    label = { Text(text = reviewRow.title) },
-                    singleLine = true,
+                    }
                 )
             }
         }

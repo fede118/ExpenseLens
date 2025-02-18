@@ -9,4 +9,8 @@ sealed class HomeUpstreamEvent : UpstreamUiEvent() {
     data class SignInTapped(val context: Context): HomeUpstreamEvent()
     data object SignOutTapped : HomeUpstreamEvent()
     data object ToExpensesHistoryTapped : HomeUpstreamEvent()
+    data class CreateHouseholdTapped(
+        val userId: String,
+        val householdName: String
+    ) : HomeUpstreamEvent()
 }

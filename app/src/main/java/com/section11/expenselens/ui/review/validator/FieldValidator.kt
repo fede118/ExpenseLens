@@ -23,7 +23,7 @@ class ExpenseValidator {
                     total = validateTotal(reviewMap[TOTAL]?.value),
                     category = validateCategory(reviewMap[CATEGORY_SELECTION]?.value),
                     date = validateDate(reviewMap[DATE_SELECTION]?.value),
-                    note = reviewMap[ADD_NOTE]?.value.orEmpty()
+                    note = validateNote(reviewMap[ADD_NOTE]?.value)
                 )
             )
         } catch (exception: ExpenseValidationException) {
@@ -43,5 +43,10 @@ class ExpenseValidator {
         } catch (exception: ParseException) {
             throw InvalidExpenseDateException()
         }
+    }
+
+    private fun validateNote(note: String?): String {
+        // todo validate max chars?
+        return note.orEmpty()
     }
 }

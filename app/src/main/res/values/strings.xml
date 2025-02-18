@@ -4,11 +4,16 @@
     <string name="welcome_greeting">Hello, Welcome to ExpenseLens</string>
 
     <!--  Home Screen Content  -->
-    <string name="home_screen_household_name_prefix">Your household name is:\n</string>
-    <string name="home_screen_expense_history_label">My expenses</string>
-    <string name="home_screen_sign_out_success">Successfully signed out</string>
-    <string name="home_screen_profile_pic_content_description">Profile Picture</string>
     <string name="home_screen_sign_in_icon_content_description">Sign in</string>
+    <string name="home_screen_profile_pic_content_description">Profile Picture</string>
+    <string name="home_screen_expense_history_label">My expenses</string>
+    <string name="home_screen_add_expense_label">Add Expense</string>
+    <string name="home_screen_create_household">Create household</string>
+    <string name="home_screen_no_household_message">No household found, please create one:</string>
+    <string name="home_screen_create_household_name">Your Household name</string>
+    <string name="home_screen_household_name_prefix">Your household name is: %s</string>
+    <string name="home_screen_sign_out_success">Successfully signed out</string>
+    <string name="home_screen_house_hold_creation_failure">Something went wrong creating household, try again later.</string>
 
     <!--  Expense Review Screen  -->
     <string name="expense_review_screen_total_title">Total</string>

@@ -1,7 +1,7 @@
 package com.section11.expenselens.framework.utils
 
 import com.google.firebase.Timestamp
-import com.section11.expenselens.domain.Constants.EXPECTED_DATE_FORMAT
+import com.section11.expenselens.domain.DomainConstants.EXPECTED_DATE_FORMAT
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId

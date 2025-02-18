@@ -26,10 +26,9 @@ class ExpenseHistoryViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             val user = useCase.getCurrentUser().getOrNull()
             if (user != null) {
-                val householdIdResult = storeExpensesUseCase.getCurrentHouseholdIdAndName(user.id)
-                val householdId = householdIdResult.getOrNull()?.first
-                if (householdId != null) {
-                    val expenses = storeExpensesUseCase.getAllExpensesFromHousehold(householdId)
+                val household = storeExpensesUseCase.getCurrentHousehold(user.id)
+                if (household != null) {
+                    val expenses = storeExpensesUseCase.getAllExpensesFromHousehold(household.id)
 
                     expenses.getOrNull()?.let { expensesList ->
                         _uiState.value = expensesList.map {

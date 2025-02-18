@@ -5,7 +5,7 @@ import com.section11.expenselens.data.dto.request.GeminiRequestBody
 import com.section11.expenselens.data.dto.request.GeminiRequestBody.Content
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
 import com.section11.expenselens.data.service.GeminiService
-import com.section11.expenselens.domain.Constants.EXPECTED_DATE_FORMAT
+import com.section11.expenselens.domain.DomainConstants.EXPECTED_DATE_FORMAT
 import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository

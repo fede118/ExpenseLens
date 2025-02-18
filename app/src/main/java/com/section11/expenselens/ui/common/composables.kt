@@ -21,6 +21,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -37,6 +38,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.section11.expenselens.R
+import com.section11.expenselens.ui.common.UiConstants.MAX_INPUT_CHARACTERS
+import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.Preview
@@ -158,6 +161,29 @@ fun ExpenseLensDatePicker(
     }
 }
 
+
+@Composable
+fun MaxCharsOutlinedTextField(
+    value: String,
+    title: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    maxLength: Int = MAX_INPUT_CHARACTERS
+) {
+    OutlinedTextField(
+        value = value,
+        modifier = modifier,
+        onValueChange = { newValue ->
+            if (newValue.length <= maxLength) {
+                onValueChange(newValue)
+            }
+        },
+        singleLine = true,
+        label = { Text(text = title) },
+        supportingText = { Text(text = "${value.length} / $maxLength") }
+    )
+}
+
 @DarkAndLightPreviews
 @Composable
 fun ProfileDialogPreview(modifier: Modifier = Modifier) {
@@ -170,4 +196,13 @@ fun ProfileDialogPreview(modifier: Modifier = Modifier) {
             onLogout = {}
         )
     }
+}
+
+@Composable
+fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
+    Image(
+        painter = rememberAsyncImagePainter(user.profilePic),
+        contentDescription = stringResource(R.string.home_screen_sign_in_icon_content_description),
+        modifier = modifier
+    )
 }
