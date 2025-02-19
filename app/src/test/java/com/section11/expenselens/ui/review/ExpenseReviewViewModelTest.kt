@@ -35,7 +35,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -195,7 +194,7 @@ class ExpenseReviewViewModelTest {
         val expense = mock<ConsolidatedExpenseInformation>()
         val userMock = mockUserData()
         whenever(expenseValidator.validateExpense(any())).thenReturn(Result.success(expense))
-        whenever(storeExpenseUseCase.addExpense(any(), any(), anyOrNull())).thenReturn(Result.success(Unit))
+        whenever(storeExpenseUseCase.addExpense(any(), any())).thenReturn(Result.success(Unit))
 
         viewModel.onUpstreamEvent(ExpenseSubmitted(expenseReviewUiModel))
 
@@ -213,7 +212,7 @@ class ExpenseReviewViewModelTest {
         )
         val expense = mock<ConsolidatedExpenseInformation>()
         whenever(expenseValidator.validateExpense(any())).thenReturn(Result.success(expense))
-        whenever(storeExpenseUseCase.addExpense(any(), any(), anyOrNull())).thenReturn(Result.success(Unit))
+        whenever(storeExpenseUseCase.addExpense(any(), any())).thenReturn(Result.success(Unit))
 
         // Since this is a cold flow we need to start the collection before actually calling the viewModel method
         val job = launch {

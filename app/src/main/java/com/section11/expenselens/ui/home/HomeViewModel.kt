@@ -13,9 +13,11 @@ import com.section11.expenselens.framework.navigation.NavigationManager.Navigati
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
+import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.ToExpensesHistoryTapped
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,7 +43,7 @@ class HomeViewModel @Inject constructor(
     private val navigationManager: NavigationManager,
     private val googleSignInUseCase: GoogleSignInUseCase,
     private val storeExpenseUseCase: StoreExpenseUseCase,
-    private val mapper: HomeScreenUiMapper,
+    private val uiMapper: HomeScreenUiMapper,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -50,19 +53,15 @@ class HomeViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<DownstreamUiEvent>()
     val uiEvent: SharedFlow<DownstreamUiEvent> = _uiEvent
 
-    private val greeting = mapper.getGreeting()
-
     init {
         viewModelScope.launch(dispatcher) {
             _uiEvent.emit(Loading(true))
             val userData = googleSignInUseCase.getCurrentUser().getOrNull()
             if (userData != null) {
-                val householdResult = storeExpenseUseCase.getCurrentHouseholdIdAndName(userData.id)
-                val householdName = householdResult.getOrNull()?.second
-                val userUiModel = mapper.getUserData(userData)
-                _uiState.value = UserSignedIn(greeting, userUiModel, householdName)
+                val householdsResult = storeExpenseUseCase.getCurrentHousehold(userData.id)
+                _uiState.value = uiMapper.getUserSignInModel(userData, householdsResult)
             } else {
-                _uiState.value = UserSignedOut(greeting)
+                _uiState.value = UserSignedOut(uiMapper.getGreeting())
             }
             _uiEvent.emit(Loading(false))
         }
@@ -75,18 +74,18 @@ class HomeViewModel @Inject constructor(
                 is SignInTapped -> handleSignInEvent(homeEvent)
                 is SignOutTapped -> handleSignOutEvent()
                 is ToExpensesHistoryTapped -> navigationManager.navigate(NavigateToExpensesHistory)
+                is CreateHouseholdTapped -> handleHouseholdCreation(homeEvent)
             }
         }
     }
 
     private suspend fun handleSignInEvent(event: SignInTapped) {
         _uiEvent.emit(Loading(true))
-        val signInResult = googleSignInUseCase.signInToGoogle(event.context).getOrNull()
-        val greeting = mapper.getGreeting()
-        when(signInResult) {
+        when(val signInResult = googleSignInUseCase.signInToGoogle(event.context).getOrNull()) {
             is SignInSuccess -> {
-                val userUiModel = mapper.getUserData(signInResult.userData)
-                _uiState.value = UserSignedIn(greeting, userUiModel)
+                val userData = signInResult.userData
+                val householdsResult = storeExpenseUseCase.getCurrentHousehold(userData.id)
+                _uiState.value = uiMapper.getUserSignInModel(userData, householdsResult)
             }
             is SignInCancelled -> _uiEvent.emit(Loading(false))
             null -> _uiEvent.emit(ShowSnackBar("Something went wrong, try again"))
@@ -97,11 +96,40 @@ class HomeViewModel @Inject constructor(
     private suspend fun handleSignOutEvent() {
         _uiEvent.emit(Loading(true))
         googleSignInUseCase.signOut()
-        _uiState.value = UserSignedOut(greeting)
+        _uiState.value = UserSignedOut(uiMapper.getGreeting())
         _uiEvent.emit(Loading(false))
-        _uiEvent.emit(ShowSnackBar(mapper.getSignOutSuccessMessage()))
+        _uiEvent.emit(ShowSnackBar(uiMapper.getSignOutSuccessMessage()))
     }
 
+    private suspend fun handleHouseholdCreation(event: CreateHouseholdTapped) {
+        _uiEvent.emit(Loading(true))
+        val houseHoldResult = storeExpenseUseCase.createHousehold(
+            event.userId,
+            event.householdName
+        )
+
+        houseHoldResult.fold(
+            onSuccess = { household ->
+                _uiState.update {
+                    if (it is UserSignedIn) {
+                        it.copy(householdInfo = HouseholdUiState(
+                            household.id,
+                            household.name
+                        ))
+                    } else {
+                        it
+                    }
+                }
+                _uiEvent.emit(Loading(false))
+            },
+            onFailure = {
+                _uiEvent.tryEmit(ShowSnackBar(uiMapper.getHouseholdCreationErrorMessage()))
+                _uiEvent.emit(Loading(false))
+            }
+        )
+    }
+
+    // TODO remove this on first release version of the app
     fun dummyButtonForTesting(context: Context) {
         val fakeRepo = FakeRepositoryForPreviews(context)
         viewModelScope.launch {
@@ -118,8 +146,10 @@ class HomeViewModel @Inject constructor(
         data class UserSignedIn(
             val greeting: String,
             val user: UserInfoUiModel,
-            val householdName: String? = null
-        ) : HomeUiState()
+            val householdInfo: HouseholdUiState? = null
+        ) : HomeUiState() {
+            data class HouseholdUiState(val id: String, val name: String)
+        }
         data class UserSignedOut(val greeting: String) : HomeUiState()
     }
 }

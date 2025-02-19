@@ -3,11 +3,13 @@ package com.section11.expenselens.ui.home.composables
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +21,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,14 +36,17 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import coil.compose.rememberAsyncImagePainter
 import com.section11.expenselens.R
 import com.section11.expenselens.ui.common.HandleDownstreamEvents
+import com.section11.expenselens.ui.common.MaxCharsOutlinedTextField
 import com.section11.expenselens.ui.common.ProfileDialog
+import com.section11.expenselens.ui.common.ProfilePictureIcon
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
+import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.ToExpensesHistoryTapped
@@ -55,16 +61,85 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
+private const val HOUSEHOLD_NAME_MAX_CHARS = 25
+
 @Composable
 fun HomeScreenContent(
-    modifier: Modifier = Modifier,
     homeUiState: StateFlow<UiState>,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
     val uiState by homeUiState.collectAsState()
-    val dimens = LocalDimens.current
+    when (uiState) {
+        is UserSignedIn -> SignedInUi(uiState as UserSignedIn, onEvent)
+        is UserSignedOut -> LoggedOutUi(uiState as UserSignedOut, onEvent)
+    }
 
+    HandleDownstreamEvents(downstreamUiEvent)
+}
+
+@Composable
+fun SignedInUi(
+    userSignedInModel: UserSignedIn,
+    onEvent: (HomeUpstreamEvent) -> Unit
+) {
+    with(userSignedInModel) {
+        if (householdInfo != null) {
+            ExistingHouseholdUi(
+                user,
+                greeting,
+                householdInfo,
+                onEvent
+            )
+        } else {
+            CreateHouseholdUi(
+                Modifier.fillMaxWidth(1f),
+                user,
+                greeting,
+                onEvent
+            )
+        }
+    }
+}
+
+@Composable
+fun ExistingHouseholdUi(
+    userInfo: UserInfoUiModel,
+    greeting: String,
+    household: HouseholdUiState,
+    onEvent: (HomeUpstreamEvent) -> Unit)
+{
+    val dimens = LocalDimens.current
+    BoxHomeScreenContainer(
+        boxContent = {
+            FloatingActionButton(
+                onClick = { onEvent(AddExpenseTapped) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(dimens.m2),
+
+                ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.home_screen_add_expense_label)
+                )
+            }
+        }
+    ) { iconModifier ->
+        SignedInGreetingAndIcon(iconModifier, userInfo, greeting, onEvent) {
+            Text(stringResource(R.string.home_screen_household_name_prefix, household.name))
+        }
+    }
+}
+
+@Composable
+fun BoxHomeScreenContainer(
+    modifier: Modifier = Modifier,
+    boxContent: @Composable BoxScope.() -> Unit = {},
+    content: @Composable ColumnScope.(iconModifier: Modifier) -> Unit
+) {
+    val dimens = LocalDimens.current
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -73,61 +148,43 @@ fun HomeScreenContent(
         Column(
             modifier = Modifier
                 .padding(dimens.m2)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val iconModifier = Modifier
                 .size(dimens.m5)
                 .align(Alignment.End)
                 .clip(CircleShape)
-            when (uiState) {
-                is UserSignedIn -> {
-                    val user = (uiState as UserSignedIn).user
-                    SignedInUi(iconModifier, user, uiState) { event ->
-                        onEvent(event)
-                    }
-                }
-                is UserSignedOut -> {
-                    LoggedOutUi(iconModifier, uiState as UserSignedOut) { event ->
-                        onEvent(event)
-                    }
-                }
-            }
 
-            Spacer(modifier = Modifier.padding(dimens.m2))
+            content(iconModifier)
         }
-
-        FloatingActionButton(
-            onClick = { onEvent(AddExpenseTapped) },
-            containerColor = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(dimens.m2)
-        ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Expense")
-        }
-
-        HandleDownstreamEvents(downstreamUiEvent)
+        boxContent()
     }
 }
 
 @Composable
-fun SignedInUi(
-    modifier: Modifier = Modifier,
-    user: UserInfoUiModel,
-    uiState: UiState,
-    onEvent: (HomeUpstreamEvent) -> Unit
+fun ColumnScope.SignedInGreetingAndIcon(
+    modifier: Modifier,
+    userInfo: UserInfoUiModel,
+    greeting: String,
+    onEvent: (HomeUpstreamEvent) -> Unit,
+    content: @Composable ColumnScope.() -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
     ProfilePictureIcon(
-        user = user,
+        user = userInfo,
         modifier = modifier.clickable { showDialog = true }
     )
 
+    Greeting(greeting)
+
+    content()
+
     if (showDialog) {
         ProfileDialog(
-            profileImageUrl = user.profilePic,
-            userName = user.displayName,
+            profileImageUrl = userInfo.profilePic,
+            userName = userInfo.displayName,
             onDismiss = { showDialog = false },
             onLogout = {
                 showDialog = false
@@ -144,30 +201,64 @@ fun SignedInUi(
             }
         }
     }
-    val userSignedInModel = (uiState as UserSignedIn)
-    Greeting("${userSignedInModel.greeting} \n" +
-             stringResource(R.string.home_screen_household_name_prefix)
-            + userSignedInModel.householdName
-    )
 }
 
 @Composable
-fun LoggedOutUi(
+fun CreateHouseholdUi(
     modifier: Modifier = Modifier,
-    state: UserSignedOut,
+    userInfo: UserInfoUiModel,
+    greeting: String,
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
-    GoogleSignInButton(modifier) { event ->
-        onEvent(event)
+    var text by remember { mutableStateOf(String()) }
+    val dimens = LocalDimens.current
+
+    BoxHomeScreenContainer { iconModifier ->
+        SignedInGreetingAndIcon(iconModifier, userInfo, greeting, onEvent) {
+            Spacer(Modifier.height(dimens.m1))
+            Text(
+                stringResource(R.string.home_screen_no_household_message)
+            )
+            Spacer(Modifier.height(dimens.m1))
+            MaxCharsOutlinedTextField(
+                modifier = modifier,
+                value = text,
+                onValueChange = { text = it },
+                title = stringResource(R.string.home_screen_create_household_name),
+                maxLength = HOUSEHOLD_NAME_MAX_CHARS
+            )
+            TextButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    onEvent(CreateHouseholdTapped(userInfo.id, text))
+                }
+            ) {
+                Text(stringResource(R.string.home_screen_create_household))
+            }
+        }
     }
-    Greeting(state.greeting)
+}
+
+@Composable
+fun LoggedOutUi(state: UserSignedOut, onEvent: (HomeUpstreamEvent) -> Unit) {
+    val context = LocalContext.current
+    val colorScheme = MaterialTheme.colorScheme
+    BoxHomeScreenContainer { iconModifier ->
+        Image(
+            imageVector = Icons.Default.AccountCircle,
+            contentDescription = stringResource(R.string.home_screen_profile_pic_content_description),
+            modifier = iconModifier.clickable { onEvent(SignInTapped(context)) },
+            colorFilter = ColorFilter.tint(colorScheme.contentColorFor(colorScheme.background))
+        )
+        Greeting(state.greeting)
+    }
 }
 
 @Composable
 fun Greeting(greeting: String) {
     val dimens = LocalDimens.current
     Spacer(modifier = Modifier.padding(dimens.m3))
-    Row {
+    Column {
         Text(
             modifier = Modifier
                 .padding(horizontal = dimens.m2)
@@ -176,36 +267,13 @@ fun Greeting(greeting: String) {
             textAlign = TextAlign.Center,
         )
     }
-
-}
-
-@Composable
-fun GoogleSignInButton(modifier: Modifier = Modifier, onEvent: (HomeUpstreamEvent) -> Unit) {
-    val context = LocalContext.current
-    val colorScheme = MaterialTheme.colorScheme
-    Image(
-        imageVector = Icons.Default.AccountCircle,
-        contentDescription = stringResource(R.string.home_screen_profile_pic_content_description),
-        modifier = modifier.clickable { onEvent(SignInTapped(context)) },
-        colorFilter = ColorFilter.tint(colorScheme.contentColorFor(colorScheme.background))
-    )
-}
-
-@Composable
-fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
-    Image(
-        painter = rememberAsyncImagePainter(user.profilePic),
-        contentDescription = stringResource(R.string.home_screen_sign_in_icon_content_description),
-        modifier = modifier
-    )
 }
 
 @DarkAndLightPreviews
 @Composable
-fun HomeScreenNoSignInPreview() {
+fun LoggedOutPreview() {
     Preview {
         HomeScreenContent(
-            modifier = Modifier.fillMaxSize(),
             homeUiState = MutableStateFlow(UserSignedOut("Test Greeting")),
             downstreamUiEvent = MutableSharedFlow()
         ) {}
@@ -214,7 +282,7 @@ fun HomeScreenNoSignInPreview() {
 
 @DarkAndLightPreviews
 @Composable
-fun HomeScreenSignedInPreview() {
+fun SignedInPreview() {
     val userSignedIn = MutableStateFlow(
         UserSignedIn(
             "Hello, welcome to expense lens",
@@ -223,7 +291,24 @@ fun HomeScreenSignedInPreview() {
     )
     Preview {
         HomeScreenContent(
-            modifier = Modifier.fillMaxSize(),
+            homeUiState = userSignedIn,
+            downstreamUiEvent = MutableSharedFlow()
+        ) {}
+    }
+}
+
+@DarkAndLightPreviews
+@Composable
+fun SignedInWithHouseholdPreview() {
+    val userSignedIn = MutableStateFlow(
+        UserSignedIn(
+            "Hello, welcome to expense lens",
+            UserInfoUiModel("id", "Test User", ""),
+            HouseholdUiState("id", "testing")
+        )
+    )
+    Preview {
+        HomeScreenContent(
             homeUiState = userSignedIn,
             downstreamUiEvent = MutableSharedFlow()
         ) {}

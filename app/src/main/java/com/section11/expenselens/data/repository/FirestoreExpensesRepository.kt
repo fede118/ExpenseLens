@@ -4,49 +4,27 @@ import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.FirebaseFirestoreException.Code.NOT_FOUND
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.EXPENSES_COLLECTION
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HOUSEHOLDS_COLLECTION
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
-import com.section11.expenselens.data.dto.FirestoreHousehold.Companion.NAME_FIELD
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
+import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.ExpensesRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
-
-private const val HOUSEHOLD_COLLECTION = "households"
-private const val EXPENSES_COLLECTION = "expenses"
 
 class FirestoreExpensesRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ): ExpensesRepository {
 
-    override suspend fun getHousehold(householdName: String): String? {
-        return try {
-            val householdsCollection = firestore.collection(HOUSEHOLD_COLLECTION)
-            val querySnapshot = householdsCollection
-                .whereEqualTo(NAME_FIELD, householdName)
-                .get().await()
-
-            if (querySnapshot.documents.isNotEmpty()) {
-                querySnapshot.documents.firstOrNull()?.id // Return the ID of the first matching document
-            } else {
-                null
-            }
-        } catch (e: FirebaseFirestoreException) {
-            when(e.code) {
-                NOT_FOUND -> null
-                else -> throw e
-            }
-        }
-    }
-
     override suspend fun createHousehold(
-        householdName: String,
-        userId: String
-    ): Result<Pair<String, String>> {
+        userId: String,
+        householdName: String
+    ): Result<UserHousehold> {
         return try {
-            val householdId = firestore.collection(HOUSEHOLD_COLLECTION).document().id
+            val householdId = firestore.collection(HOUSEHOLDS_COLLECTION).document().id
             val users = listOf(userId)
 
             val household = FirestoreHousehold(
@@ -55,14 +33,27 @@ class FirestoreExpensesRepository @Inject constructor(
                 users = users
             )
 
-            firestore.collection(HOUSEHOLD_COLLECTION)
+            firestore.collection(HOUSEHOLDS_COLLECTION)
                 .document(householdId)
                 .set(household)
                 .await()
 
-            Result.success(householdId to householdName)
+            Result.success(UserHousehold(householdId, householdName))
         } catch (exception: FirebaseFirestoreException) {
             Log.e(FirebaseFirestoreException::class.simpleName, exception.stackTraceToString())
+            Result.failure(exception)
+        }
+    }
+
+    override suspend fun deleteHousehold(userId: String, householdId: String): Result<Unit> {
+        return try {
+            firestore.collection(HOUSEHOLDS_COLLECTION)
+                .document(householdId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+        } catch (exception: FirebaseFirestoreException) {
             Result.failure(exception)
         }
     }
@@ -82,7 +73,7 @@ class FirestoreExpensesRepository @Inject constructor(
             distributedExpense = expense.distributedExpense
         )
         return try {
-            firestore.collection(HOUSEHOLD_COLLECTION)
+            firestore.collection(HOUSEHOLDS_COLLECTION)
                 .document(householdId)
                 .collection(EXPENSES_COLLECTION)
                 .add(firestoreExpense)
@@ -97,7 +88,7 @@ class FirestoreExpensesRepository @Inject constructor(
         householdId: String
     ): Result<List<FirestoreExpense>> {
         return try {
-            val expensesCollection = firestore.collection(HOUSEHOLD_COLLECTION)
+            val expensesCollection = firestore.collection(HOUSEHOLDS_COLLECTION)
                 .document(householdId)
                 .collection(EXPENSES_COLLECTION)
 

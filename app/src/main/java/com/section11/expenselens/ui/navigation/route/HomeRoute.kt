@@ -1,8 +1,6 @@
 package com.section11.expenselens.ui.navigation.route
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.section11.expenselens.ui.home.composables.HomeScreenContent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
@@ -16,12 +14,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun HomeRoute(
-    modifier: Modifier = Modifier,
     homeUiState: StateFlow<UiState>,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     onUpstreamEvent: (HomeUpstreamEvent) -> Unit
 ) {
-    HomeScreenContent(modifier.fillMaxSize(), homeUiState, downstreamUiEvent) { event ->
+    HomeScreenContent(homeUiState, downstreamUiEvent) { event ->
         onUpstreamEvent(event)
     }
 }

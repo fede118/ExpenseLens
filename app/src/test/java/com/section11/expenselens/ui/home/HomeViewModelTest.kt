@@ -2,6 +2,7 @@ package com.section11.expenselens.ui.home
 
 import android.content.Context
 import com.section11.expenselens.domain.models.UserData
+import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
@@ -9,14 +10,16 @@ import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
+import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
-import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
+import io.mockk.mockkStatic
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +36,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -72,8 +77,9 @@ class HomeViewModelTest {
     fun `on init should get user information to update uiState to user signed in`() = runTest {
         val mockUserData = UserData("id", "idToken", "name", "img")
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
-        val mockUiModel: UserInfoUiModel = mock()
-        whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), anyOrNull()))
+            .thenReturn(mockUiModel)
         val user: UserData = mock()
         whenever(user.id).thenReturn("uid")
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
@@ -87,7 +93,7 @@ class HomeViewModelTest {
         )
         advanceUntilIdle()
 
-        assertEquals(UserSignedIn(greeting, mockUiModel), viewModel.uiState.value)
+        assert(viewModel.uiState.value is UserSignedIn)
     }
 
     @Test
@@ -110,8 +116,8 @@ class HomeViewModelTest {
     fun `on init if user signed in then should try to get household`() = runTest {
         val mockUserData = UserData("id", "idToken", "name", "img")
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
-        val mockUiModel: UserInfoUiModel = mock()
-        whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), any())).thenReturn(mockUiModel)
         val user: UserData = mock()
         whenever(user.id).thenReturn("uid")
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
@@ -125,7 +131,7 @@ class HomeViewModelTest {
         )
         advanceUntilIdle()
 
-        verify(storeExpenseUseCase).getCurrentHouseholdIdAndName(any())
+        verify(storeExpenseUseCase).getCurrentHousehold(any())
     }
 
     @Test
@@ -145,13 +151,13 @@ class HomeViewModelTest {
         val successSigning = SignInSuccess(mockUserData)
         whenever(googleSignInUseCase.signInToGoogle(mockContext))
             .thenReturn(Result.success(successSigning))
-        val mockUiModel: UserInfoUiModel = mock()
-        whenever(mapper.getUserData(any())).thenReturn(mockUiModel)
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), anyOrNull())).thenReturn(mockUiModel)
 
         viewModel.onUiEvent(SignInTapped(mockContext))
         advanceUntilIdle()
 
-        assertEquals(UserSignedIn(greeting, mockUiModel), viewModel.uiState.value)
+        assert(viewModel.uiState.value is UserSignedIn)
     }
 
     @Test
@@ -175,7 +181,7 @@ class HomeViewModelTest {
         job.join() // Ensure the coroutine completes
 
         assertTrue(viewModel.uiState.value is UserSignedOut)
-        verify(mapper, never()).getUserData(any())
+        verify(mapper, never()).getUserSignInModel(any(), any())
     }
 
     @Test
@@ -211,5 +217,59 @@ class HomeViewModelTest {
 
         verify(googleSignInUseCase).signOut()
         assertTrue(viewModel.uiState.value is UserSignedOut)
+    }
+
+    @Test
+    fun `when ToExpenseHistory tap then should navigate to expense history`() = runTest {
+        val event = HomeUpstreamEvent.ToExpensesHistoryTapped
+
+        viewModel.onUiEvent(event)
+        advanceUntilIdle()
+
+        verify(navigationManager).navigate(NavigationEvent.NavigateToExpensesHistory)
+    }
+
+    @Test
+    fun `when CreateHouseholdTapped then should create household`() = runTest {
+        val event = HomeUpstreamEvent.CreateHouseholdTapped("id", "name")
+
+        viewModel.onUiEvent(event)
+        advanceUntilIdle()
+
+        verify(storeExpenseUseCase).createHousehold(any(), any())
+    }
+
+    @Test
+    fun `when household creating succeeds then should update ui state`() = runTest {
+        val event = HomeUpstreamEvent.CreateHouseholdTapped("id", "name")
+        val householdResult: UserHousehold = mock<UserHousehold>().apply {
+            whenever(id).thenReturn("someHouseholdId")
+            whenever(name).thenReturn(event.householdName)
+        }
+        whenever(storeExpenseUseCase.createHousehold(any(), any()))
+            .thenReturn(Result.success(householdResult))
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), anyOrNull()))
+            .thenReturn(mockUiModel)
+        val user: UserData = mock()
+        whenever(user.id).thenReturn("uid")
+        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
+        mockkStatic(UserSignedIn::class)
+        whenever(mockUiModel.copy(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
+
+        viewModel = HomeViewModel(
+            navigationManager,
+            googleSignInUseCase,
+            storeExpenseUseCase,
+            mapper,
+            testDispatcher
+        )
+        advanceUntilIdle()
+        viewModel.onUiEvent(event)
+        advanceUntilIdle()
+
+        assert(viewModel.uiState.value is UserSignedIn)
+        val expectedHousehold = HouseholdUiState(householdResult.id, householdResult.name)
+        verify(mockUiModel).copy(anyOrNull(), anyOrNull(), eq(expectedHousehold))
     }
 }

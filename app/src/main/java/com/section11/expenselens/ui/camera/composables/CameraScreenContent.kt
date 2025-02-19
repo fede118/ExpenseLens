@@ -62,8 +62,9 @@ fun CameraScreenContent(
     if (cameraPermissionState.status.isGranted) {
         FullScreenCameraView(
             modifier = modifier.fillMaxSize(),
-            imageCapture = imageCapture
-        ) { onEvent -> onUiEvent(onEvent) }
+            imageCapture = imageCapture,
+            onEvent = onUiEvent
+        )
     } else {
         RequestCameraPermission(cameraPermissionState)
     }
