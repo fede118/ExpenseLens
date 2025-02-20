@@ -1,7 +1,5 @@
 package com.section11.expenselens.ui.navigation
 
-import android.os.Build
-import android.os.Bundle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.navigation.composables.NavigationEffects
+import com.section11.expenselens.framework.utils.getArg
 import com.section11.expenselens.ui.camera.CameraPreviewViewModel
 import com.section11.expenselens.ui.history.ExpenseHistoryViewModel
 import com.section11.expenselens.ui.home.HomeViewModel
@@ -70,11 +69,13 @@ fun ExpenseLensNavGraph(
             InterceptShowSnackBarDownStreamEvents(homeViewModel.uiEvent)
 
             HomeRoute(
-                homeUiState = homeViewModel.uiState,
+                homeUiStateFlow = homeViewModel.uiState,
                 downstreamUiEvent = homeViewModel.uiEvent,
+                dialogDownstreamUiEvent = homeViewModel.profileDialogUiEvent,
                 onUpstreamEvent = homeViewModel::onUiEvent
             )
 
+            // TODO: remove this for release
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.align(Alignment.BottomCenter)) {
                     Text("Just for development:", textAlign = TextAlign.Center)
@@ -96,9 +97,9 @@ fun ExpenseLensNavGraph(
         }
 
         composable(route = EXPENSE_REVIEW_ROUTE) { navStackEntry ->
-            val args = navStackEntry.arguments
-            val expenseInfo = getExpenseInfo(args)
-            val extractedTextFromImage = args?.getString(EXTRACTED_TEXT_KEY)
+            val bundle = navStackEntry.arguments
+            val expenseInfo = bundle?.getArg<SuggestedExpenseInformation>(EXPENSE_INFORMATION_KEY)
+            val extractedTextFromImage = bundle?.getString(EXTRACTED_TEXT_KEY)
             val expenseReviewViewModel = hiltViewModel<ExpenseReviewViewModel>()
 
             InterceptShowSnackBarDownStreamEvents(expenseReviewViewModel.uiEvent)
@@ -140,15 +141,6 @@ fun getHomeViewModelFromParentEntry(navController: NavController): HomeViewModel
         navController.getBackStackEntry(NAV_GRAPH_ROUTE)
     }
     return hiltViewModel(parentEntry)
-}
-
-private fun getExpenseInfo(args: Bundle?): SuggestedExpenseInformation? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        args?.getParcelable(EXPENSE_INFORMATION_KEY, SuggestedExpenseInformation::class.java)
-    } else {
-        @Suppress("DEPRECATION")
-        args?.getParcelable(EXPENSE_INFORMATION_KEY) as? SuggestedExpenseInformation
-    }
 }
 
 @Composable

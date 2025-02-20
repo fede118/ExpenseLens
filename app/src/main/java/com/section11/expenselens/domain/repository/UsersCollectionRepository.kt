@@ -2,7 +2,9 @@ package com.section11.expenselens.domain.repository
 
 import com.section11.expenselens.domain.models.UserHousehold
 
-interface UserHouseholdsRepository {
+interface UsersCollectionRepository {
+
+    suspend fun createUserIfNotExists(userId: String, email: String): Result<Unit>
 
     suspend fun getUserHouseholds(userId: String): List<UserHousehold>
 

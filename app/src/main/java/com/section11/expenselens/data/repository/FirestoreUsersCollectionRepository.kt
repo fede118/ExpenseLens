@@ -3,17 +3,38 @@ package com.section11.expenselens.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.USERS_COLLECTION
+import com.section11.expenselens.data.constants.FirestoreConstants.Fields.EMAIL_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Fields.HOUSEHOLDS_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Fields.ID_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Fields.INVITATIONS_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Fields.NAME_FIELD
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.repository.UserHouseholdsRepository
+import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class FirestoreUsersHouseholdsRepository @Inject constructor(
+class FirestoreUsersCollectionRepository @Inject constructor(
     private val firestore: FirebaseFirestore
-) : UserHouseholdsRepository {
+) : UsersCollectionRepository {
+
+    override suspend fun createUserIfNotExists(userId: String, email: String): Result<Unit> {
+        return try {
+            val userDocRef = firestore.collection(USERS_COLLECTION).document(userId)
+            val snapshot = userDocRef.get().await()
+
+            if (!snapshot.exists()) {
+                val userData = mapOf(
+                    EMAIL_FIELD to email,
+                    HOUSEHOLDS_FIELD to emptyList<Map<String, Any>>(), // Initialize empty household list
+                    INVITATIONS_FIELD to emptyList<Map<String, Any>>() // Initialize empty invitation list
+                )
+                userDocRef.set(userData).await()
+            }
+            Result.success(Unit)
+        } catch (e: FirebaseFirestoreException) {
+            Result.failure(e)
+        }
+    }
 
     override suspend fun getUserHouseholds(userId: String): List<UserHousehold> {
         val userDoc = firestore.collection(USERS_COLLECTION).document(userId).get().await()

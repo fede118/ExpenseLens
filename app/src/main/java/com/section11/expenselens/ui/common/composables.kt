@@ -1,18 +1,29 @@
 package com.section11.expenselens.ui.common
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -34,7 +45,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import com.section11.expenselens.R
@@ -184,6 +197,111 @@ fun MaxCharsOutlinedTextField(
     )
 }
 
+@Composable
+fun TransformingButton(
+    buttonLabel: String,
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    placeHolderText: String = String(),
+    supportingText: @Composable () -> Unit = {},
+    onSubmit: (String) -> Unit, // Callback with loading state control
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val dimens = LocalDimens.current
+    var isEditing by remember { mutableStateOf(false) }
+
+
+    AnimatedContent(
+        targetState = isEditing to isLoading,
+        transitionSpec = {
+            (fadeIn() + scaleIn()).togetherWith(fadeOut() + scaleOut())
+        },
+        modifier = modifier.padding(dimens.m1),
+        label = String()
+    ) { (editing, loading) ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(dimens.m1)
+        ) {
+            when {
+                loading -> CircularProgressIndicator(modifier = Modifier.size(dimens.m5))
+                editing -> OutlinedTextFieldWithCallBack(
+                    placeHolderText,
+                    supportingText = { supportingText() },
+                    onSubmit = { enteredText ->
+                        onSubmit(enteredText)
+                        keyboardController?.hide()
+                    }
+                )
+                else -> {
+                    Button(
+                        onClick = { isEditing = true },
+                        modifier = Modifier.padding(dimens.m1)
+                    ) {
+                        Text(buttonLabel)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RowScope.OutlinedTextFieldWithCallBack(
+    placeHolderText: String,
+    modifier: Modifier = Modifier,
+    supportingText: @Composable () -> Unit = {},
+    onSubmit: (String) -> Unit
+) {
+    val dimens = LocalDimens.current
+    var text by remember { mutableStateOf(String()) }
+
+    OutlinedTextField(
+        value = text,
+        onValueChange = { text = it },
+        modifier = modifier.weight(1f),
+        placeholder = { Text(placeHolderText) },
+        textStyle = MaterialTheme.typography.bodySmall,
+        singleLine = true,
+        supportingText = { supportingText() },
+        trailingIcon = {
+            TextButton(
+                onClick = {
+                    if (text.isNotBlank()) {
+                        onSubmit(text)
+                        text = String()
+                    }
+                }
+            ) {
+                Text(stringResource(R.string.string_send))
+            }
+        },
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                if (text.isNotBlank()) {
+                    onSubmit(text)
+                    text = String()
+                }
+            }
+        )
+    )
+
+    Spacer(modifier = Modifier.width(dimens.m1))
+}
+
+@Composable
+fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
+    Image(
+        painter = rememberAsyncImagePainter(user.profilePic),
+        contentDescription = stringResource(R.string.home_screen_sign_in_icon_content_description),
+        modifier = modifier
+    )
+}
+
 @DarkAndLightPreviews
 @Composable
 fun ProfileDialogPreview(modifier: Modifier = Modifier) {
@@ -194,15 +312,11 @@ fun ProfileDialogPreview(modifier: Modifier = Modifier) {
             userName = "Test User",
             onDismiss = {},
             onLogout = {}
-        )
+        ) {
+            TransformingButton(
+                stringResource(R.string.home_screen_invite_to_household_label),
+                onSubmit = { _ -> }
+            )
+        }
     }
-}
-
-@Composable
-fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
-    Image(
-        painter = rememberAsyncImagePainter(user.profilePic),
-        contentDescription = stringResource(R.string.home_screen_sign_in_icon_content_description),
-        modifier = modifier
-    )
 }

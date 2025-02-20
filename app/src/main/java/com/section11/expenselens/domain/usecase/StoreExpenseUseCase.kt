@@ -6,12 +6,12 @@ import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.ExpensesRepository
-import com.section11.expenselens.domain.repository.UserHouseholdsRepository
+import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import javax.inject.Inject
 
 class StoreExpenseUseCase @Inject constructor(
     private val expensesRepository: ExpensesRepository,
-    private val userHouseholdsRepository: UserHouseholdsRepository
+    private val usersCollectionRepository: UsersCollectionRepository
 ) {
 
     /**
@@ -20,7 +20,7 @@ class StoreExpenseUseCase @Inject constructor(
      * if we want more than 1 household per user. The data will already support it, but not our logic
      */
     suspend fun getCurrentHousehold(userId: String): UserHousehold? {
-        return userHouseholdsRepository.getUserHouseholds(userId).ifEmpty { null }?.first()
+        return usersCollectionRepository.getUserHouseholds(userId).ifEmpty { null }?.first()
     }
 
     suspend fun createHousehold(
@@ -30,7 +30,7 @@ class StoreExpenseUseCase @Inject constructor(
         val householdCreationResult = expensesRepository.createHousehold(userId, houseHoldName)
         val household = householdCreationResult.getOrNull()
         return if (householdCreationResult.isSuccess && household != null) {
-            val addHouseholdToUserResult = userHouseholdsRepository.addHouseholdToUser(userId, household)
+            val addHouseholdToUserResult = usersCollectionRepository.addHouseholdToUser(userId, household)
 
             addHouseholdToUserResult.fold(
                 onSuccess = { Result.success(household) },

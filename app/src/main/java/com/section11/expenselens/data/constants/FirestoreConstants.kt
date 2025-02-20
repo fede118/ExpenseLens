@@ -4,7 +4,13 @@ package com.section11.expenselens.data.constants
  * Current Data structure:
  * - Documents:
  *      - users/{userId} (collection)
+ *          - email
  *          - households (list of households)
+ *          - invitations (list of invitations)
+ *              - householdId
+ *              - householdName
+ *              - inviterId
+ *              - status (pending, accepted, rejected)
  *      - households/{householdId} (collection)
  *              - expenses
  *                  - expenseId
@@ -26,8 +32,14 @@ object FirestoreConstants {
 
     object Fields {
         const val HOUSEHOLDS_FIELD = "households"  // Field inside `users/{userId}`
+        const val HOUSEHOLD_ID_FIELD = "householdId"
+        const val HOUSEHOLD_NAME_FIELD = "householdName"
+        const val INVITATIONS_FIELD = "invitations"
+        const val INVITER_ID_FIELD = "inviterId"
+        const val INVITE_STATUS_FIELD = "status"
+        const val INVITE_TIMESTAMP_FIELD = "timestamp"
         const val ID_FIELD = "id"
         const val NAME_FIELD = "name"
-        const val USERS_FIELD = "users"
+        const val EMAIL_FIELD = "email"
     }
 }
