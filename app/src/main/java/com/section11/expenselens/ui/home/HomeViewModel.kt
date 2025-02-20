@@ -1,26 +1,31 @@
 package com.section11.expenselens.ui.home
 
 import android.content.Context
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
+import com.section11.expenselens.domain.usecase.HouseholdInvitationUseCase
 import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
+import com.section11.expenselens.ui.common.AbstractViewModel
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
+import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdLoading
+import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdResult
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
-import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
-import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.ToExpensesHistoryTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHouseholdTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.ToExpensesHistoryTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
@@ -30,10 +35,7 @@ import com.section11.expenselens.ui.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,17 +45,19 @@ class HomeViewModel @Inject constructor(
     private val navigationManager: NavigationManager,
     private val googleSignInUseCase: GoogleSignInUseCase,
     private val storeExpenseUseCase: StoreExpenseUseCase,
+    private val householdInvitationUseCase: HouseholdInvitationUseCase,
     private val uiMapper: HomeScreenUiMapper,
     private val dispatcher: CoroutineDispatcher
-) : ViewModel() {
+) : AbstractViewModel() {
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
-
-    private val _uiEvent = MutableSharedFlow<DownstreamUiEvent>()
-    val uiEvent: SharedFlow<DownstreamUiEvent> = _uiEvent
+    private val _profileDialogUiEvent = MutableSharedFlow<DownstreamUiEvent>()
+    val profileDialogUiEvent: SharedFlow<DownstreamUiEvent> = _profileDialogUiEvent
 
     init {
+        getSignInOrSignedOutStatus()
+    }
+
+    private fun getSignInOrSignedOutStatus() {
         viewModelScope.launch(dispatcher) {
             _uiEvent.emit(Loading(true))
             val userData = googleSignInUseCase.getCurrentUser().getOrNull()
@@ -75,6 +79,7 @@ class HomeViewModel @Inject constructor(
                 is SignOutTapped -> handleSignOutEvent()
                 is ToExpensesHistoryTapped -> navigationManager.navigate(NavigateToExpensesHistory)
                 is CreateHouseholdTapped -> handleHouseholdCreation(homeEvent)
+                is AddUserToHouseholdTapped -> handleInvitingUserToHousehold(homeEvent)
             }
         }
     }
@@ -127,6 +132,37 @@ class HomeViewModel @Inject constructor(
                 _uiEvent.emit(Loading(false))
             }
         )
+    }
+
+    private suspend fun handleInvitingUserToHousehold(inviteEvent: AddUserToHouseholdTapped) {
+        _profileDialogUiEvent.emit(AddUserToHouseholdLoading(true))
+        val household = (_uiState.value as? UserSignedIn)?.householdInfo
+        household?.let {
+            val  result = householdInvitationUseCase.inviteToHousehold(
+                inviterId = inviteEvent.invitingUserId,
+                inviteeEmail = inviteEvent.inviteeUserEmail,
+                household = UserHousehold(it.id, it.name)
+            )
+
+            result.fold(
+                onFailure = { exception ->
+                    _profileDialogUiEvent.emit(
+                        AddUserToHouseholdResult(
+                            uiMapper.getInvitationErrorMessage(exception),
+                            uiMapper.getInvitationErrorMessageColor()
+                        )
+                    )
+                },
+                onSuccess = {
+                    _profileDialogUiEvent.emit(
+                        AddUserToHouseholdResult(
+                            uiMapper.getSuccessInvitationMessage(),
+                            uiMapper.getInvitationSuccessMessageColor()
+                        )
+                    )
+                }
+            )
+        }
     }
 
     // TODO remove this on first release version of the app

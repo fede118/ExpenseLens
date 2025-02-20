@@ -7,13 +7,15 @@ import com.google.gson.Gson
 import com.section11.expenselens.BuildConfig
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
 import com.section11.expenselens.data.repository.FirestoreExpensesRepository
-import com.section11.expenselens.data.repository.FirestoreUsersHouseholdsRepository
+import com.section11.expenselens.data.repository.FirestoreHouseholdInvitationRepository
+import com.section11.expenselens.data.repository.FirestoreUsersCollectionRepository
 import com.section11.expenselens.data.repository.GeminiAiRepository
 import com.section11.expenselens.data.repository.GoogleUserSessionRepository
 import com.section11.expenselens.data.service.GeminiService
 import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository
 import com.section11.expenselens.domain.repository.ExpensesRepository
-import com.section11.expenselens.domain.repository.UserHouseholdsRepository
+import com.section11.expenselens.domain.repository.HouseholdInvitationRepository
+import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import com.section11.expenselens.domain.repository.UserSessionRepository
 import dagger.Module
 import dagger.Provides
@@ -60,7 +62,14 @@ class RepositoryModule {
     @Provides
     fun providesFirestoreUsersHouseholdsRepository(
         firestore: FirebaseFirestore
-    ): UserHouseholdsRepository {
-        return FirestoreUsersHouseholdsRepository(firestore)
+    ): UsersCollectionRepository {
+        return FirestoreUsersCollectionRepository(firestore)
+    }
+
+    @Provides
+    fun providesFirestoreHouseholdInvitationRepository(
+        firestore: FirebaseFirestore
+    ): HouseholdInvitationRepository {
+        return FirestoreHouseholdInvitationRepository(firestore)
     }
 }

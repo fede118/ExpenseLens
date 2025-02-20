@@ -7,29 +7,33 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.section11.expenselens.domain.exceptions.IllegalUserInfoException
 import com.section11.expenselens.domain.exceptions.InvalidCredentialException
 import com.section11.expenselens.domain.exceptions.InvalidCredentialTypeException
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.repository.UserSessionRepository
+import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
 import com.section11.expenselens.framework.utils.GoogleTokenMapper
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-private const val FIREBASE_EXCEPTION_FALLBACK_MESSAGE = "Firebase authentication failed"
-private const val FIREBASE_EXCEPTION_ID_NULL = "User ID is null after successful Firebase sign-in. This is unexpected."
-private const val FIREBASE_EXCEPTION_CODE = "-1"
+private const val FIREBASE_AUTH_EXCEPTION_MESSAGE = "Firebase authentication failed"
+private const val FIREBASE_EXCEPTION_ID_NULL = "User ID or Email is null after successful Firebase " +
+        "sign-in. This is unexpected."
+private const val FIREBASE_EXCEPTION_EMAIL_NULL = "User email is null after successful Firebase " +
+        "sign-in. This is unexpected."
+private const val FIREBASE_EXCEPTION_USER_CREATION_FAILED = "Failed to add user to users collection"
 
 class GoogleSignInUseCase @Inject constructor(
     private val credentialRequest: GetCredentialRequest,
     private val credentialManager: CredentialManager,
     private val firebaseAuth: FirebaseAuth,
     private val userSessionRepository: UserSessionRepository,
-    private val googleTokenMapper: GoogleTokenMapper
+    private val googleTokenMapper: GoogleTokenMapper,
+    private val usersCollectionRepository: UsersCollectionRepository
 ) {
 
     /**
@@ -68,25 +72,42 @@ class GoogleSignInUseCase @Inject constructor(
 
         return if (task.isSuccessful) {
             val user = firebaseAuth.currentUser
-            val uid = user?.uid ?: throw FirebaseException(FIREBASE_EXCEPTION_ID_NULL)
-            userSessionRepository.saveUser(
-                googleUser.idToken,
-                uid,
-                googleUser.displayName,
-                googleUser.profilePictureUri
-            )
-            Result.success(SignInSuccess(UserData(
-                googleUser.idToken,
-                uid,
-                googleUser.displayName,
-                googleUser.profilePictureUri.toString()
-            )))
+            val uid = user?.uid
+            val email = user?.email
+            return if (uid == null  ) {
+                Result.failure(
+                    IllegalUserInfoException(FIREBASE_EXCEPTION_ID_NULL)
+                )
+            } else if (email == null) {
+                Result.failure(
+                    IllegalUserInfoException(FIREBASE_EXCEPTION_EMAIL_NULL)
+                )
+            } else {
+                val firestoreUserResult = usersCollectionRepository.createUserIfNotExists(uid, email)
+                if (firestoreUserResult.isFailure) {
+                    throw IllegalUserInfoException(FIREBASE_EXCEPTION_USER_CREATION_FAILED)
+                }
+
+                with(googleUser) {
+                    userSessionRepository.saveUser(
+                        idToken,
+                        uid,
+                        displayName,
+                        profilePictureUri
+                    )
+                    Result.success(SignInSuccess(
+                        UserData(
+                            idToken,
+                            uid,
+                            displayName,
+                            profilePictureUri.toString()
+                        )
+                    ))
+                }
+            }
         } else {
             Result.failure(
-                FirebaseAuthException(
-                    FIREBASE_EXCEPTION_CODE,
-                    task.exception?.message ?: FIREBASE_EXCEPTION_FALLBACK_MESSAGE
-                )
+                IllegalUserInfoException(FIREBASE_AUTH_EXCEPTION_MESSAGE)
             )
         }
     }

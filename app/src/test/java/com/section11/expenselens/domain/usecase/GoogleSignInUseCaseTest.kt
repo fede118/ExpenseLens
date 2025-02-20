@@ -19,6 +19,7 @@ import com.section11.expenselens.domain.exceptions.InvalidCredentialException
 import com.section11.expenselens.domain.exceptions.InvalidCredentialTypeException
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.repository.UserSessionRepository
+import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import com.section11.expenselens.framework.utils.GoogleTokenMapper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -41,6 +42,7 @@ class GoogleSignInUseCaseTest {
     private val userSessionRepository: UserSessionRepository = mock()
     private val mockTokenMapper: GoogleTokenMapper = mock()
     private val firebaseAuth: FirebaseAuth = mock()
+    private val usersCollectionRepository: UsersCollectionRepository = mock()
     private val context: Context = mock()
     private lateinit var googleSignInUseCase: GoogleSignInUseCase
 
@@ -51,7 +53,8 @@ class GoogleSignInUseCaseTest {
             credentialManager,
             firebaseAuth,
             userSessionRepository,
-            mockTokenMapper
+            mockTokenMapper,
+            usersCollectionRepository
         )
     }
 
@@ -71,6 +74,8 @@ class GoogleSignInUseCaseTest {
         val mockTask: Task<AuthResult> = Tasks.forResult(mock<AuthResult>())
         whenever(firebaseAuth.signInWithCredential(any())).thenReturn(mockTask)
         val userMock = getFireBaseUser()
+        whenever(userMock.uid).thenReturn(id)
+        whenever(userMock.email).thenReturn("email")
         whenever(firebaseAuth.currentUser).thenReturn(userMock)
 
         val result = googleSignInUseCase.signInToGoogle(context)

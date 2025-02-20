@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -41,15 +43,19 @@ import com.section11.expenselens.ui.common.HandleDownstreamEvents
 import com.section11.expenselens.ui.common.MaxCharsOutlinedTextField
 import com.section11.expenselens.ui.common.ProfileDialog
 import com.section11.expenselens.ui.common.ProfilePictureIcon
+import com.section11.expenselens.ui.common.TransformingButton
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
+import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdLoading
+import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdResult
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
-import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignOutTapped
-import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.ToExpensesHistoryTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHouseholdTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.ToExpensesHistoryTapped
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
@@ -65,13 +71,14 @@ private const val HOUSEHOLD_NAME_MAX_CHARS = 25
 
 @Composable
 fun HomeScreenContent(
-    homeUiState: StateFlow<UiState>,
+    homeUiStateFlow: StateFlow<UiState>,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    onEvent: (HomeUpstreamEvent) -> Unit
+    dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
+    onEvent: (HomeUpstreamEvent) -> Unit = {}
 ) {
-    val uiState by homeUiState.collectAsState()
+    val uiState by homeUiStateFlow.collectAsState()
     when (uiState) {
-        is UserSignedIn -> SignedInUi(uiState as UserSignedIn, onEvent)
+        is UserSignedIn -> SignedInUi(uiState as UserSignedIn, dialogDownstreamUiEvent, onEvent)
         is UserSignedOut -> LoggedOutUi(uiState as UserSignedOut, onEvent)
     }
 
@@ -81,20 +88,23 @@ fun HomeScreenContent(
 @Composable
 fun SignedInUi(
     userSignedInModel: UserSignedIn,
+    dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
     with(userSignedInModel) {
         if (householdInfo != null) {
             ExistingHouseholdUi(
                 user,
+                dialogDownstreamUiEvent,
                 greeting,
                 householdInfo,
-                onEvent
+                onEvent,
             )
         } else {
             CreateHouseholdUi(
                 Modifier.fillMaxWidth(1f),
                 user,
+                dialogDownstreamUiEvent,
                 greeting,
                 onEvent
             )
@@ -105,10 +115,11 @@ fun SignedInUi(
 @Composable
 fun ExistingHouseholdUi(
     userInfo: UserInfoUiModel,
+    dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     greeting: String,
     household: HouseholdUiState,
-    onEvent: (HomeUpstreamEvent) -> Unit)
-{
+    onEvent: (HomeUpstreamEvent) -> Unit
+) {
     val dimens = LocalDimens.current
     BoxHomeScreenContainer(
         boxContent = {
@@ -127,7 +138,7 @@ fun ExistingHouseholdUi(
             }
         }
     ) { iconModifier ->
-        SignedInGreetingAndIcon(iconModifier, userInfo, greeting, onEvent) {
+        SignedInGreetingAndIcon(iconModifier, userInfo, dialogDownstreamUiEvent, greeting, onEvent) {
             Text(stringResource(R.string.home_screen_household_name_prefix, household.name))
         }
     }
@@ -164,13 +175,33 @@ fun BoxHomeScreenContainer(
 
 @Composable
 fun ColumnScope.SignedInGreetingAndIcon(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     userInfo: UserInfoUiModel,
+    dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     greeting: String,
     onEvent: (HomeUpstreamEvent) -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val dialogUiEvent by dialogDownstreamUiEvent.collectAsState(null)
     var showDialog by remember { mutableStateOf(false) }
+    var isAddUsersLoading by remember { mutableStateOf(false) }
+    var invitationResultMessage: String? by remember { mutableStateOf(null) }
+    var invitationResultMessageColor: Color? by remember { mutableStateOf(null) }
+
+    LaunchedEffect(dialogUiEvent) {
+        when(dialogUiEvent) {
+            is AddUserToHouseholdLoading -> {
+                (dialogUiEvent as AddUserToHouseholdLoading).isLoading.let {
+                    isAddUsersLoading = it
+                }
+            }
+            is AddUserToHouseholdResult -> {
+                isAddUsersLoading = false
+                invitationResultMessage = (dialogUiEvent as AddUserToHouseholdResult).message
+                invitationResultMessageColor = (dialogUiEvent as AddUserToHouseholdResult).textColor
+            }
+        }
+    }
 
     ProfilePictureIcon(
         user = userInfo,
@@ -198,6 +229,19 @@ fun ColumnScope.SignedInGreetingAndIcon(
                 ) {
                     Text(stringResource(R.string.home_screen_expense_history_label))
                 }
+
+                TransformingButton(
+                    buttonLabel = stringResource(R.string.home_screen_invite_to_household_label),
+                    isLoading = isAddUsersLoading,
+                    placeHolderText = stringResource(R.string.home_screen_invite_to_household_placeholder),
+                    supportingText = {
+                        invitationResultMessage?.let {
+                            Text(it, color = invitationResultMessageColor ?: Color.Unspecified)
+                        }
+                    }
+                ) { enteredText ->
+                    onEvent(AddUserToHouseholdTapped(userInfo.id, enteredText))
+                }
             }
         }
     }
@@ -207,6 +251,7 @@ fun ColumnScope.SignedInGreetingAndIcon(
 fun CreateHouseholdUi(
     modifier: Modifier = Modifier,
     userInfo: UserInfoUiModel,
+    dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     greeting: String,
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
@@ -214,7 +259,7 @@ fun CreateHouseholdUi(
     val dimens = LocalDimens.current
 
     BoxHomeScreenContainer { iconModifier ->
-        SignedInGreetingAndIcon(iconModifier, userInfo, greeting, onEvent) {
+        SignedInGreetingAndIcon(iconModifier, userInfo, dialogDownstreamUiEvent, greeting, onEvent) {
             Spacer(Modifier.height(dimens.m1))
             Text(
                 stringResource(R.string.home_screen_no_household_message)
@@ -274,7 +319,8 @@ fun Greeting(greeting: String) {
 fun LoggedOutPreview() {
     Preview {
         HomeScreenContent(
-            homeUiState = MutableStateFlow(UserSignedOut("Test Greeting")),
+            homeUiStateFlow = MutableStateFlow(UserSignedOut("Test Greeting")),
+            dialogDownstreamUiEvent = MutableSharedFlow(),
             downstreamUiEvent = MutableSharedFlow()
         ) {}
     }
@@ -291,9 +337,10 @@ fun SignedInPreview() {
     )
     Preview {
         HomeScreenContent(
-            homeUiState = userSignedIn,
+            homeUiStateFlow = userSignedIn,
+            dialogDownstreamUiEvent = MutableSharedFlow(),
             downstreamUiEvent = MutableSharedFlow()
-        ) {}
+        )
     }
 }
 
@@ -309,8 +356,9 @@ fun SignedInWithHouseholdPreview() {
     )
     Preview {
         HomeScreenContent(
-            homeUiState = userSignedIn,
+            homeUiStateFlow = userSignedIn,
+            dialogDownstreamUiEvent = MutableSharedFlow(),
             downstreamUiEvent = MutableSharedFlow()
-        ) {}
+        )
     }
 }

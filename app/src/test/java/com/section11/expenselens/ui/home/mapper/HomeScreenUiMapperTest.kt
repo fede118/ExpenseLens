@@ -1,6 +1,8 @@
 package com.section11.expenselens.ui.home.mapper
 
+import androidx.compose.ui.graphics.Color
 import com.section11.expenselens.R
+import com.section11.expenselens.domain.exceptions.UserNotFoundException
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProvider
@@ -68,6 +70,55 @@ class HomeScreenUiMapperTest {
     fun `getHouseholdCreationErrorMessage should return correct error message`() {
         mapper.getHouseholdCreationErrorMessage()
 
-        verify(resourceProvider).getString(R.string.home_screen_house_hold_creation_failure)
+        verify(resourceProvider).getString(R.string.home_screen_household_creation_failure)
+    }
+
+    @Test
+    fun `getInvitationErrorMessage should return correct error message when UserNotFoundException`() {
+        val userNotFoundException = UserNotFoundException("message")
+        whenever(resourceProvider.getString(R.string.home_screen_household_invite_user_not_found))
+            .thenReturn("message")
+
+        val result = mapper.getInvitationErrorMessage(userNotFoundException)
+
+        verify(resourceProvider).getString(R.string.home_screen_household_invite_user_not_found)
+        assertEquals("message", result)
+    }
+
+    @Test
+    fun `getInvitationErrorMessage should return correct error message when other exception`() {
+        val exception = Exception("message")
+        whenever(resourceProvider.getString(R.string.home_screen_household_invite_failure))
+            .thenReturn("message")
+
+        val result = mapper.getInvitationErrorMessage(exception)
+
+        verify(resourceProvider).getString(R.string.home_screen_household_invite_failure)
+        assertEquals("message", result)
+    }
+
+    @Test
+    fun `getSuccessInvitationMessage should return correct success message`() {
+        whenever(resourceProvider.getString(R.string.home_screen_household_invite_success))
+            .thenReturn("message")
+
+        val result = mapper.getSuccessInvitationMessage()
+
+        verify(resourceProvider).getString(R.string.home_screen_household_invite_success)
+        assertEquals("message", result)
+    }
+
+    @Test
+    fun `getInvitationErrorMessageColor should return red color`() {
+        val result = mapper.getInvitationErrorMessageColor()
+
+        assertEquals(Color.Red, result)
+    }
+
+    @Test
+    fun `getInvitationSuccessMessageColor should return green color`() {
+        val result = mapper.getInvitationSuccessMessageColor()
+
+        assertEquals(Color.Green, result)
     }
 }

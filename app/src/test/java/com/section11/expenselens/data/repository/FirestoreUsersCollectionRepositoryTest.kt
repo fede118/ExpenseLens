@@ -1,7 +1,9 @@
 package com.section11.expenselens.data.repository
 
+import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.common.truth.Truth.assertThat
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -14,17 +16,17 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
-class FirestoreUsersHouseholdsRepositoryTest {
+class FirestoreUsersCollectionRepositoryTest {
 
-    private lateinit var repository: FirestoreUsersHouseholdsRepository
+    private lateinit var repository: FirestoreUsersCollectionRepository
 
     private val mockFirestore: FirebaseFirestore = mock()
     private val mockDocumentReference: DocumentReference = mock()
@@ -36,11 +38,44 @@ class FirestoreUsersHouseholdsRepositoryTest {
 
     @Before
     fun setUp() {
-        repository = FirestoreUsersHouseholdsRepository(mockFirestore)
+        repository = FirestoreUsersCollectionRepository(mockFirestore)
 
         whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mock())
         whenever(mockFirestore.collection(USERS_COLLECTION).document(testUserId))
             .thenReturn(mockDocumentReference)
+    }
+
+    @Test
+    fun `createUserIfNotExists creates new document if user does not exist`() = runTest {
+        val mockCollection = mock<CollectionReference>()
+        whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(any())).thenReturn(mockDocumentReference)
+        val docSnapshotMock: DocumentSnapshot = mock()
+        val task: Task<DocumentSnapshot> = Tasks.forResult(docSnapshotMock)
+        whenever(mockDocumentReference.get()).thenReturn(task)
+        whenever(mockDocumentSnapshot.exists()).thenReturn(false)
+        val setTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockDocumentReference.set(any())).thenReturn(setTask)
+
+        val result = repository.createUserIfNotExists(testUserId, "testEmail")
+
+        assertThat(result.isSuccess).isTrue()
+        verify(mockDocumentReference).set(any())
+    }
+
+    @Test
+    fun `createUserIfNotExists doesn't create new document if user exists`() = runTest {
+        val mockCollection = mock<CollectionReference>()
+        whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(any())).thenReturn(mockDocumentReference)
+        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
+        val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
+        whenever(mockDocumentReference.get()).thenReturn(task)
+
+        val result = repository.createUserIfNotExists(testUserId, "testEmail")
+
+        assertThat(result.isSuccess).isTrue()
+        verify(mockDocumentReference, never()).set(any())
     }
 
     @Test

@@ -1,6 +1,8 @@
 package com.section11.expenselens.ui.home.mapper
 
+import androidx.compose.ui.graphics.Color
 import com.section11.expenselens.R
+import com.section11.expenselens.domain.exceptions.UserNotFoundException
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProvider
@@ -32,6 +34,27 @@ class HomeScreenUiMapper @Inject constructor(private val resourceProvider: Resou
     }
 
     fun getHouseholdCreationErrorMessage(): String {
-        return resourceProvider.getString(R.string.home_screen_house_hold_creation_failure)
+        return resourceProvider.getString(R.string.home_screen_household_creation_failure)
     }
+
+    fun getInvitationErrorMessage(throwable: Throwable): String {
+        return when(throwable) {
+            is UserNotFoundException -> {
+                resourceProvider.getString(R.string.home_screen_household_invite_user_not_found)
+            }
+            else -> getGenericInviteError()
+        }
+    }
+
+    private fun getGenericInviteError(): String {
+        return resourceProvider.getString(R.string.home_screen_household_invite_failure)
+    }
+
+    fun getSuccessInvitationMessage(): String {
+        return resourceProvider.getString(R.string.home_screen_household_invite_success)
+    }
+
+    fun getInvitationErrorMessageColor() = Color.Red
+
+    fun getInvitationSuccessMessageColor() = Color.Green
 }

@@ -14,13 +14,12 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun HomeRoute(
-    homeUiState: StateFlow<UiState>,
+    homeUiStateFlow: StateFlow<UiState>,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    onUpstreamEvent: (HomeUpstreamEvent) -> Unit
+    dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
+    onUpstreamEvent: (HomeUpstreamEvent) -> Unit = {}
 ) {
-    HomeScreenContent(homeUiState, downstreamUiEvent) { event ->
-        onUpstreamEvent(event)
-    }
+    HomeScreenContent(homeUiStateFlow, downstreamUiEvent, dialogDownstreamUiEvent, onUpstreamEvent)
 }
 
 @DarkAndLightPreviews
@@ -29,8 +28,9 @@ fun HomeScreenPreview() {
     val homeUiState = MutableStateFlow<UiState>(UiState.Idle)
     Preview {
         HomeRoute(
-            homeUiState = homeUiState,
+            homeUiStateFlow = homeUiState,
+            dialogDownstreamUiEvent = MutableSharedFlow(),
             downstreamUiEvent = MutableSharedFlow(),
-        ) {}
+        )
     }
 }

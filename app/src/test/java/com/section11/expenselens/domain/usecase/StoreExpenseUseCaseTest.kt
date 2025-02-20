@@ -8,7 +8,7 @@ import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.ExpensesRepository
-import com.section11.expenselens.domain.repository.UserHouseholdsRepository
+import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,7 +28,7 @@ class StoreExpenseUseCaseTest {
 
     private lateinit var useCase: StoreExpenseUseCase
     private val expensesRepository: ExpensesRepository = mock()
-    private val usersHouseholdRepository: UserHouseholdsRepository = mock()
+    private val usersHouseholdRepository: UsersCollectionRepository = mock()
 
     @Before
     fun setup() {
