@@ -24,4 +24,16 @@ class HouseholdInvitationUseCaseTest {
         // Then
         verify(invitationsRepository).postInvitationsToUser(inviterId, inviteeEmail, household)
     }
+
+    @Test
+    fun `getPendingInvitations should call the repository`() = runTest {
+        // Given
+        val userId = "userId"
+
+        // When
+        householdInvitationUseCase.getPendingInvitations(userId)
+
+        // Then
+        verify(invitationsRepository).getPendingInvitations(userId)
+    }
 }

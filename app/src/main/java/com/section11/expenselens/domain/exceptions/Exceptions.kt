@@ -5,6 +5,7 @@ private const val API_ERROR = "API Error:"
 private const val INVALID_CREDENTIALS = "Invalid credentials"
 private const val INVALID_CREDENTIALS_TYPE = "Invalid credentials type"
 private const val NO_HOUSEHOLD_IN_FIRESTONE = "No household in firestone with that name"
+private const val FIELD_WAS_NULL_MESSAGE = "A mandatory field for firebase was null"
 
 /**
  * Exception representing an API error.
@@ -30,3 +31,5 @@ class HouseholdNotFoundException(message: String = NO_HOUSEHOLD_IN_FIRESTONE): R
 class IllegalUserInfoException(message: String) : RuntimeException(message)
 
 class UserNotFoundException(message: String) : RuntimeException(message)
+
+class NullFieldOnFirebaseException(message: String = FIELD_WAS_NULL_MESSAGE) : RuntimeException(message)

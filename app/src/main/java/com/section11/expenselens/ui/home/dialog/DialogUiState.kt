@@ -5,7 +5,7 @@ import com.section11.expenselens.ui.utils.DownstreamUiEvent
 
 sealed class DialogUiEvent : DownstreamUiEvent() {
     data class AddUserToHouseholdLoading(val isLoading: Boolean) : DialogUiEvent()
-    data class AddUserToHouseholdResult(
+    data class HouseholdInviteResultEvent(
         val message: String,
         val textColor: Color
     ) : DialogUiEvent()

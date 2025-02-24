@@ -36,7 +36,7 @@ class HomeScreenUiMapperTest {
     fun `when getUserData then userData model is returned when household null`() {
         val mockUserData = UserData("idToken", "id", "name", "img")
 
-        val result = mapper.getUserSignInModel(mockUserData, null)
+        val result = mapper.getUserSignInModel(mockUserData, null, null)
 
         with(result.user) {
             assert(result.householdInfo == null)
@@ -51,7 +51,7 @@ class HomeScreenUiMapperTest {
         val mockUserData = UserData("idToken", "id", "name", "img")
         val household = UserHousehold("id", "name")
 
-        val result = mapper.getUserSignInModel(mockUserData, household)
+        val result = mapper.getUserSignInModel(mockUserData, household, null)
 
         with(result) {
             assertEquals(household.id, householdInfo?.id)
@@ -74,15 +74,16 @@ class HomeScreenUiMapperTest {
     }
 
     @Test
-    fun `getInvitationErrorMessage should return correct error message when UserNotFoundException`() {
+    fun `getHouseholdInviteResultEvent should return correct error message when UserNotFoundException`() {
         val userNotFoundException = UserNotFoundException("message")
         whenever(resourceProvider.getString(R.string.home_screen_household_invite_user_not_found))
             .thenReturn("message")
 
-        val result = mapper.getInvitationErrorMessage(userNotFoundException)
+        val result = mapper.getHouseholdInviteResultEvent(userNotFoundException)
 
         verify(resourceProvider).getString(R.string.home_screen_household_invite_user_not_found)
-        assertEquals("message", result)
+        assertEquals("message", result.message)
+        assertEquals(Color.Red, result.textColor)
     }
 
     @Test
@@ -91,10 +92,10 @@ class HomeScreenUiMapperTest {
         whenever(resourceProvider.getString(R.string.home_screen_household_invite_failure))
             .thenReturn("message")
 
-        val result = mapper.getInvitationErrorMessage(exception)
+        val result = mapper.getHouseholdInviteResultEvent(exception)
 
         verify(resourceProvider).getString(R.string.home_screen_household_invite_failure)
-        assertEquals("message", result)
+        assertEquals("message", result.message)
     }
 
     @Test
@@ -102,23 +103,10 @@ class HomeScreenUiMapperTest {
         whenever(resourceProvider.getString(R.string.home_screen_household_invite_success))
             .thenReturn("message")
 
-        val result = mapper.getSuccessInvitationMessage()
+        val result = mapper.getHouseholdInviteResultEvent()
 
         verify(resourceProvider).getString(R.string.home_screen_household_invite_success)
-        assertEquals("message", result)
-    }
-
-    @Test
-    fun `getInvitationErrorMessageColor should return red color`() {
-        val result = mapper.getInvitationErrorMessageColor()
-
-        assertEquals(Color.Red, result)
-    }
-
-    @Test
-    fun `getInvitationSuccessMessageColor should return green color`() {
-        val result = mapper.getInvitationSuccessMessageColor()
-
-        assertEquals(Color.Green, result)
+        assertEquals("message", result.message)
+        assertEquals(Color.Green, result.textColor)
     }
 }

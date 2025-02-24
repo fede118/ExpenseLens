@@ -2,6 +2,7 @@ package com.section11.expenselens.ui.home
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
@@ -15,13 +16,12 @@ import com.section11.expenselens.framework.navigation.NavigationManager.Navigati
 import com.section11.expenselens.ui.common.AbstractViewModel
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
-import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdLoading
-import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdResult
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHouseholdTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
@@ -62,13 +62,22 @@ class HomeViewModel @Inject constructor(
             _uiEvent.emit(Loading(true))
             val userData = googleSignInUseCase.getCurrentUser().getOrNull()
             if (userData != null) {
-                val householdsResult = storeExpenseUseCase.getCurrentHousehold(userData.id)
-                _uiState.value = uiMapper.getUserSignInModel(userData, householdsResult)
+                onSignIn(userData)
             } else {
                 _uiState.value = UserSignedOut(uiMapper.getGreeting())
             }
             _uiEvent.emit(Loading(false))
         }
+    }
+
+    private suspend fun onSignIn(userData: UserData) {
+        val householdsResult = storeExpenseUseCase.getCurrentHousehold(userData.id)
+        val pendingInvites = householdInvitationUseCase.getPendingInvitations(userData.id)
+        _uiState.value = uiMapper.getUserSignInModel(
+            userData,
+            householdsResult,
+            pendingInvites.getOrNull()
+        )
     }
 
     fun onUiEvent(homeEvent: HomeUpstreamEvent) {
@@ -80,6 +89,7 @@ class HomeViewModel @Inject constructor(
                 is ToExpensesHistoryTapped -> navigationManager.navigate(NavigateToExpensesHistory)
                 is CreateHouseholdTapped -> handleHouseholdCreation(homeEvent)
                 is AddUserToHouseholdTapped -> handleInvitingUserToHousehold(homeEvent)
+                is HouseholdInviteTap -> { Unit /* TODO working on this in next PR */ }
             }
         }
     }
@@ -87,11 +97,7 @@ class HomeViewModel @Inject constructor(
     private suspend fun handleSignInEvent(event: SignInTapped) {
         _uiEvent.emit(Loading(true))
         when(val signInResult = googleSignInUseCase.signInToGoogle(event.context).getOrNull()) {
-            is SignInSuccess -> {
-                val userData = signInResult.userData
-                val householdsResult = storeExpenseUseCase.getCurrentHousehold(userData.id)
-                _uiState.value = uiMapper.getUserSignInModel(userData, householdsResult)
-            }
+            is SignInSuccess -> onSignIn(signInResult.userData)
             is SignInCancelled -> _uiEvent.emit(Loading(false))
             null -> _uiEvent.emit(ShowSnackBar("Something went wrong, try again"))
         }
@@ -117,10 +123,7 @@ class HomeViewModel @Inject constructor(
             onSuccess = { household ->
                 _uiState.update {
                     if (it is UserSignedIn) {
-                        it.copy(householdInfo = HouseholdUiState(
-                            household.id,
-                            household.name
-                        ))
+                        uiMapper.updateSignedInUiWithHousehold(it, household)
                     } else {
                         it
                     }
@@ -146,21 +149,9 @@ class HomeViewModel @Inject constructor(
 
             result.fold(
                 onFailure = { exception ->
-                    _profileDialogUiEvent.emit(
-                        AddUserToHouseholdResult(
-                            uiMapper.getInvitationErrorMessage(exception),
-                            uiMapper.getInvitationErrorMessageColor()
-                        )
-                    )
+                    _profileDialogUiEvent.emit(uiMapper.getHouseholdInviteResultEvent(exception))
                 },
-                onSuccess = {
-                    _profileDialogUiEvent.emit(
-                        AddUserToHouseholdResult(
-                            uiMapper.getSuccessInvitationMessage(),
-                            uiMapper.getInvitationSuccessMessageColor()
-                        )
-                    )
-                }
+                onSuccess = { _profileDialogUiEvent.emit(uiMapper.getHouseholdInviteResultEvent()) }
             )
         }
     }
