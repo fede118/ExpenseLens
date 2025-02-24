@@ -12,8 +12,11 @@ import com.section11.expenselens.data.constants.FirestoreConstants.Fields.INVITA
 import com.section11.expenselens.data.constants.FirestoreConstants.Fields.INVITER_ID_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Fields.INVITE_STATUS_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Fields.INVITE_TIMESTAMP_FIELD
-import com.section11.expenselens.data.dto.FirestoreHouseholdInvitation.HouseholdInviteStatus.Pending
+import com.section11.expenselens.domain.exceptions.NullFieldOnFirebaseException
 import com.section11.expenselens.domain.exceptions.UserNotFoundException
+import com.section11.expenselens.domain.models.HouseholdInvite
+import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus
+import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus.Pending
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.HouseholdInvitationRepository
 import kotlinx.coroutines.tasks.await
@@ -24,6 +27,8 @@ private const val USER_NOT_FOUND_MESSAGE = "User not found"
 class FirestoreHouseholdInvitationRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : HouseholdInvitationRepository {
+
+    private val nullException = NullFieldOnFirebaseException()
 
     override suspend fun postInvitationsToUser(
         inviterId: String,
@@ -62,5 +67,41 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
 
     private fun getUserNotFoundException(): UserNotFoundException {
         return UserNotFoundException(USER_NOT_FOUND_MESSAGE)
+    }
+
+    override suspend fun getPendingInvitations(userId: String): Result<List<HouseholdInvite>> {
+        return try {
+            val userDoc = firestore.collection(USERS_COLLECTION).document(userId).get().await()
+            val queriedInvitationList = userDoc.get(INVITATIONS_FIELD) as? List<Map<String, Any>>
+
+
+
+            val inviteList = queriedInvitationList?.map { invitationMap ->
+                val householdId = invitationMap.getOrThrow<String>(HOUSEHOLD_ID_FIELD)
+                val householdName = invitationMap.getOrThrow<String>(HOUSEHOLD_NAME_FIELD)
+                val inviterId = invitationMap.getOrThrow<String>(INVITER_ID_FIELD)
+                val status = HouseholdInviteStatus.valueOf(invitationMap.getOrThrow(INVITE_STATUS_FIELD))
+                val timestamp = invitationMap.getOrThrow<Timestamp>(INVITE_TIMESTAMP_FIELD)
+
+                HouseholdInvite(
+                    householdId = householdId,
+                    householdName = householdName,
+                    inviterId = inviterId,
+                    status = status,
+                    timestamp = timestamp
+                )
+            }
+
+            Result.success(inviteList ?: emptyList())
+        } catch (exception: FirebaseFirestoreException) {
+            Result.failure(exception)
+        } catch (exception: NullFieldOnFirebaseException) {
+            Result.failure(exception)
+        }
+    }
+
+    @Throws(NullFieldOnFirebaseException::class)
+    private fun <T> Map<String, Any>.getOrThrow(key: String): T {
+        return this[key] as? T ?: throw nullException
     }
 }

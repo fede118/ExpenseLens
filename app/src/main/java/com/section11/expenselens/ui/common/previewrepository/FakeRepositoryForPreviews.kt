@@ -2,12 +2,15 @@ package com.section11.expenselens.ui.common.previewrepository
 
 import android.content.Context
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
+import com.google.firebase.Timestamp
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.framework.utils.ResourceProviderImpl
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
+import com.section11.expenselens.ui.home.model.InviteStatusUiModel
+import com.section11.expenselens.ui.home.model.PendingInvitesUiModel
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
@@ -25,7 +28,14 @@ class FakeRepositoryForPreviews(context: Context) {
         user = UserInfoUiModel(
             id = "id",
             displayName = "Test User",
-            profilePic = ""
+            profilePic = "",
+            pendingInvites = listOf(
+                PendingInvitesUiModel(
+                    householdName = "Fake household",
+                    id = "id",
+                    status = InviteStatusUiModel.Pending,
+                    timestamp = Timestamp.now()
+            ))
         ),
         householdInfo = if (withHousehold) {
             HouseholdUiState(

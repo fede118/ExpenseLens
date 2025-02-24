@@ -44,6 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -216,15 +218,12 @@ fun TransformingButton(
         transitionSpec = {
             (fadeIn() + scaleIn()).togetherWith(fadeOut() + scaleOut())
         },
-        modifier = modifier.padding(dimens.m1),
         label = String()
     ) { (editing, loading) ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(dimens.m1)
+            modifier = modifier
         ) {
             when {
                 loading -> CircularProgressIndicator(modifier = Modifier.size(dimens.m5))
@@ -299,6 +298,37 @@ fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
         painter = rememberAsyncImagePainter(user.profilePic),
         contentDescription = stringResource(R.string.home_screen_sign_in_icon_content_description),
         modifier = modifier
+    )
+}
+
+@Composable
+fun ContentWithBadge(
+    modifier: Modifier = Modifier,
+    showBadge: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    Box(modifier = modifier) {
+        content()
+        if (showBadge) {
+            RedDot(Modifier.align(Alignment.TopEnd))
+        }
+    }
+}
+
+@Composable
+fun RedDot(modifier: Modifier = Modifier) {
+    val dimens = LocalDimens.current
+    Box(
+        modifier = modifier
+            .padding(dimens.mHalf)
+            .size(dimens.m1)
+            .drawBehind {
+                drawCircle(
+                    color = Color.Red,
+                    radius = size.minDimension / 1.5f,
+                    center = Offset(size.width, size.height - dimens.m2.toPx())
+                )
+            }
     )
 }
 

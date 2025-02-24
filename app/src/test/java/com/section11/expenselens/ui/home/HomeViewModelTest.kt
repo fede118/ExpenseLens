@@ -13,7 +13,8 @@ import com.section11.expenselens.framework.navigation.NavigationManager.Navigati
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
-import com.section11.expenselens.ui.home.dialog.DialogUiEvent
+import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdLoading
+import com.section11.expenselens.ui.home.dialog.DialogUiEvent.HouseholdInviteResultEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
@@ -41,7 +42,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -148,7 +148,7 @@ class HomeViewModelTest {
         whenever(googleSignInUseCase.signInToGoogle(mockContext))
             .thenReturn(Result.success(successSigning))
         val mockUiModel: UserSignedIn = mock()
-        whenever(mapper.getUserSignInModel(any(), anyOrNull())).thenReturn(mockUiModel)
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
 
         viewModel.onUiEvent(SignInTapped(mockContext))
         advanceUntilIdle()
@@ -177,7 +177,7 @@ class HomeViewModelTest {
         job.join() // Ensure the coroutine completes
 
         assertTrue(viewModel.uiState.value is UserSignedOut)
-        verify(mapper, never()).getUserSignInModel(any(), any())
+        verify(mapper, never()).getUserSignInModel(any(), any(), anyOrNull())
     }
 
     @Test
@@ -245,11 +245,8 @@ class HomeViewModelTest {
         whenever(storeExpenseUseCase.createHousehold(any(), any()))
             .thenReturn(Result.success(householdResult))
         val mockUiModel: UserSignedIn = mock()
-        whenever(mapper.getUserSignInModel(any(), anyOrNull()))
-            .thenReturn(mockUiModel)
-        val user: UserData = mock()
-        whenever(user.id).thenReturn("uid")
-        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
+        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mock()))
         mockkStatic(UserSignedIn::class)
         whenever(mockUiModel.copy(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
 
@@ -261,13 +258,10 @@ class HomeViewModelTest {
             mapper,
             testDispatcher
         )
-        advanceUntilIdle()
         viewModel.onUiEvent(event)
         advanceUntilIdle()
 
-        assert(viewModel.uiState.value is UserSignedIn)
-        val expectedHousehold = HouseholdUiState(householdResult.id, householdResult.name)
-        verify(mockUiModel).copy(anyOrNull(), anyOrNull(), eq(expectedHousehold))
+        verify(mapper).updateSignedInUiWithHousehold(mockUiModel, householdResult)
     }
 
     @Test
@@ -276,8 +270,7 @@ class HomeViewModelTest {
         whenever(householdInvitationsUseCase.inviteToHousehold(any(), any(), any()))
             .thenReturn(Result.success(Unit))
         mockInitWithSomeUserInfo(withHousehold = true)
-        val successMessage = "success"
-        initMapperInviteSuccessMessage(successMessage)
+        whenever(mapper.getHouseholdInviteResultEvent()).thenReturn(mock())
 
         viewModel = HomeViewModel(
             navigationManager,
@@ -289,11 +282,10 @@ class HomeViewModelTest {
         )
 
         val job = launch {
-            viewModel.profileDialogUiEvent.collectIndexed { _, value ->
-                if (value is DialogUiEvent.AddUserToHouseholdResult) {
-                    assertEquals(successMessage, value.message)
-                    cancel()
-                }
+            viewModel.profileDialogUiEvent.collectIndexed { index, value ->
+                if (index == 0) assert(value is AddUserToHouseholdLoading)
+                if (index == 1) assert(value is HouseholdInviteResultEvent)
+                cancel()
             }
         }
 
@@ -308,11 +300,12 @@ class HomeViewModelTest {
     @Test
     fun `when invite user to household then should show error`() = runTest {
         val event = AddUserToHouseholdTapped("invitingUserId", "inviteeUserEmail")
+        val mockException: Throwable = mock()
         whenever(householdInvitationsUseCase.inviteToHousehold(any(), any(), any()))
-            .thenReturn(Result.failure(mock()))
+            .thenReturn(Result.failure(mockException))
         mockInitWithSomeUserInfo(withHousehold = true)
-        val errorMessage = "error message"
-        initMapperInviteErrorMessage(errorMessage)
+        whenever(mapper.getHouseholdInviteResultEvent(mockException))
+            .thenReturn(mock())
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
@@ -323,16 +316,16 @@ class HomeViewModelTest {
         )
 
         val job = launch {
-            viewModel.profileDialogUiEvent.collectIndexed { _, value ->
-                if (value is DialogUiEvent.AddUserToHouseholdResult) {
-                    assertEquals(errorMessage, value.message)
-                    cancel()
-                }
+            viewModel.profileDialogUiEvent.collectIndexed { index, value ->
+                if (index == 0) assert(value is AddUserToHouseholdLoading)
+                if (index == 1) assert(value is HouseholdInviteResultEvent)
+                cancel()
             }
         }
 
         viewModel.onUiEvent(event)
         advanceUntilIdle()
+        job.join()
 
         verify(householdInvitationsUseCase).inviteToHousehold(any(), any(), any())
     }
@@ -351,19 +344,9 @@ class HomeViewModelTest {
                 whenever(mockUiModel.householdInfo).thenReturn(this)
             }
         }
-        whenever(mapper.getUserSignInModel(any(), anyOrNull())).thenReturn(mockUiModel)
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
         val user: UserData = mock()
         whenever(user.id).thenReturn("uid")
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
-    }
-
-    private fun initMapperInviteErrorMessage(errorMessage: String) {
-        whenever(mapper.getInvitationErrorMessage(any())).thenReturn(errorMessage)
-        whenever(mapper.getInvitationErrorMessageColor()).thenReturn(mock())
-    }
-
-    private fun initMapperInviteSuccessMessage(message: String) {
-        whenever(mapper.getSuccessInvitationMessage()).thenReturn(message)
-        whenever(mapper.getInvitationSuccessMessageColor()).thenReturn(mock())
     }
 }
