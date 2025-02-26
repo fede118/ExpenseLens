@@ -7,7 +7,7 @@ import com.section11.expenselens.domain.models.Category.HOME
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.repository.ExpensesRepository
+import com.section11.expenselens.domain.repository.HouseholdRepository
 import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -15,8 +15,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.util.Date
@@ -24,15 +24,15 @@ import java.util.Date
 private const val TEST_HOUSEHOLD_NAME = "Test Household"
 
 @ExperimentalCoroutinesApi
-class StoreExpenseUseCaseTest {
+class HouseholdUseCaseTest {
 
-    private lateinit var useCase: StoreExpenseUseCase
-    private val expensesRepository: ExpensesRepository = mock()
+    private lateinit var useCase: HouseholdUseCase
+    private val householdRepository: HouseholdRepository = mock()
     private val usersHouseholdRepository: UsersCollectionRepository = mock()
 
     @Before
     fun setup() {
-        useCase = StoreExpenseUseCase(expensesRepository, usersHouseholdRepository)
+        useCase = HouseholdUseCase(householdRepository, usersHouseholdRepository)
     }
 
     @Test
@@ -67,11 +67,11 @@ class StoreExpenseUseCaseTest {
         )
         val households = listOf(UserHousehold(householdId, TEST_HOUSEHOLD_NAME))
         whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
-        whenever(expensesRepository.addExpenseToHousehold(userMock, householdId, expense))
+        whenever(householdRepository.addExpenseToHousehold(userMock, householdId, expense))
             .thenReturn(Result.success(Unit))
 
         // When
-        val result = useCase.addExpense(userMock, expense)
+        val result = useCase.addExpenseToCurrentHousehold(userMock, expense)
 
         // Then
         assertTrue(result.isSuccess)
@@ -95,11 +95,11 @@ class StoreExpenseUseCaseTest {
 
         val households = listOf(UserHousehold(householdId, TEST_HOUSEHOLD_NAME))
         whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
-        whenever(expensesRepository.addExpenseToHousehold(userMock, householdId, expense))
+        whenever(householdRepository.addExpenseToHousehold(userMock, householdId, expense))
             .thenReturn(Result.success(Unit))
 
         // When
-        val result = useCase.addExpense(userMock, expense)
+        val result = useCase.addExpenseToCurrentHousehold(userMock, expense)
 
         // Then
         assertTrue(result.isSuccess)
@@ -125,7 +125,7 @@ class StoreExpenseUseCaseTest {
         whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
 
         // When
-        val result = useCase.addExpense(userMock, expense)
+        val result = useCase.addExpenseToCurrentHousehold(userMock, expense)
 
         // Then
         assertTrue(result.isFailure)
@@ -147,7 +147,7 @@ class StoreExpenseUseCaseTest {
             )
         )
 
-        whenever(expensesRepository.getAllExpensesFromHousehold(householdId))
+        whenever(householdRepository.getAllExpensesFromHousehold(householdId))
             .thenReturn(Result.success(expenses))
 
         // When
@@ -168,7 +168,7 @@ class StoreExpenseUseCaseTest {
         val householdName = "New Household"
         val householdId = "household789"
         val household = UserHousehold(householdId, householdName)
-        whenever(expensesRepository.createHousehold(any(), any()))
+        whenever(householdRepository.createHousehold(any(), any()))
             .thenReturn(Result.success(household))
 
         // When
@@ -177,6 +177,63 @@ class StoreExpenseUseCaseTest {
         // Then
         assertTrue(result.isSuccess)
         assertEquals(household, result.getOrNull())
-        verify(expensesRepository).createHousehold(userId, householdName)
+        verify(householdRepository).createHousehold(userId, householdName)
+    }
+
+    @Test
+    fun `when create household fails then should return failure`() = runTest {
+        // Given
+        whenever(householdRepository.createHousehold(any(), any()))
+            .thenReturn(Result.failure(Exception()))
+
+        // When
+        val result = useCase.createHousehold("userId", "householdName")
+
+        // Then
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `when create household is success then should also add user to household`() = runTest {
+        // Given
+        val userId = "userId"
+        val householdName = "householdName"
+        val householdId = "householdId"
+        val userHousehold: UserHousehold = mock()
+        whenever(userHousehold.name).thenReturn(householdName)
+        whenever(userHousehold.id).thenReturn(householdId)
+        whenever(householdRepository.createHousehold(any(), any()))
+            .thenReturn(Result.success(userHousehold))
+        whenever(usersHouseholdRepository.addHouseholdToUser(any(), any()))
+            .thenReturn(Result.success(Unit))
+
+        // When
+        val result = useCase.createHousehold(userId, householdName)
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals(userHousehold, result.getOrNull())
+    }
+
+    @Test
+    fun `when create household is success but add user fails then delete household`() = runTest {
+        // Given
+        val userId = "userId"
+        val householdName = "householdName"
+        val householdId = "householdId"
+        val userHousehold: UserHousehold = mock()
+        whenever(userHousehold.name).thenReturn(householdName)
+        whenever(userHousehold.id).thenReturn(householdId)
+        whenever(householdRepository.createHousehold(any(), any()))
+            .thenReturn(Result.success(userHousehold))
+        whenever(usersHouseholdRepository.addHouseholdToUser(any(), any()))
+            .thenReturn(Result.failure(Exception()))
+
+        // When
+        val result = useCase.createHousehold(userId, householdName)
+
+        // Then
+        assertTrue(result.isFailure)
+        verify(householdRepository).deleteHousehold(userId, householdId)
     }
 }

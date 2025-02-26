@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
-import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
+import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
@@ -39,7 +39,7 @@ private const val SUBMIT_EXPENSE_ERROR = "Couldn't submit expense, try again lat
 @HiltViewModel
 class ExpenseReviewViewModel @Inject constructor(
     private val expenseReviewUiMapper: ExpenseReviewScreenUiMapper,
-    private val storeExpenseUseCase: StoreExpenseUseCase,
+    private val householdUseCase: HouseholdUseCase,
     private val signInUseCase: GoogleSignInUseCase,
     private val navigationManager: NavigationManager,
     private val expenseValidator: ExpenseValidator,
@@ -81,7 +81,7 @@ class ExpenseReviewViewModel @Inject constructor(
                             _uiEvent.emit(ShowSnackBar(getFieldValidationErrorMessage(it)))
                         }
                         consolidateExpenseResult.onSuccess { expense ->
-                            val result = storeExpenseUseCase.addExpense(user, expense)
+                            val result = householdUseCase.addExpenseToCurrentHousehold(user, expense)
                             handleExpenseSubmission(result)
                         }
                     } else {

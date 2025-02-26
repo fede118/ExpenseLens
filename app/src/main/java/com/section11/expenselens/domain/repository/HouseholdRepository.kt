@@ -5,7 +5,7 @@ import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 
-interface ExpensesRepository {
+interface HouseholdRepository {
 
     suspend fun createHousehold(userId: String, householdName: String): Result<UserHousehold>
 

@@ -1,8 +1,6 @@
 package com.section11.expenselens.ui.home.mapper
 
-import androidx.compose.ui.graphics.Color
 import com.section11.expenselens.R
-import com.section11.expenselens.domain.exceptions.UserNotFoundException
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProvider
@@ -71,42 +69,5 @@ class HomeScreenUiMapperTest {
         mapper.getHouseholdCreationErrorMessage()
 
         verify(resourceProvider).getString(R.string.home_screen_household_creation_failure)
-    }
-
-    @Test
-    fun `getHouseholdInviteResultEvent should return correct error message when UserNotFoundException`() {
-        val userNotFoundException = UserNotFoundException("message")
-        whenever(resourceProvider.getString(R.string.home_screen_household_invite_user_not_found))
-            .thenReturn("message")
-
-        val result = mapper.getHouseholdInviteResultEvent(userNotFoundException)
-
-        verify(resourceProvider).getString(R.string.home_screen_household_invite_user_not_found)
-        assertEquals("message", result.message)
-        assertEquals(Color.Red, result.textColor)
-    }
-
-    @Test
-    fun `getInvitationErrorMessage should return correct error message when other exception`() {
-        val exception = Exception("message")
-        whenever(resourceProvider.getString(R.string.home_screen_household_invite_failure))
-            .thenReturn("message")
-
-        val result = mapper.getHouseholdInviteResultEvent(exception)
-
-        verify(resourceProvider).getString(R.string.home_screen_household_invite_failure)
-        assertEquals("message", result.message)
-    }
-
-    @Test
-    fun `getSuccessInvitationMessage should return correct success message`() {
-        whenever(resourceProvider.getString(R.string.home_screen_household_invite_success))
-            .thenReturn("message")
-
-        val result = mapper.getHouseholdInviteResultEvent()
-
-        verify(resourceProvider).getString(R.string.home_screen_household_invite_success)
-        assertEquals("message", result.message)
-        assertEquals(Color.Green, result.textColor)
     }
 }

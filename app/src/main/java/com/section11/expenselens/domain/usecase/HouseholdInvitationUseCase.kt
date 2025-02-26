@@ -24,4 +24,19 @@ class HouseholdInvitationUseCase @Inject constructor(
     suspend fun getPendingInvitations(userId: String): Result<List<HouseholdInvite>> {
         return householdInvitationRepository.getPendingInvitations(userId)
     }
+
+    suspend fun handleHouseholdInviteResponse(
+        inviteWasAccepted: Boolean,
+        userId: String,
+        householdId: String,
+        householdName: String
+    ): Result<List<HouseholdInvite>> {
+        if (inviteWasAccepted) {
+            householdInvitationRepository.acceptHouseholdInvite(userId, householdId, householdName)
+        } else {
+            householdInvitationRepository.deleteHouseholdInvite(userId, householdId)
+        }
+
+        return getPendingInvitations(userId)
+    }
 }

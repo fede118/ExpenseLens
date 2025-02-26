@@ -32,7 +32,7 @@ class FakeRepositoryForPreviews(context: Context) {
             pendingInvites = listOf(
                 PendingInvitesUiModel(
                     householdName = "Fake household",
-                    id = "id",
+                    householdId = "id",
                     status = InviteStatusUiModel.Pending,
                     timestamp = Timestamp.now()
             ))

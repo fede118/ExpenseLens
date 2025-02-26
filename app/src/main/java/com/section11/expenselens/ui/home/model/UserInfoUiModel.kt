@@ -14,10 +14,11 @@ data class UserInfoUiModel(
 
 @Parcelize
 data class PendingInvitesUiModel(
-    val id: String,
+    val householdId: String,
     val householdName: String,
     val timestamp: Timestamp?,
-    val status: InviteStatusUiModel
+    val status: InviteStatusUiModel,
+    val isLoading: Boolean = false
 ) : Parcelable
 
 @Parcelize

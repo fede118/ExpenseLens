@@ -5,7 +5,7 @@ import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
-import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
+import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
@@ -44,7 +44,7 @@ private const val UNAUTHENTICATED_ERROR = "Authentication Error occurred, please
 class ExpenseReviewViewModelTest {
 
     private val expenseReviewUiMapper: ExpenseReviewScreenUiMapper = mock()
-    private val storeExpenseUseCase: StoreExpenseUseCase = mock()
+    private val householdUseCase: HouseholdUseCase = mock()
     private val signInUseCase: GoogleSignInUseCase = mock()
     private val navigationManager: NavigationManager = mock()
     private val expenseValidator: ExpenseValidator = mock()
@@ -58,7 +58,7 @@ class ExpenseReviewViewModelTest {
 
         viewModel = ExpenseReviewViewModel(
             expenseReviewUiMapper,
-            storeExpenseUseCase,
+            householdUseCase,
             signInUseCase,
             navigationManager,
             expenseValidator,
@@ -194,12 +194,12 @@ class ExpenseReviewViewModelTest {
         val expense = mock<ConsolidatedExpenseInformation>()
         val userMock = mockUserData()
         whenever(expenseValidator.validateExpense(any())).thenReturn(Result.success(expense))
-        whenever(storeExpenseUseCase.addExpense(any(), any())).thenReturn(Result.success(Unit))
+        whenever(householdUseCase.addExpenseToCurrentHousehold(any(), any())).thenReturn(Result.success(Unit))
 
         viewModel.onUpstreamEvent(ExpenseSubmitted(expenseReviewUiModel))
 
         advanceUntilIdle()
-        verify(storeExpenseUseCase).addExpense(userMock, expense)
+        verify(householdUseCase).addExpenseToCurrentHousehold(userMock, expense)
         verify(navigationManager).navigate(NavigateHome)
     }
 
@@ -212,7 +212,7 @@ class ExpenseReviewViewModelTest {
         )
         val expense = mock<ConsolidatedExpenseInformation>()
         whenever(expenseValidator.validateExpense(any())).thenReturn(Result.success(expense))
-        whenever(storeExpenseUseCase.addExpense(any(), any())).thenReturn(Result.success(Unit))
+        whenever(householdUseCase.addExpenseToCurrentHousehold(any(), any())).thenReturn(Result.success(Unit))
 
         // Since this is a cold flow we need to start the collection before actually calling the viewModel method
         val job = launch {

@@ -4,7 +4,7 @@ import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
-import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
+import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -24,7 +24,7 @@ import org.mockito.kotlin.whenever
 class ExpenseHistoryViewModelTest {
 
     private lateinit var viewModel: ExpenseHistoryViewModel
-    private val storeExpensesUseCase: StoreExpenseUseCase = mock()
+    private val householdUseCase: HouseholdUseCase = mock()
     private val signInUseCase: GoogleSignInUseCase = mock()
     private val userData: UserData = mock()
     private val dispatcher = StandardTestDispatcher()
@@ -53,13 +53,13 @@ class ExpenseHistoryViewModelTest {
             FirestoreExpense("Transport", 50.0, mock(), "user123", "Taxi")
         )
 
-        whenever(storeExpensesUseCase.getCurrentHousehold("user123"))
+        whenever(householdUseCase.getCurrentHousehold("user123"))
             .thenReturn(userHouseHold)
-        whenever(storeExpensesUseCase.getAllExpensesFromHousehold(householdId))
+        whenever(householdUseCase.getAllExpensesFromHousehold(householdId))
             .thenReturn(Result.success(expenses))
 
         // When
-        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, signInUseCase, dispatcher)
+        viewModel = ExpenseHistoryViewModel(householdUseCase, signInUseCase, dispatcher)
         advanceUntilIdle()
 
         // Then
@@ -69,11 +69,11 @@ class ExpenseHistoryViewModelTest {
     @Test
     fun `uiState remains empty when household does not exist`() = runTest {
         // Given
-        whenever(storeExpensesUseCase.getCurrentHousehold("user123"))
+        whenever(householdUseCase.getCurrentHousehold("user123"))
             .thenReturn(null)
 
         // When
-        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, signInUseCase, dispatcher)
+        viewModel = ExpenseHistoryViewModel(householdUseCase, signInUseCase, dispatcher)
         advanceUntilIdle()
 
         // Then
@@ -86,7 +86,7 @@ class ExpenseHistoryViewModelTest {
         whenever(signInUseCase.getCurrentUser()).thenReturn(null)
 
         // When
-        viewModel = ExpenseHistoryViewModel(storeExpensesUseCase, signInUseCase, dispatcher)
+        viewModel = ExpenseHistoryViewModel(householdUseCase, signInUseCase, dispatcher)
         advanceUntilIdle()
 
         // Then

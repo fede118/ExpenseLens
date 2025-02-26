@@ -1,13 +1,14 @@
 package com.section11.expenselens.ui.home
 
 import android.content.Context
+import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
 import com.section11.expenselens.domain.usecase.HouseholdInvitationUseCase
-import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
+import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
@@ -17,11 +18,13 @@ import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHousehold
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.HouseholdInviteResultEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHouseholdTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
+import com.section11.expenselens.ui.home.mapper.PendingInvitationsMapper
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
 import io.mockk.mockkStatic
@@ -40,8 +43,11 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -53,8 +59,9 @@ class HomeViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val navigationManager: NavigationManager = mock()
     private val mapper: HomeScreenUiMapper = mock()
+    private val invitesMapper: PendingInvitationsMapper = mock()
     private val googleSignInUseCase: GoogleSignInUseCase = mock()
-    private val storeExpenseUseCase: StoreExpenseUseCase = mock()
+    private val householdUseCase: HouseholdUseCase = mock()
     private val householdInvitationsUseCase: HouseholdInvitationUseCase = mock()
     private val greeting = "hello"
 
@@ -67,9 +74,10 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
-            storeExpenseUseCase,
+            householdUseCase,
             householdInvitationsUseCase,
             mapper,
+            invitesMapper,
             testDispatcher
         )
     }
@@ -86,9 +94,10 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
-            storeExpenseUseCase,
+            householdUseCase,
             householdInvitationsUseCase,
             mapper,
+            invitesMapper,
             testDispatcher
         )
         advanceUntilIdle()
@@ -103,9 +112,10 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
-            storeExpenseUseCase,
+            householdUseCase,
             householdInvitationsUseCase,
             mapper,
+            invitesMapper,
             testDispatcher
         )
         advanceUntilIdle()
@@ -120,14 +130,15 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
-            storeExpenseUseCase,
+            householdUseCase,
             householdInvitationsUseCase,
             mapper,
+            invitesMapper,
             testDispatcher
         )
         advanceUntilIdle()
 
-        verify(storeExpenseUseCase).getCurrentHousehold(any())
+        verify(householdUseCase).getCurrentHousehold(any())
     }
 
     @Test
@@ -232,7 +243,7 @@ class HomeViewModelTest {
         viewModel.onUiEvent(event)
         advanceUntilIdle()
 
-        verify(storeExpenseUseCase).createHousehold(any(), any())
+        verify(householdUseCase).createHousehold(any(), any())
     }
 
     @Test
@@ -242,7 +253,7 @@ class HomeViewModelTest {
             whenever(id).thenReturn("someHouseholdId")
             whenever(name).thenReturn(event.householdName)
         }
-        whenever(storeExpenseUseCase.createHousehold(any(), any()))
+        whenever(householdUseCase.createHousehold(any(), any()))
             .thenReturn(Result.success(householdResult))
         val mockUiModel: UserSignedIn = mock()
         whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
@@ -253,9 +264,10 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
-            storeExpenseUseCase,
+            householdUseCase,
             householdInvitationsUseCase,
             mapper,
+            invitesMapper,
             testDispatcher
         )
         viewModel.onUiEvent(event)
@@ -270,14 +282,15 @@ class HomeViewModelTest {
         whenever(householdInvitationsUseCase.inviteToHousehold(any(), any(), any()))
             .thenReturn(Result.success(Unit))
         mockInitWithSomeUserInfo(withHousehold = true)
-        whenever(mapper.getHouseholdInviteResultEvent()).thenReturn(mock())
+        whenever(invitesMapper.getHouseholdInviteResultEvent()).thenReturn(mock())
 
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
-            storeExpenseUseCase,
+            householdUseCase,
             householdInvitationsUseCase,
             mapper,
+            invitesMapper,
             testDispatcher
         )
 
@@ -304,14 +317,15 @@ class HomeViewModelTest {
         whenever(householdInvitationsUseCase.inviteToHousehold(any(), any(), any()))
             .thenReturn(Result.failure(mockException))
         mockInitWithSomeUserInfo(withHousehold = true)
-        whenever(mapper.getHouseholdInviteResultEvent(mockException))
+        whenever(invitesMapper.getHouseholdInviteResultEvent(mockException))
             .thenReturn(mock())
         viewModel = HomeViewModel(
             navigationManager,
             googleSignInUseCase,
-            storeExpenseUseCase,
+            householdUseCase,
             householdInvitationsUseCase,
             mapper,
+            invitesMapper,
             testDispatcher
         )
 
@@ -330,13 +344,55 @@ class HomeViewModelTest {
         verify(householdInvitationsUseCase).inviteToHousehold(any(), any(), any())
     }
 
+    @Test
+    fun `onHouseholdInvite tap Accept then should update ui state`() = runTest {
+        val event = HouseholdInviteTap("householdId", "householdName", "userId", true)
+        whenever(
+            householdInvitationsUseCase.handleHouseholdInviteResponse(eq(true), any(), any(), any())
+        ).thenReturn(Result.success(emptyList()))
+        val household = UserHousehold("householdId", "householdName")
+        val signedInState = mockSignIn()
+        whenever(invitesMapper.setPendingInviteLoading(any(), any())).thenReturn(signedInState)
+        whenever(invitesMapper.updateInvitesAndHousehold(any(), any(), any())).thenReturn(mock())
+        viewModel.onUiEvent(SignInTapped(mock()))
+        whenever(householdUseCase.getCurrentHousehold(anyString())).thenReturn(household)
+
+        viewModel.onUiEvent(event)
+        advanceUntilIdle()
+
+        verify(invitesMapper).setPendingInviteLoading(any(), any())
+        verify(householdUseCase, atLeast(1)).getCurrentHousehold(any())
+        verify(invitesMapper).updateInvitesAndHousehold(any(), anyOrNull(), anyOrNull())
+        assertTrue(viewModel.uiState.value is UserSignedIn)
+    }
+
+    @Test
+    fun `on HouseholdInviteTap refused then shouldnt add household and remove invite`() = runTest {
+        val event = HouseholdInviteTap("id", "name", "user", false)
+        whenever(
+            householdInvitationsUseCase.handleHouseholdInviteResponse(eq(false), any(), any(), any())
+        ).thenReturn(Result.success(emptyList()))
+        val signedInState = mockSignIn()
+        whenever(invitesMapper.setPendingInviteLoading(any(), any())).thenReturn(signedInState)
+        whenever(invitesMapper.updateInvitesAndHousehold(any(), any(), any())).thenReturn(mock())
+        viewModel.onUiEvent(SignInTapped(mock()))
+        whenever(householdUseCase.getCurrentHousehold(anyString())).thenReturn(mock())
+
+        viewModel.onUiEvent(event)
+        advanceUntilIdle()
+
+        verify(householdInvitationsUseCase)
+            .handleHouseholdInviteResponse(false, "user", "id", "name")
+        assertTrue(viewModel.uiState.value is UserSignedIn)
+    }
+
     private suspend fun mockInitWithSomeUserInfo(withHousehold: Boolean = false) {
         val mockUserData = UserData("id", "idToken", "name", "img")
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserSignedIn = mock()
         if (withHousehold) {
             val mockHousehold: UserHousehold = mock()
-            whenever(storeExpenseUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
+            whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
             val mockHouseholdUiState: HouseholdUiState = mock()
             with(mockHouseholdUiState) {
                 whenever(id).thenReturn("someHouseholdId")
@@ -348,5 +404,36 @@ class HomeViewModelTest {
         val user: UserData = mock()
         whenever(user.id).thenReturn("uid")
         whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
+    }
+
+    private suspend fun mockSignIn(
+        withHousehold: Boolean = false,
+        withPendingInvitations: Boolean = false
+    ): UserSignedIn {
+        val googleSignIn: SignInSuccess = mock()
+        val mockUserData: UserData = mock()
+        whenever(mockUserData.id).thenReturn("id")
+        whenever(googleSignIn.userData).thenReturn(mockUserData)
+        whenever(googleSignInUseCase.signInToGoogle(any())).thenReturn(Result.success(googleSignIn))
+        if (withHousehold) {
+            val household: UserHousehold = mock()
+            whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(household)
+        } else {
+            whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(null)
+        }
+
+        if (withPendingInvitations) {
+            val pendingInvites: List<HouseholdInvite> = mock()
+            whenever(householdInvitationsUseCase.getPendingInvitations(any()))
+                .thenReturn(Result.success(pendingInvites))
+        } else {
+            whenever(householdInvitationsUseCase.getPendingInvitations(any()))
+                .thenReturn(Result.success(emptyList()))
+        }
+
+        val mockSignedInUser: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull()))
+            .thenReturn(mockSignedInUser)
+        return mockSignedInUser
     }
 }
