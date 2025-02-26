@@ -198,7 +198,7 @@ fun ProfileDialogContent(
             Spacer(Modifier.height(dimens.m1))
         }
 
-        PendingInvitesSection(userInfo.pendingInvites, onEvent)
+        PendingInvitesSection(userInfo.pendingInvites, userInfo.id, onEvent)
 
         Spacer(Modifier.height(dimens.m1))
     }
@@ -276,58 +276,79 @@ fun CreateHouseholdUi(
 @Composable
 fun PendingInvitesSection(
     pendingInvitesUiModel: List<PendingInvitesUiModel>,
+    userId: String,
     onEvent: (HomeUpstreamEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dimens = LocalDimens.current
-    var isLoading by remember { mutableStateOf(false) }
 
-    if (pendingInvitesUiModel.isNotEmpty() && isLoading.not()) {
+    if (pendingInvitesUiModel.isNotEmpty()) {
         Column(
             modifier,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             pendingInvitesUiModel.forEach {
-                Row(
-                    Modifier.fillMaxWidth(1f),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        stringResource(R.string.profile_dialog_invitation_prefix, it.householdName),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(
-                        onClick = {
-                            isLoading = true
-                            onEvent(HouseholdInviteTap(it.id, true))
-                        }
-                    ) {
-                        Text(
-                            stringResource(R.string.profile_dialog_accept_invitation),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    TextButton(
-                        onClick = {
-                            isLoading = true
-                            onEvent(HouseholdInviteTap(it.id, false))
-                        }
-                    ) {
-                        Text(
-                            stringResource(R.string.profile_dialog_reject_invitation),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                if (it.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(dimens.m5))
+                } else {
+                    PendingInviteItem(it, userId, onEvent)
                 }
             }
         }
-    } else if (isLoading) {
-        CircularProgressIndicator(modifier = Modifier.size(dimens.m5))
+    }
+}
+
+
+@Composable
+fun PendingInviteItem(
+    pendingInvite: PendingInvitesUiModel,
+    userId: String,
+    onEvent: (HomeUpstreamEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier.fillMaxWidth(1f),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            stringResource(R.string.profile_dialog_invitation_prefix, pendingInvite.householdName),
+            style = MaterialTheme.typography.bodySmall
+        )
+    }
+    Row(
+        modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Button(
+            onClick = {
+                onEvent(HouseholdInviteTap(
+                    pendingInvite.householdId,
+                    pendingInvite.householdName,
+                    userId,
+                    true
+                ))
+            }
+        ) {
+            Text(
+                stringResource(R.string.profile_dialog_accept_invitation),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        TextButton(
+            onClick = {
+                onEvent(HouseholdInviteTap(
+                    pendingInvite.householdId,
+                    pendingInvite.householdName,
+                    userId,
+                    false
+                ))
+            }
+        ) {
+            Text(
+                stringResource(R.string.profile_dialog_reject_invitation),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 

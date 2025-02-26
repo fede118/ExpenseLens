@@ -12,4 +12,8 @@ interface HouseholdInvitationRepository {
     ) : Result<Unit>
 
     suspend fun getPendingInvitations(userId: String): Result<List<HouseholdInvite>>
+
+    suspend fun acceptHouseholdInvite(userId: String, householdId: String, householdName: String): Result<Unit>
+
+    suspend fun deleteHouseholdInvite(userId: String, householdId: String): Result<Unit>
 }

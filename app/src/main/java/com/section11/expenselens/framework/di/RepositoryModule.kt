@@ -6,14 +6,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.section11.expenselens.BuildConfig
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
-import com.section11.expenselens.data.repository.FirestoreExpensesRepository
+import com.section11.expenselens.data.repository.FirestoreHouseholdRepository
 import com.section11.expenselens.data.repository.FirestoreHouseholdInvitationRepository
 import com.section11.expenselens.data.repository.FirestoreUsersCollectionRepository
 import com.section11.expenselens.data.repository.GeminiAiRepository
 import com.section11.expenselens.data.repository.GoogleUserSessionRepository
 import com.section11.expenselens.data.service.GeminiService
 import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository
-import com.section11.expenselens.domain.repository.ExpensesRepository
+import com.section11.expenselens.domain.repository.HouseholdRepository
 import com.section11.expenselens.domain.repository.HouseholdInvitationRepository
 import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import com.section11.expenselens.domain.repository.UserSessionRepository
@@ -55,8 +55,8 @@ class RepositoryModule {
     }
 
     @Provides
-    fun provideFirestoreExpensesRepository(firestore: FirebaseFirestore): ExpensesRepository {
-        return FirestoreExpensesRepository(firestore)
+    fun provideFirestoreExpensesRepository(firestore: FirebaseFirestore): HouseholdRepository {
+        return FirestoreHouseholdRepository(firestore)
     }
 
     @Provides

@@ -4,20 +4,20 @@ import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
-import com.section11.expenselens.data.constants.FirestoreConstants.Collections.EXPENSES_COLLECTION
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HOUSEHOLDS_COLLECTION
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.EXPENSES_FIELD
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.repository.ExpensesRepository
+import com.section11.expenselens.domain.repository.HouseholdRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class FirestoreExpensesRepository @Inject constructor(
+class FirestoreHouseholdRepository @Inject constructor(
     private val firestore: FirebaseFirestore
-): ExpensesRepository {
+): HouseholdRepository {
 
     override suspend fun createHousehold(
         userId: String,
@@ -75,7 +75,7 @@ class FirestoreExpensesRepository @Inject constructor(
         return try {
             firestore.collection(HOUSEHOLDS_COLLECTION)
                 .document(householdId)
-                .collection(EXPENSES_COLLECTION)
+                .collection(EXPENSES_FIELD)
                 .add(firestoreExpense)
                 .await()
             Result.success(Unit)
@@ -90,7 +90,7 @@ class FirestoreExpensesRepository @Inject constructor(
         return try {
             val expensesCollection = firestore.collection(HOUSEHOLDS_COLLECTION)
                 .document(householdId)
-                .collection(EXPENSES_COLLECTION)
+                .collection(EXPENSES_FIELD)
 
             val querySnapshot = expensesCollection.get().await()
 

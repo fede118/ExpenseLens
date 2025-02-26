@@ -29,16 +29,16 @@ private const val HOUSEHOLD_COLLECTION = "households"
 private const val EXPENSES_COLLECTION = "expenses"
 
 @ExperimentalCoroutinesApi
-class FirestoreExpensesRepositoryTest {
+class FirestoreHouseholdRepositoryTest {
 
-    private lateinit var repository: FirestoreExpensesRepository
+    private lateinit var repository: FirestoreHouseholdRepository
     private val mockFirestore: FirebaseFirestore = mock()
     private val mockCollection: CollectionReference = mock()
     private val mockDocument: DocumentReference = mock()
 
     @Before
     fun setUp() {
-        repository = FirestoreExpensesRepository(mockFirestore)
+        repository = FirestoreHouseholdRepository(mockFirestore)
     }
 
     @Test

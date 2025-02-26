@@ -5,12 +5,12 @@ import com.section11.expenselens.domain.exceptions.HouseholdNotFoundException
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.repository.ExpensesRepository
+import com.section11.expenselens.domain.repository.HouseholdRepository
 import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import javax.inject.Inject
 
-class StoreExpenseUseCase @Inject constructor(
-    private val expensesRepository: ExpensesRepository,
+class HouseholdUseCase @Inject constructor(
+    private val householdRepository: HouseholdRepository,
     private val usersCollectionRepository: UsersCollectionRepository
 ) {
 
@@ -27,24 +27,25 @@ class StoreExpenseUseCase @Inject constructor(
         userId: String,
         houseHoldName: String
     ): Result<UserHousehold> {
-        val householdCreationResult = expensesRepository.createHousehold(userId, houseHoldName)
-        val household = householdCreationResult.getOrNull()
-        return if (householdCreationResult.isSuccess && household != null) {
-            val addHouseholdToUserResult = usersCollectionRepository.addHouseholdToUser(userId, household)
+        val householdCreationResult = householdRepository.createHousehold(userId, houseHoldName)
+        return householdCreationResult.fold(
+            onSuccess = { household ->
+                val addHouseholdToUserResult = usersCollectionRepository.addHouseholdToUser(userId, household)
 
-            addHouseholdToUserResult.fold(
-                onSuccess = { Result.success(household) },
-                onFailure = {
-                    expensesRepository.deleteHousehold(userId, household.id)
-                    Result.failure(it)
-                }
-            )
-        } else {
-            householdCreationResult
-        }
+                addHouseholdToUserResult.fold(
+                    onSuccess = { Result.success(household) },
+                    onFailure = {
+                        householdRepository.deleteHousehold(userId, household.id)
+                        Result.failure(it)
+                    }
+                )
+            },
+            onFailure = { Result.failure(it) }
+        )
+
     }
 
-    suspend fun addExpense(
+    suspend fun addExpenseToCurrentHousehold(
         userData: UserData,
         expense: ConsolidatedExpenseInformation
     ): Result<Unit> {
@@ -52,7 +53,7 @@ class StoreExpenseUseCase @Inject constructor(
         return if (currentHousehold == null) {
             return Result.failure(HouseholdNotFoundException())
         } else {
-            expensesRepository.addExpenseToHousehold(userData, currentHousehold.id, expense)
+            householdRepository.addExpenseToHousehold(userData, currentHousehold.id, expense)
         }
     }
 
@@ -60,6 +61,6 @@ class StoreExpenseUseCase @Inject constructor(
      * TODO: FirestoreExpense shouldnt be used in domain layer being a data object
      */
     suspend fun getAllExpensesFromHousehold(householdId: String): Result<List<FirestoreExpense>> {
-        return expensesRepository.getAllExpensesFromHousehold(householdId)
+        return householdRepository.getAllExpensesFromHousehold(householdId)
     }
 }

@@ -2,13 +2,14 @@ package com.section11.expenselens.ui.home
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
 import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
 import com.section11.expenselens.domain.usecase.HouseholdInvitationUseCase
-import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
+import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
@@ -27,6 +28,7 @@ import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHous
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.ToExpensesHistoryTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
+import com.section11.expenselens.ui.home.mapper.PendingInvitationsMapper
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
@@ -44,9 +46,10 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val navigationManager: NavigationManager,
     private val googleSignInUseCase: GoogleSignInUseCase,
-    private val storeExpenseUseCase: StoreExpenseUseCase,
+    private val householdUseCase: HouseholdUseCase,
     private val householdInvitationUseCase: HouseholdInvitationUseCase,
     private val uiMapper: HomeScreenUiMapper,
+    private val pendingInvitesMapper: PendingInvitationsMapper,
     private val dispatcher: CoroutineDispatcher
 ) : AbstractViewModel() {
 
@@ -71,7 +74,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private suspend fun onSignIn(userData: UserData) {
-        val householdsResult = storeExpenseUseCase.getCurrentHousehold(userData.id)
+        val householdsResult = householdUseCase.getCurrentHousehold(userData.id)
         val pendingInvites = householdInvitationUseCase.getPendingInvitations(userData.id)
         _uiState.value = uiMapper.getUserSignInModel(
             userData,
@@ -89,7 +92,7 @@ class HomeViewModel @Inject constructor(
                 is ToExpensesHistoryTapped -> navigationManager.navigate(NavigateToExpensesHistory)
                 is CreateHouseholdTapped -> handleHouseholdCreation(homeEvent)
                 is AddUserToHouseholdTapped -> handleInvitingUserToHousehold(homeEvent)
-                is HouseholdInviteTap -> { Unit /* TODO working on this in next PR */ }
+                is HouseholdInviteTap -> handleHouseholdInviteTap(homeEvent)
             }
         }
     }
@@ -114,7 +117,7 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun handleHouseholdCreation(event: CreateHouseholdTapped) {
         _uiEvent.emit(Loading(true))
-        val houseHoldResult = storeExpenseUseCase.createHousehold(
+        val houseHoldResult = householdUseCase.createHousehold(
             event.userId,
             event.householdName
         )
@@ -149,10 +152,45 @@ class HomeViewModel @Inject constructor(
 
             result.fold(
                 onFailure = { exception ->
-                    _profileDialogUiEvent.emit(uiMapper.getHouseholdInviteResultEvent(exception))
+                    _profileDialogUiEvent.emit(
+                        pendingInvitesMapper.getHouseholdInviteResultEvent(exception)
+                    )
                 },
-                onSuccess = { _profileDialogUiEvent.emit(uiMapper.getHouseholdInviteResultEvent()) }
+                onSuccess = {
+                    _profileDialogUiEvent.emit(pendingInvitesMapper.getHouseholdInviteResultEvent())
+                }
             )
+        }
+    }
+
+    private suspend fun handleHouseholdInviteTap(inviteTap: HouseholdInviteTap) {
+        _uiState.update { pendingInvitesMapper.setPendingInviteLoading(it, inviteTap) }
+
+        with (inviteTap) {
+            val newPendingInvitesResult = householdInvitationUseCase.handleHouseholdInviteResponse(
+                accepted,
+                userId,
+                householdId,
+                householdName
+            )
+
+            var pendingInvites: List<HouseholdInvite>? = null
+            newPendingInvitesResult.fold(
+                onSuccess = {  pendingInvites = it },
+                onFailure = {
+                    pendingInvites = householdInvitationUseCase
+                        .getPendingInvitations(inviteTap.userId)
+                        .getOrNull()
+                }
+            )
+            _uiState.update {
+                if (it is UserSignedIn) {
+                    val household = householdUseCase.getCurrentHousehold(userId)
+                    pendingInvitesMapper.updateInvitesAndHousehold(it, pendingInvites, household)
+                } else {
+                    it
+                }
+            }
         }
     }
 

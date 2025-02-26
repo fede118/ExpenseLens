@@ -10,7 +10,12 @@ sealed class HomeUpstreamEvent : UpstreamUiEvent() {
         val userId: String,
         val householdName: String
     ) : HomeUpstreamEvent()
-    data class HouseholdInviteTap(val id: String, val accepted: Boolean) : HomeUpstreamEvent()
+    data class HouseholdInviteTap(
+        val householdId: String,
+        val householdName: String,
+        val userId: String,
+        val accepted: Boolean
+    ) : HomeUpstreamEvent()
 }
 
 sealed class ProfileDialogEvents: HomeUpstreamEvent() {

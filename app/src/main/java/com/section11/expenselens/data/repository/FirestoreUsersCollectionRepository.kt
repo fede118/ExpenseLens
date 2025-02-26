@@ -1,13 +1,15 @@
 package com.section11.expenselens.data.repository
 
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.USERS_COLLECTION
-import com.section11.expenselens.data.constants.FirestoreConstants.Fields.EMAIL_FIELD
-import com.section11.expenselens.data.constants.FirestoreConstants.Fields.HOUSEHOLDS_FIELD
-import com.section11.expenselens.data.constants.FirestoreConstants.Fields.ID_FIELD
-import com.section11.expenselens.data.constants.FirestoreConstants.Fields.INVITATIONS_FIELD
-import com.section11.expenselens.data.constants.FirestoreConstants.Fields.NAME_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.EMAIL_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.HOUSEHOLDS_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.INVITATIONS_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersHouseholdsArray.HOUSEHOLD_ID_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersHouseholdsArray.HOUSEHOLD_NAME_FIELD
+import com.section11.expenselens.data.mapper.mapToHouseholdsList
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import kotlinx.coroutines.tasks.await
@@ -43,43 +45,18 @@ class FirestoreUsersCollectionRepository @Inject constructor(
         return households ?: emptyList()
     }
 
-    private fun List<*>.mapToHouseholdsList(): List<UserHousehold> {
-        return mapNotNull {
-            val map = it as? Map<*, *>
-            val id = map?.get(ID_FIELD) as? String
-            val name = map?.get(NAME_FIELD) as? String
-            if (id != null && name != null) UserHousehold(id, name) else null
-        }
-    }
-
     override suspend fun addHouseholdToUser(
         userId: String,
         household: UserHousehold
     ): Result<Unit> {
         val userDocRef = firestore.collection(USERS_COLLECTION).document(userId)
-
         return try {
             firestore.runTransaction { transaction ->
-                val snapshot = transaction.get(userDocRef)
-
-                val userHouseholds = if (snapshot.exists()) {
-                    (snapshot.get(HOUSEHOLDS_FIELD) as? List<*>)?.mapToHouseholdsList() ?: emptyList()
-                } else {
-                    emptyList()
-                }
-
-                // Avoid duplicate households
-                if (userHouseholds.any { it.id == household.id }) {
-                    return@runTransaction
-                }
-
-                val updatedHouseholds = userHouseholds.toMutableList().apply { add(household) }
-
-                if (snapshot.exists()) {
-                    transaction.update(userDocRef, HOUSEHOLDS_FIELD, updatedHouseholds)
-                } else {
-                    transaction.set(userDocRef, mapOf(HOUSEHOLDS_FIELD to updatedHouseholds))
-                }
+                val householdMap = mapOf(
+                    HOUSEHOLD_ID_FIELD to household.id,
+                    HOUSEHOLD_NAME_FIELD to household.name
+                )
+                transaction.update(userDocRef, HOUSEHOLDS_FIELD, FieldValue.arrayUnion(householdMap))
             }.await()
 
             Result.success(Unit)

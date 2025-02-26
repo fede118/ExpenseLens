@@ -6,11 +6,12 @@ import com.google.common.truth.Truth.assertThat
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Transaction
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.USERS_COLLECTION
-import com.section11.expenselens.data.constants.FirestoreConstants.Fields.HOUSEHOLDS_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.HOUSEHOLDS_FIELD
 import com.section11.expenselens.domain.models.UserHousehold
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -20,6 +21,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -108,23 +110,6 @@ class FirestoreUsersCollectionRepositoryTest {
     }
 
     @Test
-    fun `addHouseholdToUser creates new document if user does not exist`() = runTest {
-        doAnswer { invocation ->
-            val transactionFunction = invocation.arguments[0] as Transaction.Function<Unit>
-            transactionFunction.apply(mockTransaction) // Call it with the mock transaction
-            Tasks.forResult(Unit) // Return a successful Task
-        }.whenever(mockFirestore).runTransaction(any<Transaction.Function<Unit>>())
-
-        whenever(mockTransaction.get(mockDocumentReference)).thenReturn(mockDocumentSnapshot)
-        whenever(mockDocumentSnapshot.exists()).thenReturn(false)
-
-        val result = repository.addHouseholdToUser(testUserId, testHousehold)
-
-        verify(mockTransaction).set(mockDocumentReference, mapOf(HOUSEHOLDS_FIELD to listOf(testHousehold)))
-        assertThat(result.isSuccess).isTrue()
-    }
-
-    @Test
     fun `addHouseholdToUser updates document when household doesn't exist`() = runTest {
         val existingHousehold = UserHousehold("someHouseholdId", "Test Household 1")
         val existingHouseholds = listOf(
@@ -145,46 +130,19 @@ class FirestoreUsersCollectionRepositoryTest {
         val result = repository.addHouseholdToUser(testUserId, testHousehold)
 
         verify(mockTransaction).update(
-            mockDocumentReference,
-            HOUSEHOLDS_FIELD,
-            listOf(
-                existingHousehold,
-                testHousehold
-            )
+            eq(mockDocumentReference),
+            eq(HOUSEHOLDS_FIELD),
+            any<FieldValue>()
         )
-        assertThat(result.isSuccess).isTrue()
-    }
-
-    @Test
-    fun `addHouseholdToUser does not add duplicate household`() = runTest {
-        val existingHouseholds = listOf(
-            mapOf("id" to "household1", "name" to "Test Household 1")
-        )
-
-        doAnswer { invocation ->
-            val transactionFunction = invocation.arguments[0] as Transaction.Function<Unit>
-            transactionFunction.apply(mockTransaction) // Call it with the mock transaction
-            Tasks.forResult(Unit) // Return a successful Task
-        }.whenever(mockFirestore).runTransaction(any<Transaction.Function<Unit>>())
-        whenever(mockTransaction.get(mockDocumentReference)).thenReturn(mockDocumentSnapshot)
-        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
-        whenever(mockDocumentSnapshot.get(HOUSEHOLDS_FIELD)).thenReturn(existingHouseholds)
-
-        val result = repository.addHouseholdToUser(testUserId, UserHousehold("household1", "Test Household 1"))
-
-        verify(mockTransaction, never()).update(any<DocumentReference>(), any<String>(), any())
         assertThat(result.isSuccess).isTrue()
     }
 
     @Test
     fun `addHouseholdToUser returns failure when transaction fails`() = runTest {
-        val mockException:  FirebaseFirestoreException = mock()
-        doAnswer { invocation ->
-            val transactionFunction = invocation.arguments[0] as Transaction.Function<Unit>
-            transactionFunction.apply(mockTransaction) // Call it with the mock transaction
-            Tasks.forResult(Unit) // Return a successful Task
+        val mockException: FirebaseFirestoreException = mock()
+        doAnswer {
+            throw mockException
         }.whenever(mockFirestore).runTransaction(any<Transaction.Function<Unit>>())
-        whenever(mockTransaction.get(mockDocumentReference)).thenThrow(mockException)
 
         val result = repository.addHouseholdToUser(testUserId, testHousehold)
 
