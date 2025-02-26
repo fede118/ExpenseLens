@@ -367,7 +367,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `on HouseholdInviteTap refused then shouldnt add household and remove invite`() = runTest {
+    fun `on HouseholdInviteTap refused then shouldn't add household and remove invite`() = runTest {
         val event = HouseholdInviteTap("id", "name", "user", false)
         whenever(
             householdInvitationsUseCase.handleHouseholdInviteResponse(eq(false), any(), any(), any())

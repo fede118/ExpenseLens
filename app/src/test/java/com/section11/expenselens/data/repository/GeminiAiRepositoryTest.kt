@@ -32,7 +32,7 @@ class GeminiAiRepositoryTest {
 
     @Test
     fun `when service is called then mapper should be called with the response`() = runTest {
-        val extractedText = "sometext"
+        val extractedText = "some text"
         val mockResponse: Response<GeminiResponse> = mock()
         val expectedResponse = getGeminiResponse("some response")
         whenever(mockResponse.isSuccessful).thenReturn(true)

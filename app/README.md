@@ -8,7 +8,7 @@
         |-- name: "Smith Family"
         |-- users: ["userId1", "userId2"] // Array of user IDs
         |
-        |-- expenses (subcollection)
+        |-- expenses (sub-collection)
                 |
                 |-- expenseId (document)
                         |

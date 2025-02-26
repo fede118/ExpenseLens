@@ -54,7 +54,7 @@ object FirestoreConstants {
         }
 
         /**
-         * Commented Fields are not being used right now. But will be used in the future. Thats how
+         * Commented Fields are not being used right now. But will be used in the future. That's how
          * the structure should be.
          */
         object HouseholdsCollection {

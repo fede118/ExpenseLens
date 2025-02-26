@@ -58,7 +58,7 @@ class HouseholdUseCase @Inject constructor(
     }
 
     /**
-     * TODO: FirestoreExpense shouldnt be used in domain layer being a data object
+     * TODO: FirestoreExpense shouldn't be used in domain layer being a data object
      */
     suspend fun getAllExpensesFromHousehold(householdId: String): Result<List<FirestoreExpense>> {
         return householdRepository.getAllExpensesFromHousehold(householdId)

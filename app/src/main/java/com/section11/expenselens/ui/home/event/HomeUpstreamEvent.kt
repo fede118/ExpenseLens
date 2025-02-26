@@ -25,5 +25,4 @@ sealed class ProfileDialogEvents: HomeUpstreamEvent() {
         val inviteeUserEmail: String
     ) : HomeUpstreamEvent()
     data object SignOutTapped : HomeUpstreamEvent()
-    data object ToExpensesHistoryTapped : HomeUpstreamEvent()
 }
