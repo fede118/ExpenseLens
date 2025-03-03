@@ -1,14 +1,17 @@
 package com.section11.expenselens.ui.home
 
 import android.content.Context
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
 import com.section11.expenselens.domain.usecase.HouseholdInvitationUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
+import com.section11.expenselens.framework.credentials.GoogleCredentialManager
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
@@ -27,6 +30,7 @@ import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
 import com.section11.expenselens.ui.home.mapper.PendingInvitationsMapper
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
+import com.section11.expenselens.ui.utils.getUserData
 import io.mockk.mockkStatic
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -58,9 +62,10 @@ class HomeViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val navigationManager: NavigationManager = mock()
+    private val credentialManager: GoogleCredentialManager = mock()
     private val mapper: HomeScreenUiMapper = mock()
     private val invitesMapper: PendingInvitationsMapper = mock()
-    private val googleSignInUseCase: GoogleSignInUseCase = mock()
+    private val signInUseCase: SignInUseCase = mock()
     private val householdUseCase: HouseholdUseCase = mock()
     private val householdInvitationsUseCase: HouseholdInvitationUseCase = mock()
     private val greeting = "hello"
@@ -73,7 +78,8 @@ class HomeViewModelTest {
         Dispatchers.setMain(testDispatcher)
         viewModel = HomeViewModel(
             navigationManager,
-            googleSignInUseCase,
+            credentialManager,
+            signInUseCase,
             householdUseCase,
             householdInvitationsUseCase,
             mapper,
@@ -93,7 +99,8 @@ class HomeViewModelTest {
 
         viewModel = HomeViewModel(
             navigationManager,
-            googleSignInUseCase,
+            credentialManager,
+            signInUseCase,
             householdUseCase,
             householdInvitationsUseCase,
             mapper,
@@ -107,11 +114,12 @@ class HomeViewModelTest {
 
     @Test
     fun `on init should get user information if null update uiState to user signed out`() = runTest {
-        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.failure(mock()))
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.failure(mock()))
 
         viewModel = HomeViewModel(
             navigationManager,
-            googleSignInUseCase,
+            credentialManager,
+            signInUseCase,
             householdUseCase,
             householdInvitationsUseCase,
             mapper,
@@ -129,7 +137,8 @@ class HomeViewModelTest {
 
         viewModel = HomeViewModel(
             navigationManager,
-            googleSignInUseCase,
+            credentialManager,
+            signInUseCase,
             householdUseCase,
             householdInvitationsUseCase,
             mapper,
@@ -154,10 +163,14 @@ class HomeViewModelTest {
     @Test
     fun `when SignInTapped event and sign in successful then should update ui state`() = runTest {
         val mockContext: Context = mock()
-        val mockUserData = UserData("id", "idToken", "name", "img")
-        val successSigning = SignInSuccess(mockUserData)
-        whenever(googleSignInUseCase.signInToGoogle(mockContext))
-            .thenReturn(Result.success(successSigning))
+        val mockUserData = getUserData()
+        val mockCredentialResponse: GetCredentialResponse = mock()
+        val mockCredential: CustomCredential = mock()
+        whenever(mockCredentialResponse.credential).thenReturn(mockCredential)
+        whenever(mockCredential.type).thenReturn(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)
+        whenever(credentialManager.getCredentials(mockContext)).thenReturn(mockCredentialResponse)
+        whenever(signInUseCase.signInCredentialsFetched(any()))
+            .thenReturn(Result.success(mockUserData))
         val mockUiModel: UserSignedIn = mock()
         whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
 
@@ -170,8 +183,8 @@ class HomeViewModelTest {
     @Test
     fun `when SignInTapped event and user cancels then should hide loader`() = runTest {
         val mockContext: Context = mock()
-        whenever(googleSignInUseCase.signInToGoogle(mockContext))
-            .thenReturn(Result.success(SignInCancelled))
+        whenever(credentialManager.getCredentials(mockContext))
+            .then { throw GetCredentialCancellationException() }
 
         // Since this is a cold flow we need to start the collection before actually calling the viewModel method
         val job = launch {
@@ -194,7 +207,9 @@ class HomeViewModelTest {
     @Test
     fun `when SignInTapped event and sign in fails then should update ui state`() = runTest {
         val mockContext: Context = mock()
-        whenever(googleSignInUseCase.signInToGoogle(mockContext))
+        val mockCredentialResponse: GetCredentialResponse = mock()
+        whenever(credentialManager.getCredentials(mockContext)).thenReturn(mockCredentialResponse)
+        whenever(signInUseCase.signInCredentialsFetched(mockCredentialResponse))
             .thenReturn(Result.failure(mock()))
 
         viewModel.onUiEvent(SignInTapped(mockContext))
@@ -222,7 +237,7 @@ class HomeViewModelTest {
 
         job.join() // Ensure the coroutine completes
 
-        verify(googleSignInUseCase).signOut()
+        verify(signInUseCase).signOut()
         assertTrue(viewModel.uiState.value is UserSignedOut)
     }
 
@@ -257,13 +272,14 @@ class HomeViewModelTest {
             .thenReturn(Result.success(householdResult))
         val mockUiModel: UserSignedIn = mock()
         whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
-        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mock()))
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mock()))
         mockkStatic(UserSignedIn::class)
         whenever(mockUiModel.copy(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
 
         viewModel = HomeViewModel(
             navigationManager,
-            googleSignInUseCase,
+            credentialManager,
+            signInUseCase,
             householdUseCase,
             householdInvitationsUseCase,
             mapper,
@@ -286,7 +302,8 @@ class HomeViewModelTest {
 
         viewModel = HomeViewModel(
             navigationManager,
-            googleSignInUseCase,
+            credentialManager,
+            signInUseCase,
             householdUseCase,
             householdInvitationsUseCase,
             mapper,
@@ -321,7 +338,8 @@ class HomeViewModelTest {
             .thenReturn(mock())
         viewModel = HomeViewModel(
             navigationManager,
-            googleSignInUseCase,
+            credentialManager,
+            signInUseCase,
             householdUseCase,
             householdInvitationsUseCase,
             mapper,
@@ -346,9 +364,15 @@ class HomeViewModelTest {
 
     @Test
     fun `onHouseholdInvite tap Accept then should update ui state`() = runTest {
-        val event = HouseholdInviteTap("householdId", "householdName", "userId", true)
+        val event = HouseholdInviteTap(
+            "inviteId",
+            "householdId",
+            "householdName",
+            "userId",
+            true
+        )
         whenever(
-            householdInvitationsUseCase.handleHouseholdInviteResponse(eq(true), any(), any(), any())
+            householdInvitationsUseCase.handleHouseholdInviteResponse(eq(true), any(), any(), any(), any())
         ).thenReturn(Result.success(emptyList()))
         val household = UserHousehold("householdId", "householdName")
         val signedInState = mockSignIn()
@@ -367,10 +391,10 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `on HouseholdInviteTap refused then shouldnt add household and remove invite`() = runTest {
-        val event = HouseholdInviteTap("id", "name", "user", false)
+    fun `on HouseholdInviteTap refused then shouldn't add household and remove invite`() = runTest {
+        val event = HouseholdInviteTap("inviteId", "id", "name", "user", false)
         whenever(
-            householdInvitationsUseCase.handleHouseholdInviteResponse(eq(false), any(), any(), any())
+            householdInvitationsUseCase.handleHouseholdInviteResponse(eq(false), any(), any(), any(), any())
         ).thenReturn(Result.success(emptyList()))
         val signedInState = mockSignIn()
         whenever(invitesMapper.setPendingInviteLoading(any(), any())).thenReturn(signedInState)
@@ -382,13 +406,25 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         verify(householdInvitationsUseCase)
-            .handleHouseholdInviteResponse(false, "user", "id", "name")
+            .handleHouseholdInviteResponse(false, "inviteId", "user", "id", "name")
         assertTrue(viewModel.uiState.value is UserSignedIn)
     }
 
+    @Test
+    fun `signInToGoogle with invalid credential type should not update ui to SignedIn`() = runTest {
+        val customCredential = CustomCredential("invalid_type", mock())
+        val credentialResponse = GetCredentialResponse(customCredential)
+        whenever(credentialManager.getCredentials(any())).thenReturn(credentialResponse)
+
+        viewModel.onUiEvent(SignInTapped(mock()))
+        advanceUntilIdle()
+
+        assert(viewModel.uiState.value is UserSignedOut)
+    }
+
     private suspend fun mockInitWithSomeUserInfo(withHousehold: Boolean = false) {
-        val mockUserData = UserData("id", "idToken", "name", "img")
-        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
+        val mockUserData = getUserData()
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserSignedIn = mock()
         if (withHousehold) {
             val mockHousehold: UserHousehold = mock()
@@ -403,18 +439,19 @@ class HomeViewModelTest {
         whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
         val user: UserData = mock()
         whenever(user.id).thenReturn("uid")
-        whenever(googleSignInUseCase.getCurrentUser()).thenReturn(Result.success(user))
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(user))
     }
 
     private suspend fun mockSignIn(
         withHousehold: Boolean = false,
         withPendingInvitations: Boolean = false
     ): UserSignedIn {
-        val googleSignIn: SignInSuccess = mock()
         val mockUserData: UserData = mock()
         whenever(mockUserData.id).thenReturn("id")
-        whenever(googleSignIn.userData).thenReturn(mockUserData)
-        whenever(googleSignInUseCase.signInToGoogle(any())).thenReturn(Result.success(googleSignIn))
+        val mockCredentialResponse: GetCredentialResponse = mock()
+        whenever(credentialManager.getCredentials(any())).thenReturn(mockCredentialResponse)
+        whenever(signInUseCase.signInCredentialsFetched(any()))
+            .thenReturn(Result.success(mockUserData))
         if (withHousehold) {
             val household: UserHousehold = mock()
             whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(household)

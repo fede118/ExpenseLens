@@ -7,6 +7,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.QuerySnapshot
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.domain.models.Category.HOME
@@ -19,6 +20,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -96,6 +98,29 @@ class FirestoreHouseholdRepositoryTest {
         val household = result.getOrNull()
         assertEquals(householdId, household?.id)
         assertEquals(householdName, household?.name)
+    }
+
+    @Test
+    fun `createHousehold returns failure on exception`() = runTest {
+        // Given
+        val householdName = "New Household"
+        val userId = "user123"
+        val mockDocument: DocumentReference = mock()
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("household456")
+        val mockTask: Task<DocumentReference> = Tasks.forResult(mockDocument)
+        whenever(mockCollection.add(any())).thenReturn(mockTask)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        val firebaseException: FirebaseFirestoreException = mock()
+        whenever(mockDocument.set(any())).thenReturn(Tasks.forException(firebaseException))
+
+        // When
+        val result = repository.createHousehold(userId, householdName)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(result.isFailure)
     }
 
     @Test

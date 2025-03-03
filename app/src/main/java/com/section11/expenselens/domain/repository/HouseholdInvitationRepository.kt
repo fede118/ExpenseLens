@@ -13,7 +13,16 @@ interface HouseholdInvitationRepository {
 
     suspend fun getPendingInvitations(userId: String): Result<List<HouseholdInvite>>
 
-    suspend fun acceptHouseholdInvite(userId: String, householdId: String, householdName: String): Result<Unit>
+    suspend fun acceptHouseholdInvite(
+        inviteId: String,
+        userId: String,
+        householdId: String,
+        householdName: String
+    ): Result<Unit>
 
-    suspend fun deleteHouseholdInvite(userId: String, householdId: String): Result<Unit>
+    suspend fun deleteHouseholdInvite(
+        inviteId: String,
+        userId: String,
+        householdId: String
+    ): Result<Unit>
 }

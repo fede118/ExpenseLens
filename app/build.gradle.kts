@@ -33,8 +33,8 @@ android {
         applicationId = "com.section11.expenselens"
         minSdk = 29
         targetSdk = 34
-        versionCode = 6
-        versionName = "0.2.0"
+        versionCode = 7
+        versionName = "0.2.0-beta2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -121,6 +121,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)

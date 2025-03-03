@@ -27,14 +27,15 @@ class HouseholdInvitationUseCase @Inject constructor(
 
     suspend fun handleHouseholdInviteResponse(
         inviteWasAccepted: Boolean,
+        inviteId: String,
         userId: String,
         householdId: String,
         householdName: String
     ): Result<List<HouseholdInvite>> {
         if (inviteWasAccepted) {
-            householdInvitationRepository.acceptHouseholdInvite(userId, householdId, householdName)
+            householdInvitationRepository.acceptHouseholdInvite(inviteId, userId, householdId, householdName)
         } else {
-            householdInvitationRepository.deleteHouseholdInvite(userId, householdId)
+            householdInvitationRepository.deleteHouseholdInvite(inviteId, userId, householdId)
         }
 
         return getPendingInvitations(userId)

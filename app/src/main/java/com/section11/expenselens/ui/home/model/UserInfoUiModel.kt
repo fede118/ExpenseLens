@@ -14,6 +14,7 @@ data class UserInfoUiModel(
 
 @Parcelize
 data class PendingInvitesUiModel(
+    val inviteId: String,
     val householdId: String,
     val householdName: String,
     val timestamp: Timestamp?,

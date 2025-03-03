@@ -31,6 +31,7 @@ class FakeRepositoryForPreviews(context: Context) {
             profilePic = "",
             pendingInvites = listOf(
                 PendingInvitesUiModel(
+                    inviteId = "inviteId",
                     householdName = "Fake household",
                     householdId = "id",
                     status = InviteStatusUiModel.Pending,

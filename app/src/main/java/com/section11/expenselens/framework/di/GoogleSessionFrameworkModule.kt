@@ -5,7 +5,9 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.messaging.FirebaseMessaging
 import com.section11.expenselens.BuildConfig
+import com.section11.expenselens.framework.credentials.GoogleCredentialManager
 import com.section11.expenselens.framework.utils.GoogleTokenMapper
 import com.section11.expenselens.framework.utils.GoogleTokenMapperImpl
 import dagger.Module
@@ -29,15 +31,14 @@ class GoogleSessionFrameworkModule {
     }
 
     @Provides
-    fun providesGoogleCredentialsRequest(googleIdOption: GetGoogleIdOption): GetCredentialRequest {
-        return GetCredentialRequest.Builder()
+    fun providesGoogleCredentialManager(
+        @ApplicationContext context: Context,
+        googleIdOption: GetGoogleIdOption
+    ): GoogleCredentialManager {
+        val request = GetCredentialRequest.Builder()
             .addCredentialOption(googleIdOption)
             .build()
-    }
-
-    @Provides
-    fun providesGoogleCredentialManager(@ApplicationContext context: Context): CredentialManager {
-        return CredentialManager.create(context)
+        return GoogleCredentialManager(CredentialManager.create(context), request)
     }
 
     @Provides
@@ -48,5 +49,10 @@ class GoogleSessionFrameworkModule {
     @Provides
     fun provideFirebaseAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
+    }
+
+    @Provides
+    fun provideFirebaseMessaging(): FirebaseMessaging {
+        return FirebaseMessaging.getInstance()
     }
 }

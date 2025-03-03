@@ -84,6 +84,7 @@ fun List<HouseholdInvite>?.toPendingInvitesUiModel(): List<PendingInvitesUiModel
     this?.map {
         pendingInvites.add(
             PendingInvitesUiModel(
+                inviteId = it.inviteId,
                 householdId = it.householdId,
                 householdName = it.householdName,
                 timestamp = it.timestamp,

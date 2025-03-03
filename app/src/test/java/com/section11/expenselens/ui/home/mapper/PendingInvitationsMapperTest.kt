@@ -80,6 +80,7 @@ class PendingInvitationsMapperTest {
                 profilePic = "profilePic",
                 pendingInvites = listOf(
                     PendingInvitesUiModel(
+                        inviteId = "inviteId",
                         householdId = "household456",
                         householdName = "Test Household",
                         timestamp = Timestamp.now(),
@@ -111,6 +112,7 @@ class PendingInvitationsMapperTest {
         val newHousehold = UserHousehold(householdId, "Test Household")
         val newInvites = listOf(
             HouseholdInvite(
+                inviteId = "inviteId",
                 householdId = householdId,
                 householdName = "Test Household",
                 inviterId = "inviterId",
@@ -131,6 +133,7 @@ class PendingInvitationsMapperTest {
     fun `setPendingInviteLoading should return user with pending invite loading`() {
         val householdId = "household456"
         val householdName = "Test Household"
+        val inviteId = "inviteId"
         val userSignedInState = UserSignedIn(
             greeting = "greeting",
             user = UserInfoUiModel(
@@ -139,6 +142,7 @@ class PendingInvitationsMapperTest {
                 profilePic = "profilePic",
                 pendingInvites = listOf(
                     PendingInvitesUiModel(
+                        inviteId = inviteId,
                         householdId = householdId,
                         householdName = householdName,
                         timestamp = Timestamp.now(),
@@ -149,7 +153,13 @@ class PendingInvitationsMapperTest {
             )
         )
 
-        val inviteTap = HouseholdInviteTap(householdId, householdName, "userId", true)
+        val inviteTap = HouseholdInviteTap(
+            inviteId,
+            householdId,
+            householdName,
+            "userId",
+            true
+        )
 
         val result = mapper.setPendingInviteLoading(userSignedInState, inviteTap)
 
@@ -161,9 +171,11 @@ class PendingInvitationsMapperTest {
     fun `toPendingInvitesUiModel should return correct list of pending invites`() {
         val householdId = "household456"
         val householdName = "Test Household"
+        val inviteId = "inviteId"
         val timestamp = Timestamp(Date())
         val pendingInvites = listOf(
             HouseholdInvite(
+                inviteId = inviteId,
                 householdId = householdId,
                 householdName = householdName,
                 inviterId = "inviterId",
@@ -174,6 +186,7 @@ class PendingInvitationsMapperTest {
 
         val result = pendingInvites.toPendingInvitesUiModel()
 
+        assertThat(result.first().inviteId).isEqualTo(inviteId)
         assertThat(result.first().householdId).isEqualTo(householdId)
         assertThat(result.first().householdName).isEqualTo(householdName)
         assertThat(result.first().timestamp).isEqualTo(timestamp)

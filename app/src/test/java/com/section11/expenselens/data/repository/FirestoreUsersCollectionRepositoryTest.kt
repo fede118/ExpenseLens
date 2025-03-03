@@ -11,15 +11,18 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Transaction
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.USERS_COLLECTION
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.EMAIL_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.HOUSEHOLDS_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.NOTIFICATIONS_TOKEN_FIELD
 import com.section11.expenselens.domain.models.UserHousehold
+import com.section11.expenselens.ui.utils.getUserData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.never
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
@@ -48,36 +51,49 @@ class FirestoreUsersCollectionRepositoryTest {
     }
 
     @Test
-    fun `createUserIfNotExists creates new document if user does not exist`() = runTest {
+    fun `createOrUpdateUser calls set when snapshot doesn't exist`() = runTest {
+        val userData = getUserData()
         val mockCollection = mock<CollectionReference>()
         whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mockCollection)
         whenever(mockCollection.document(any())).thenReturn(mockDocumentReference)
-        val docSnapshotMock: DocumentSnapshot = mock()
-        val task: Task<DocumentSnapshot> = Tasks.forResult(docSnapshotMock)
+        val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
         whenever(mockDocumentReference.get()).thenReturn(task)
         whenever(mockDocumentSnapshot.exists()).thenReturn(false)
         val setTask: Task<Void> = Tasks.forResult(null)
         whenever(mockDocumentReference.set(any())).thenReturn(setTask)
 
-        val result = repository.createUserIfNotExists(testUserId, "testEmail")
+        val result = repository.createOrUpdateUser(userData)
 
         assertThat(result.isSuccess).isTrue()
-        verify(mockDocumentReference).set(any())
+        val captor = argumentCaptor<Map<String, Any>>()
+        verify(mockDocumentReference).set(captor.capture())
+        assertThat(captor.firstValue[HOUSEHOLDS_FIELD]).isEqualTo(emptyList<Map<String, Any>>())
+        assertThat(captor.firstValue[EMAIL_FIELD]).isEqualTo(userData.email)
+        assertThat(captor.firstValue[NOTIFICATIONS_TOKEN_FIELD]).isEqualTo(userData.notificationToken)
+        assertThat(captor.firstValue[HOUSEHOLDS_FIELD]).isEqualTo(emptyList<Map<String, Any>>())
     }
 
     @Test
-    fun `createUserIfNotExists doesn't create new document if user exists`() = runTest {
+    fun `createOrUpdateUser calls update when snapshot exists`() = runTest {
+        val userData = getUserData()
         val mockCollection = mock<CollectionReference>()
         whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mockCollection)
         whenever(mockCollection.document(any())).thenReturn(mockDocumentReference)
-        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
         val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
         whenever(mockDocumentReference.get()).thenReturn(task)
+        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
+        val setTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockDocumentReference.update(any())).thenReturn(setTask)
 
-        val result = repository.createUserIfNotExists(testUserId, "testEmail")
+        val result = repository.createOrUpdateUser(userData)
 
         assertThat(result.isSuccess).isTrue()
-        verify(mockDocumentReference, never()).set(any())
+        val captor = argumentCaptor<Map<String, Any>>()
+        verify(mockDocumentReference).update(captor.capture())
+        assertThat(captor.firstValue[HOUSEHOLDS_FIELD]).isEqualTo(emptyList<Map<String, Any>>())
+        assertThat(captor.firstValue[EMAIL_FIELD]).isEqualTo(userData.email)
+        assertThat(captor.firstValue[NOTIFICATIONS_TOKEN_FIELD]).isEqualTo(userData.notificationToken)
+        assertThat(captor.firstValue[HOUSEHOLDS_FIELD]).isEqualTo(emptyList<Map<String, Any>>())
     }
 
     @Test

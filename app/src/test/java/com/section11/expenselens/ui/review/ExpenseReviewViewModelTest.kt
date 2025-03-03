@@ -4,7 +4,7 @@ import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
@@ -45,7 +45,7 @@ class ExpenseReviewViewModelTest {
 
     private val expenseReviewUiMapper: ExpenseReviewScreenUiMapper = mock()
     private val householdUseCase: HouseholdUseCase = mock()
-    private val signInUseCase: GoogleSignInUseCase = mock()
+    private val signInUseCase: SignInUseCase = mock()
     private val navigationManager: NavigationManager = mock()
     private val expenseValidator: ExpenseValidator = mock()
     private val dispatcher = StandardTestDispatcher()

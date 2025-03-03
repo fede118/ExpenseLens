@@ -52,4 +52,8 @@ class HomeScreenUiMapper @Inject constructor(private val resourceProvider: Resou
             )
         )
     }
+
+    fun getGenericErrorMessage(): String {
+        return resourceProvider.getString(R.string.generic_error_message)
+    }
 }

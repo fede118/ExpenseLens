@@ -1,15 +1,17 @@
 package com.section11.expenselens.ui.home
 
 import android.content.Context
+import androidx.credentials.CustomCredential
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.viewModelScope
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInCancelled
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase.SignInResult.SignInSuccess
 import com.section11.expenselens.domain.usecase.HouseholdInvitationUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
+import com.section11.expenselens.framework.credentials.GoogleCredentialManager
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
@@ -42,10 +44,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")// Added ticket to think of something. Right now I like how responsibilities are divided
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val navigationManager: NavigationManager,
-    private val googleSignInUseCase: GoogleSignInUseCase,
+    private val credentialManager: GoogleCredentialManager,
+    private val signInUseCase: SignInUseCase,
     private val householdUseCase: HouseholdUseCase,
     private val householdInvitationUseCase: HouseholdInvitationUseCase,
     private val uiMapper: HomeScreenUiMapper,
@@ -63,7 +67,7 @@ class HomeViewModel @Inject constructor(
     private fun getSignInOrSignedOutStatus() {
         viewModelScope.launch(dispatcher) {
             _uiEvent.emit(Loading(true))
-            val userData = googleSignInUseCase.getCurrentUser().getOrNull()
+            val userData = signInUseCase.getCurrentUser().getOrNull()
             if (userData != null) {
                 onSignIn(userData)
             } else {
@@ -97,19 +101,34 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun handleSignInEvent(event: SignInTapped) {
+    @Suppress("SwallowedException") // The user cancelled the sign in, that's why we swallow the exception
+    private suspend fun handleSignInEvent(signInEvent: SignInTapped) {
         _uiEvent.emit(Loading(true))
-        when(val signInResult = googleSignInUseCase.signInToGoogle(event.context).getOrNull()) {
-            is SignInSuccess -> onSignIn(signInResult.userData)
-            is SignInCancelled -> _uiEvent.emit(Loading(false))
-            null -> _uiEvent.emit(ShowSnackBar("Something went wrong, try again"))
+        val credentialResponse = try {
+            credentialManager.getCredentials(signInEvent.context)
+
+        } catch (cancellationException: GetCredentialCancellationException) {
+            return _uiEvent.emit(Loading(false))
         }
-        _uiEvent.emit(Loading(false))
+        when (credentialResponse.credential) {
+            is CustomCredential -> {
+                if (credentialResponse.credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    signInUseCase.signInCredentialsFetched(credentialResponse).fold(
+                        onFailure = { _uiEvent.emit(ShowSnackBar(uiMapper.getGenericErrorMessage())) },
+                        onSuccess = { userData ->
+                            onSignIn(userData)
+                            _uiEvent.emit(Loading(false))
+                        }
+                    )
+                }
+            }
+            else -> return _uiEvent.emit(Loading(false))
+        }
     }
 
     private suspend fun handleSignOutEvent() {
         _uiEvent.emit(Loading(true))
-        googleSignInUseCase.signOut()
+        signInUseCase.signOut()
         _uiState.value = UserSignedOut(uiMapper.getGreeting())
         _uiEvent.emit(Loading(false))
         _uiEvent.emit(ShowSnackBar(uiMapper.getSignOutSuccessMessage()))
@@ -169,6 +188,7 @@ class HomeViewModel @Inject constructor(
         with (inviteTap) {
             val newPendingInvitesResult = householdInvitationUseCase.handleHouseholdInviteResponse(
                 accepted,
+                inviteId,
                 userId,
                 householdId,
                 householdName

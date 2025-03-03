@@ -25,14 +25,13 @@ detekt = "1.23.5"
 ksp = "2.1.0-1.0.29"
 hilt = "2.53.1"
 androidx-hilt-navigation-compose = "1.2.0"
-playServicesAuthApiPhone = "18.1.0"
-playServicesIdentity = "18.1.0"
 retrofitVersion = "2.9.0"
 textRecognition = "16.0.1"
 kotlinx-coroutines = "1.10.0"
 google-services = "4.4.2"
 truthVersion = "1.4.4"
 uiTestJunit4 = "1.7.8"
+firebaseMessagingKtx = "24.1.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -76,11 +75,10 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "androidx-hilt-navigation-compose" }
-play-services-identity = { module = "com.google.android.gms:play-services-identity", version.ref = "playServicesIdentity" }
-play-services-auth-api-phone = { module = "com.google.android.gms:play-services-auth-api-phone", version.ref = "playServicesAuthApiPhone" }
 retrofit2-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
 text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "textRecognition" }
 ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "uiTestJunit4" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

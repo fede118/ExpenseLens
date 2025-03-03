@@ -18,6 +18,8 @@ const val USER_ID_KEY  = "user_id"
 const val DISPLAY_NAME_KEY = "display_name"
 const val TOKEN_PREFERENCES_KEY = "user_token"
 const val PROFILE_PIC_KEY = "profile_pic"
+const val NOTIFICATION_PREFERENCE_KEY = "notification_token_key"
+const val EMAIL_PREFERENCES_KEY = "email_key"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -53,5 +55,17 @@ class PreferencesModule {
     @Named(PROFILE_PIC_KEY)
     fun providesProfilePicPreferencesKey(): Preferences.Key<String> {
         return stringPreferencesKey(PROFILE_PIC_KEY)
+    }
+
+    @Provides
+    @Named(NOTIFICATION_PREFERENCE_KEY)
+    fun providesNotificationTokenPreferencesKey(): Preferences.Key<String> {
+        return stringPreferencesKey(NOTIFICATION_PREFERENCE_KEY)
+    }
+
+    @Provides
+    @Named(EMAIL_PREFERENCES_KEY)
+    fun providesEmailPreferencesKey(): Preferences.Key<String> {
+        return stringPreferencesKey(EMAIL_PREFERENCES_KEY)
     }
 }
