@@ -45,13 +45,25 @@ class HouseholdInvitationUseCaseTest {
         val userId = "userId"
         val householdId = "householdId"
         val householdName = "householdName"
+        val inviteId = "inviteId"
 
         // When
-        householdInvitationUseCase.handleHouseholdInviteResponse(inviteWasAccepted, userId, householdId, householdName)
+        householdInvitationUseCase.handleHouseholdInviteResponse(
+            inviteWasAccepted,
+            inviteId,
+            userId,
+            householdId,
+            householdName
+        )
 
         // Then
-        verify(invitationsRepository).acceptHouseholdInvite(userId, householdId, householdName)
-        verify(invitationsRepository, never()).deleteHouseholdInvite(userId, householdId)
+        verify(invitationsRepository).acceptHouseholdInvite(
+            inviteId,
+            userId,
+            householdId,
+            householdName
+        )
+        verify(invitationsRepository, never()).deleteHouseholdInvite(inviteId, userId, householdId)
     }
 
     @Test
@@ -61,10 +73,12 @@ class HouseholdInvitationUseCaseTest {
         val userId = "userId"
         val householdId = "householdId"
         val householdName = "householdName"
+        val inviteId = "inviteId"
 
         // When
         householdInvitationUseCase.handleHouseholdInviteResponse(
             inviteWasAccepted,
+            inviteId,
             userId,
             householdId,
             householdName
@@ -72,10 +86,11 @@ class HouseholdInvitationUseCaseTest {
 
         // Then
         verify(invitationsRepository, never()).acceptHouseholdInvite(
+            inviteId,
             userId,
             householdId,
             householdName
         )
-        verify(invitationsRepository).deleteHouseholdInvite(userId, householdId)
+        verify(invitationsRepository).deleteHouseholdInvite(inviteId, userId, householdId)
     }
 }

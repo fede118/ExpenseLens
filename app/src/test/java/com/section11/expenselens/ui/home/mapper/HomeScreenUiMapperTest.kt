@@ -1,9 +1,9 @@
 package com.section11.expenselens.ui.home.mapper
 
 import com.section11.expenselens.R
-import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProvider
+import com.section11.expenselens.ui.utils.getUserData
 import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -32,21 +32,28 @@ class HomeScreenUiMapperTest {
 
     @Test
     fun `when getUserData then userData model is returned when household null`() {
-        val mockUserData = UserData("idToken", "id", "name", "img")
+        val id = "id"
+        val name = "name"
+        val profilePic = "img"
+        val mockUserData = getUserData(
+            id = id,
+            name = name,
+            profilePic = profilePic
+        )
 
         val result = mapper.getUserSignInModel(mockUserData, null, null)
 
         with(result.user) {
             assert(result.householdInfo == null)
-            assertEquals("id", id)
-            assertEquals("name", displayName)
-            assertEquals("img", profilePic)
+            assertEquals(id, id)
+            assertEquals(name, displayName)
+            assertEquals(profilePic, profilePic)
         }
     }
 
     @Test
     fun `when getUserData then userData model is returned with household info`() {
-        val mockUserData = UserData("idToken", "id", "name", "img")
+        val mockUserData = getUserData()
         val household = UserHousehold("id", "name")
 
         val result = mapper.getUserSignInModel(mockUserData, household, null)
@@ -69,5 +76,27 @@ class HomeScreenUiMapperTest {
         mapper.getHouseholdCreationErrorMessage()
 
         verify(resourceProvider).getString(R.string.home_screen_household_creation_failure)
+    }
+
+    @Test
+    fun `updateSignedInUiWithHousehold should return correct updated model`() {
+        val mockUserData = getUserData()
+        val household = UserHousehold("id", "name")
+
+        val result = mapper.getUserSignInModel(mockUserData, household, null)
+        val updatedResult = mapper.updateSignedInUiWithHousehold(result, household)
+
+        assertEquals(household.id, updatedResult.householdInfo?.id)
+        assertEquals(household.name, updatedResult.householdInfo?.name)
+    }
+
+    @Test
+    fun `getGenericErrorMessage should return correct error message`() {
+        whenever(resourceProvider.getString(R.string.generic_error_message))
+            .thenReturn("Generic error message")
+
+        mapper.getGenericErrorMessage()
+
+        verify(resourceProvider).getString(R.string.generic_error_message)
     }
 }

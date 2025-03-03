@@ -322,6 +322,7 @@ fun PendingInviteItem(
         Button(
             onClick = {
                 onEvent(HouseholdInviteTap(
+                    pendingInvite.inviteId,
                     pendingInvite.householdId,
                     pendingInvite.householdName,
                     userId,
@@ -337,6 +338,7 @@ fun PendingInviteItem(
         TextButton(
             onClick = {
                 onEvent(HouseholdInviteTap(
+                    pendingInvite.inviteId,
                     pendingInvite.householdId,
                     pendingInvite.householdName,
                     userId,

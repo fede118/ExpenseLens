@@ -1,6 +1,7 @@
 package com.section11.expenselens.data.repository
 
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -50,6 +51,13 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
 
             val inviteeId = querySnapshot.documents.first().id
 
+            // Generate a new invite document ID
+            val inviteId = firestore.collection(USERS_COLLECTION)
+                .document(inviteeId)
+                .collection(INVITATIONS_FIELD)
+                .document().id // Generate a unique Firestore document ID
+
+            // Create the invitation document
             val invitation = mapOf(
                 INVITE_HOUSEHOLD_ID to household.id,
                 INVITE_HOUSEHOLD_NAME to household.name,
@@ -60,7 +68,9 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
 
             firestore.collection(USERS_COLLECTION)
                 .document(inviteeId)
-                .update(INVITATIONS_FIELD, FieldValue.arrayUnion(invitation))
+                .collection(INVITATIONS_FIELD)
+                .document(inviteId)
+                .set(invitation)
                 .await()
 
             Result.success(Unit)
@@ -75,17 +85,24 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
 
     override suspend fun getPendingInvitations(userId: String): Result<List<HouseholdInvite>> {
         return try {
-            val userDoc = firestore.collection(USERS_COLLECTION).document(userId).get().await()
-            val queriedInvitationList = userDoc.get(INVITATIONS_FIELD) as? List<Map<String, Any>>
+            val invitationsCollection = firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .collection(INVITATIONS_FIELD)
 
-            val inviteList = queriedInvitationList?.map { invitationMap ->
-                val householdId = invitationMap.getOrThrow<String>(INVITE_HOUSEHOLD_ID)
-                val householdName = invitationMap.getOrThrow<String>(INVITE_HOUSEHOLD_NAME)
-                val inviterId = invitationMap.getOrThrow<String>(INVITER_ID)
-                val status = HouseholdInviteStatus.valueOf(invitationMap.getOrThrow(INVITE_STATUS))
-                val timestamp = invitationMap.getOrThrow<Timestamp>(INVITE_TIMESTAMP)
+            val querySnapshot = invitationsCollection
+                .whereEqualTo(INVITE_STATUS, Pending)
+                .get()
+                .await()
+
+            val inviteList = querySnapshot.documents.map { doc ->
+                val householdId = doc.getOrThrow<String>(INVITE_HOUSEHOLD_ID)
+                val householdName = doc.getOrThrow<String>(INVITE_HOUSEHOLD_NAME)
+                val inviterId = doc.getOrThrow<String>(INVITER_ID)
+                val status = HouseholdInviteStatus.valueOf(doc.getOrThrow(INVITE_STATUS))
+                val timestamp = doc.getOrThrow<Timestamp>(INVITE_TIMESTAMP)
 
                 HouseholdInvite(
+                    inviteId = doc.id,
                     householdId = householdId,
                     householdName = householdName,
                     inviterId = inviterId,
@@ -94,7 +111,7 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
                 )
             }
 
-            Result.success(inviteList ?: emptyList())
+            Result.success(inviteList)
         } catch (exception: FirebaseFirestoreException) {
             Result.failure(exception)
         } catch (exception: NullFieldOnFirebaseException) {
@@ -103,7 +120,7 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
     }
 
     @Throws(NullFieldOnFirebaseException::class)
-    private fun <T> Map<String, Any>.getOrThrow(key: String): T {
+    private fun <T> DocumentSnapshot.getOrThrow(key: String): T {
         return this[key] as? T ?: throw nullException
     }
 
@@ -126,20 +143,18 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
      * having 1 of 3 updates fail and end up with inconsistent data.
      */
     override suspend fun acceptHouseholdInvite(
+        inviteId: String,
         userId: String,
         householdId: String,
         householdName: String
     ): Result<Unit> {
         return try {
             val userCollection = firestore.collection(USERS_COLLECTION).document(userId)
-            val userSnapshot = userCollection.get().await()
-            val currentInvitations = userSnapshot.get(INVITATIONS_FIELD) as? List<Map<String, Any>>
+            val inviteDocRef = userCollection.collection(INVITATIONS_FIELD).document(inviteId)
 
             firestore.runBatch { batch ->
-                val updatedInvitations = currentInvitations?.filterNot {
-                    it[INVITE_HOUSEHOLD_ID] == householdId
-                }
-                batch.update(userCollection, INVITATIONS_FIELD, updatedInvitations)
+                // Delete the invitation document
+                batch.delete(inviteDocRef)
 
                 // Add household to user
                 val householdMap = mapOf(
@@ -159,16 +174,18 @@ class FirestoreHouseholdInvitationRepository @Inject constructor(
         }
     }
 
-    override suspend fun deleteHouseholdInvite(userId: String, householdId: String): Result<Unit> {
+    override suspend fun deleteHouseholdInvite(
+        inviteId: String,
+        userId: String,
+        householdId: String
+    ): Result<Unit> {
         return try {
-            val userCollection = firestore.collection(USERS_COLLECTION).document(userId)
+            val inviteDocRef = firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .collection(INVITATIONS_FIELD)
+                .document(inviteId)
 
-            val userSnapshot = userCollection.get().await()
-            val currentInvitations = userSnapshot.get(INVITATIONS_FIELD) as? List<Map<String, Any>>
-            val updatedInvitations = currentInvitations?.filterNot {
-                it[INVITE_HOUSEHOLD_ID] == householdId
-            }
-            userCollection.update(INVITATIONS_FIELD, updatedInvitations).await()
+            inviteDocRef.delete().await()
 
             Result.success(Unit)
         } catch (exception: FirebaseFirestoreException) {

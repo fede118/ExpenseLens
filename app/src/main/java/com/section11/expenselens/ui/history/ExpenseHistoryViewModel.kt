@@ -3,7 +3,7 @@ package com.section11.expenselens.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.section11.expenselens.data.dto.FirestoreExpense
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ExpenseHistoryViewModel @Inject constructor(
     private val householdUseCase: HouseholdUseCase,
-    private val useCase: GoogleSignInUseCase,
+    private val useCase: SignInUseCase,
     dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 

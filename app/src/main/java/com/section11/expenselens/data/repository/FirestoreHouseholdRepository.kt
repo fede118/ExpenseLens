@@ -1,6 +1,5 @@
 package com.section11.expenselens.data.repository
 
-import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -40,7 +39,6 @@ class FirestoreHouseholdRepository @Inject constructor(
 
             Result.success(UserHousehold(householdId, householdName))
         } catch (exception: FirebaseFirestoreException) {
-            Log.e(FirebaseFirestoreException::class.simpleName, exception.stackTraceToString())
             Result.failure(exception)
         }
     }

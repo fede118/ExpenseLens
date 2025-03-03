@@ -3,7 +3,7 @@ package com.section11.expenselens.ui.review
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
@@ -40,7 +40,7 @@ private const val SUBMIT_EXPENSE_ERROR = "Couldn't submit expense, try again lat
 class ExpenseReviewViewModel @Inject constructor(
     private val expenseReviewUiMapper: ExpenseReviewScreenUiMapper,
     private val householdUseCase: HouseholdUseCase,
-    private val signInUseCase: GoogleSignInUseCase,
+    private val signInUseCase: SignInUseCase,
     private val navigationManager: NavigationManager,
     private val expenseValidator: ExpenseValidator,
     private val dispatcher: CoroutineDispatcher

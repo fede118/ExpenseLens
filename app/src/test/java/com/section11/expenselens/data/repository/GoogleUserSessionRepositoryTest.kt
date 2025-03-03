@@ -1,11 +1,11 @@
 package com.section11.expenselens.data.repository
 
-import android.net.Uri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.section11.expenselens.domain.models.UserData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -30,6 +30,8 @@ class GoogleUserSessionRepositoryTest {
     private val userIdPrefKey = stringPreferencesKey("userId")
     private val displayNamePrefKey = stringPreferencesKey("displayName")
     private val profilePicPrefKey = stringPreferencesKey("profilePic")
+    private val emailPrefKey = stringPreferencesKey("email")
+    private val notificationTokenPrefKey = stringPreferencesKey("notificationToken")
 
     private lateinit var repository: GoogleUserSessionRepository
 
@@ -40,39 +42,47 @@ class GoogleUserSessionRepositoryTest {
             tokenPrefKey,
             userIdPrefKey,
             displayNamePrefKey,
-            profilePicPrefKey
+            profilePicPrefKey,
+            emailPrefKey,
+            notificationTokenPrefKey
         )
     }
 
     @Test
     fun `saveUser should store user data in preferences`() = runTest {
         // Given
-        val idToken = "testToken"
-        val id = "user123"
-        val name = "John Doe"
-        val profilePic: Uri = mock()
+        val user = UserData(
+            "testToken",
+            "user123",
+            "John Doe",
+            "ProfilePic",
+            "email",
+            "notificationToken"
+        )
 
         // When
-        repository.saveUser(idToken, id, name, profilePic)
+        repository.saveUser(user)
 
         verify(dataStorePreferences).edit(anyOrNull())
     }
 
     @Test
     fun `saveUser should save user data to preferences`() = runTest {
-        // Arrange
-        val idToken = "testToken"
-        val id = "testId"
-        val name = "testName"
-        val profilePic = mock<Uri>()
-        val profilePicString = "testProfilePic"
-        whenever(profilePic.toString()).thenReturn(profilePicString)
-        // Act
-        repository.saveUser(idToken, id, name, profilePic)
+        // Given
+        val user = UserData(
+            "testToken",
+            "user123",
+            "John Doe",
+            "ProfilePic",
+            "email",
+            "notificationToken"
+        )
+        // When
+        repository.saveUser(user)
         advanceUntilIdle()
 
         val captor = argumentCaptor<suspend(MutablePreferences) -> Unit>()
-        // Assert
+        // Then
         verify(dataStorePreferences).edit(captor.capture())
     }
 
@@ -84,6 +94,8 @@ class GoogleUserSessionRepositoryTest {
         whenever(prefs[userIdPrefKey]).thenReturn("user123")
         whenever(prefs[displayNamePrefKey]).thenReturn("John Doe")
         whenever(prefs[profilePicPrefKey]).thenReturn("https://example.com/profile.jpg")
+        whenever(prefs[emailPrefKey]).thenReturn("email")
+        whenever(prefs[notificationTokenPrefKey]).thenReturn("notificationToken")
 
         // When
         val user = repository.getUser()
@@ -94,6 +106,8 @@ class GoogleUserSessionRepositoryTest {
         assertEquals("user123", user?.id)
         assertEquals("John Doe", user?.displayName)
         assertEquals("https://example.com/profile.jpg", user?.profilePic)
+        assertEquals("email", user?.email)
+        assertEquals("notificationToken", user?.notificationToken)
     }
 
     @Test

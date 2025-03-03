@@ -3,7 +3,7 @@ package com.section11.expenselens.ui.history
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,7 +25,7 @@ class ExpenseHistoryViewModelTest {
 
     private lateinit var viewModel: ExpenseHistoryViewModel
     private val householdUseCase: HouseholdUseCase = mock()
-    private val signInUseCase: GoogleSignInUseCase = mock()
+    private val signInUseCase: SignInUseCase = mock()
     private val userData: UserData = mock()
     private val dispatcher = StandardTestDispatcher()
 

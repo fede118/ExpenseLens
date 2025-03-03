@@ -20,7 +20,9 @@ import com.section11.expenselens.data.constants.FirestoreConstants.Collections.U
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.INVITATIONS_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersInvitationsArray.INVITER_ID
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersInvitationsArray.INVITE_HOUSEHOLD_ID
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersInvitationsArray.INVITE_HOUSEHOLD_NAME
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersInvitationsArray.INVITE_STATUS
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersInvitationsArray.INVITE_TIMESTAMP
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus.Pending
 import com.section11.expenselens.domain.models.UserHousehold
@@ -28,14 +30,12 @@ import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.firstValue
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -47,8 +47,9 @@ class FirestoreHouseholdInvitationRepositoryTest {
     private val mockFirestore: FirebaseFirestore = mock()
     private val usersCollectionMock: CollectionReference = mock()
     private val householdCollectionMock: CollectionReference = mock()
-    private val documentReference: DocumentReference = mock()
+    private val usersDocRef: DocumentReference = mock()
     private val documentSnapshot: DocumentSnapshot = mock()
+    private val testInviteId = "inviteId"
     private val testUserId = "user123"
     private val testInviterId = "user456"
     private val testHouseholdId = "household456"
@@ -59,7 +60,7 @@ class FirestoreHouseholdInvitationRepositoryTest {
     fun setUp() {
         whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(usersCollectionMock)
         whenever(mockFirestore.collection(HOUSEHOLDS_COLLECTION)).thenReturn(householdCollectionMock)
-        whenever(usersCollectionMock.document(any())).thenReturn(documentReference)
+        whenever(usersCollectionMock.document(any())).thenReturn(usersDocRef)
         repository = FirestoreHouseholdInvitationRepository(mockFirestore)
     }
 
@@ -67,28 +68,31 @@ class FirestoreHouseholdInvitationRepositoryTest {
     fun `postInvitationsToUser creates new document if user does not exist`() = runTest {
         // Given
         val userHousehold = UserHousehold("household1", "Test Household")
-        val queryMock: Query = mock()
-        whenever(usersCollectionMock.whereEqualTo(anyString(), anyString())).thenReturn(queryMock)
+        val emailQuery: Query = mock()
+        whenever(usersCollectionMock.whereEqualTo(anyString(), anyString())).thenReturn(emailQuery)
         val querySnapshot: QuerySnapshot = mock()
-        val queryTask: Task<QuerySnapshot> = Tasks.forResult(querySnapshot)
-        whenever(queryMock.get()).thenReturn(queryTask)
+        whenever(emailQuery.get()).thenReturn(Tasks.forResult(querySnapshot))
         whenever(querySnapshot.isEmpty).thenReturn(false)
-        val docMock: DocumentSnapshot = mock()
-        whenever(docMock.id).thenReturn("docIc")
-        val listOfDocs: List<DocumentSnapshot> = listOf(docMock)
-        whenever(querySnapshot.documents).thenReturn(listOfDocs)
-        val docReference: DocumentReference = mock()
-        val updateTask: Task<Void> = Tasks.forResult(null)
-        whenever(docReference.update(anyString(), any())).thenReturn(updateTask)
-        whenever(usersCollectionMock.document(anyString())).thenReturn(docReference)
 
-        val result =repository.postInvitationsToUser(
+        val docSnapshot: DocumentSnapshot = mock()
+        whenever(docSnapshot.id).thenReturn("id")
+        whenever(querySnapshot.documents).thenReturn(listOf(docSnapshot))
+
+        val mockInvitationsColl : CollectionReference = mock()
+        whenever(usersDocRef.collection(INVITATIONS_FIELD)).thenReturn(mockInvitationsColl)
+        val mockInvitationsDocRef: DocumentReference = mock()
+        whenever(mockInvitationsDocRef.id).thenReturn("someId")
+        whenever(mockInvitationsColl.document()).thenReturn(mockInvitationsDocRef)
+        whenever(mockInvitationsDocRef.set(any())).thenReturn(Tasks.forResult(null))
+        whenever(mockInvitationsColl.document("someId")).thenReturn(mockInvitationsDocRef)
+
+        val result = repository.postInvitationsToUser(
             "inviterId",
             "inviteeEmail",
             userHousehold
         )
 
-        verify(docReference).update(anyString(), any())
+        verify(mockInvitationsDocRef).set(any<Map<String, *>>())
         assertThat(result.isSuccess).isTrue()
     }
 
@@ -117,15 +121,8 @@ class FirestoreHouseholdInvitationRepositoryTest {
     fun `getPendingInvitations returns empty list if user has no pending invitations`() = runTest {
         // Given
         val userId = "userId"
-        val docSnapShotMock: DocumentSnapshot = mock()
-        whenever(docSnapShotMock.id).thenReturn(userId)
-        val listOfDocs: List<DocumentSnapshot> = listOf(docSnapShotMock)
-        val querySnapshot: QuerySnapshot = mock()
-        whenever(querySnapshot.documents).thenReturn(listOfDocs)
-        val docMock: DocumentReference = mock()
-        whenever(usersCollectionMock.document(anyString())).thenReturn(docMock)
-        val queryTask: Task<DocumentSnapshot> = Tasks.forResult(docSnapShotMock)
-        whenever(docMock.get()).thenReturn(queryTask)
+        val listOfDocs: List<DocumentSnapshot> = emptyList()
+        mockPendingInvitationsWithList(listOfDocs)
 
         val result = repository.getPendingInvitations(userId)
 
@@ -136,15 +133,6 @@ class FirestoreHouseholdInvitationRepositoryTest {
     @Test
     fun `getPendingInvitations returns list of pending invitations if user has pending invitations`() = runTest {
         // Given
-        val docSnapShotMock: DocumentSnapshot = mock()
-        whenever(docSnapShotMock.id).thenReturn(testUserId)
-        val listOfDocs: List<DocumentSnapshot> = listOf(docSnapShotMock)
-        val querySnapshot: QuerySnapshot = mock()
-        whenever(querySnapshot.documents).thenReturn(listOfDocs)
-        val docMock: DocumentReference = mock()
-        whenever(usersCollectionMock.document(anyString())).thenReturn(docMock)
-        val queryTask: Task<DocumentSnapshot> = Tasks.forResult(docSnapShotMock)
-        whenever(docMock.get()).thenReturn(queryTask)
         val timestamp = Timestamp(seconds=1740070644, nanoseconds=583000000)
         val invitationMap = mapOf(
             "householdId" to testHouseholdId,
@@ -153,8 +141,15 @@ class FirestoreHouseholdInvitationRepositoryTest {
             "status" to inviteStatus.name,
             "timestamp" to timestamp
         )
-        val listOfInvitations = listOf(invitationMap)
-        whenever(docSnapShotMock.get(anyString())).thenReturn(listOfInvitations)
+        val documentSnapshot: DocumentSnapshot = mock()
+        mockPendingInvitationsWithList(listOf(documentSnapshot))
+        whenever(documentSnapshot.data).thenReturn(invitationMap)
+        whenever(documentSnapshot.id).thenReturn(testInviteId)
+        whenever(documentSnapshot.get(INVITE_HOUSEHOLD_ID)).thenReturn(testHouseholdId)
+        whenever(documentSnapshot.get(INVITE_HOUSEHOLD_NAME)).thenReturn(testHouseholdName)
+        whenever(documentSnapshot.get(INVITER_ID)).thenReturn(testInviterId)
+        whenever(documentSnapshot.get(INVITE_STATUS)).thenReturn(inviteStatus.name)
+        whenever(documentSnapshot.get(INVITE_TIMESTAMP)).thenReturn(timestamp)
 
         val result = repository.getPendingInvitations(testUserId)
 
@@ -179,9 +174,13 @@ class FirestoreHouseholdInvitationRepositoryTest {
                 INVITE_STATUS to inviteStatus.name
             )
         )
+        whenever(usersCollectionMock.document(any())).thenReturn(usersDocRef)
+        val invitesCollectionRef: CollectionReference = mock()
+        whenever(usersDocRef.collection(INVITATIONS_FIELD)).thenReturn(invitesCollectionRef)
+        val invitesDocRef: DocumentReference = mock()
+        whenever(invitesCollectionRef.document(any())).thenReturn(invitesDocRef)
         whenever(documentSnapshot.get(INVITATIONS_FIELD)).thenReturn(existingInvitations)
-        whenever(documentSnapshot.exists()).thenReturn(true)
-        whenever(documentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+        whenever(usersDocRef.get()).thenReturn(Tasks.forResult(documentSnapshot))
         val householdDocMock: DocumentReference = mock()
         whenever(householdCollectionMock.document(any())).thenReturn(householdDocMock)
 
@@ -195,7 +194,12 @@ class FirestoreHouseholdInvitationRepositoryTest {
         // Mock updates in the batch
         whenever(batch.update(any(), anyString(), any())).thenReturn(batch)
 
-        val result = repository.acceptHouseholdInvite(testUserId, testHouseholdId, testHouseholdName)
+        val result = repository.acceptHouseholdInvite(
+            testInviteId,
+            testUserId,
+            testHouseholdId,
+            testHouseholdName
+        )
 
         // Verify the batch updates
         verify(batch).update(
@@ -206,13 +210,10 @@ class FirestoreHouseholdInvitationRepositoryTest {
                 true
             }
         )
+        verify(batch).delete(eq(invitesDocRef))
+
         verify(batch).update(
-            eq(documentReference),
-            eq(INVITATIONS_FIELD),
-            any() // We'll verify the filtered invitations separately if needed
-        )
-        verify(batch).update(
-            eq(documentReference),
+            eq(usersDocRef),
             eq(HOUSEHOLDS_FIELD),
             argThat { value ->
                 value is FieldValue && value.javaClass == FieldValue::class.java // Check it's FieldValue
@@ -225,67 +226,52 @@ class FirestoreHouseholdInvitationRepositoryTest {
 
     @Test
     fun `acceptHouseholdInvite fails when FirestoreException occurs`() = runTest {
-        // Mock a Firestore exception
         val exception: FirebaseFirestoreException = mock()
-        val querySnapshot: QuerySnapshot = mock()
-        val queryTask: Task<QuerySnapshot> = Tasks.forResult(querySnapshot)
-        whenever(usersCollectionMock.get()).thenReturn(queryTask)
-        whenever(documentSnapshot.get(INVITATIONS_FIELD)).thenReturn(listOf<Map<String, Any>>())
-        whenever(documentSnapshot.exists()).thenReturn(true)
-        whenever(documentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+        val docRef: DocumentReference = mock()
+        whenever(usersCollectionMock.document(any())).thenReturn(docRef)
+        val invitesCollectionRef: CollectionReference = mock()
+        whenever(docRef.collection(INVITATIONS_FIELD)).thenReturn(invitesCollectionRef)
+        val invitesDocRef: DocumentReference = mock()
+        whenever(invitesCollectionRef.document(any())).thenReturn(invitesDocRef)
         whenever(mockFirestore.runBatch(any())).then { throw exception }
 
-        val result = repository.acceptHouseholdInvite(testUserId, testHouseholdId, testHouseholdName)
+        val result = repository.acceptHouseholdInvite(
+            testInviteId,
+            testUserId,
+            testHouseholdId,
+            testHouseholdName
+        )
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is FirebaseFirestoreException)
-    }
-
-    @Test
-    fun `deleteHouseholdInvite removes invitation successfully`() = runTest {
-        val existingInvitations = listOf(
-            mapOf(
-                INVITE_HOUSEHOLD_ID to testHouseholdId,
-                INVITER_ID to testInviterId,
-                INVITE_STATUS to inviteStatus.name
-            ),
-            mapOf(
-                INVITE_HOUSEHOLD_ID to "otherHousehold",
-                INVITER_ID to "inviter456",
-                INVITE_STATUS to inviteStatus.name
-            )
-        )
-        whenever(documentSnapshot.get(INVITATIONS_FIELD)).thenReturn(existingInvitations)
-        whenever(documentSnapshot.exists()).thenReturn(true)
-        whenever(documentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
-        val task: Task<Void> = Tasks.forResult(null)
-        whenever(documentReference.update(anyString(), any())).thenReturn(task)
-
-        val result = repository.deleteHouseholdInvite(testUserId, testHouseholdId)
-
-        // Verify the update with filtered invitations
-        val argumentCaptor = ArgumentCaptor.forClass(Any::class.java)
-        verify(documentReference).update(eq(INVITATIONS_FIELD), argumentCaptor.capture())
-        val updatedInvitations = argumentCaptor.firstValue as List<*>
-        assertTrue(updatedInvitations.size == 1) // Only one invitation remains
-        assertTrue((updatedInvitations[0] as Map<*, *>)["householdId"] != testHouseholdId)
-
-        assertTrue(result.isSuccess)
     }
 
     @Test
     fun `deleteHouseholdInvite fails when FirestoreException occurs`() = runTest {
         val exception: FirebaseFirestoreException = mock()
-        whenever(documentSnapshot.get(INVITATIONS_FIELD)).thenReturn(listOf<Map<String, Any>>())
-        whenever(documentSnapshot.exists()).thenReturn(true)
-        whenever(documentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
-        whenever(documentReference.update(anyString(), any())).then {
+        val invitesCollectionRef: CollectionReference = mock()
+        val invitesDocRef: DocumentReference = mock()
+        whenever(invitesCollectionRef.document(any())).thenReturn(invitesDocRef)
+        whenever(usersDocRef.collection(any())).thenReturn(invitesCollectionRef)
+        whenever(invitesDocRef.delete()).then {
             throw exception
         }
 
-        val result = repository.deleteHouseholdInvite(testUserId, testHouseholdId)
+        val result = repository.deleteHouseholdInvite(testInviteId, testUserId, testHouseholdId)
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is FirebaseFirestoreException)
+    }
+
+    private fun mockPendingInvitationsWithList(docList: List<DocumentSnapshot>) {
+        val querySnapshot: QuerySnapshot = mock()
+        val docMock: DocumentReference = mock()
+        whenever(usersCollectionMock.document(any())).thenReturn(docMock)
+        val mockInviteColl: CollectionReference = mock()
+        whenever(docMock.collection(any())).thenReturn(mockInviteColl)
+        val queryMock: Query = mock()
+        whenever(mockInviteColl.whereEqualTo(anyString(), any())).thenReturn(queryMock)
+        whenever(queryMock.get()).thenReturn(Tasks.forResult(querySnapshot))
+        whenever(querySnapshot.documents).thenReturn(docList)
     }
 }

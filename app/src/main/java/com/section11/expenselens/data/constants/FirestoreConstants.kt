@@ -38,6 +38,7 @@ object FirestoreConstants {
             const val EMAIL_FIELD = "email"
             const val HOUSEHOLDS_FIELD = "households"
             const val INVITATIONS_FIELD = "invitations"
+            const val NOTIFICATIONS_TOKEN_FIELD = "notificationsToken"
 
             object UsersHouseholdsArray {
                 const val HOUSEHOLD_ID_FIELD = "id"

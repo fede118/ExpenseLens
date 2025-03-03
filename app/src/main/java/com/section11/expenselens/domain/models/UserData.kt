@@ -4,5 +4,7 @@ data class UserData(
     val idToken: String,
     val id: String,
     val displayName: String?,
-    val profilePic: String?
+    val profilePic: String?,
+    val email: String,
+    val notificationToken: String
 )
