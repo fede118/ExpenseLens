@@ -3,8 +3,8 @@ package com.section11.expenselens.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.section11.expenselens.data.dto.FirestoreExpense
-import com.section11.expenselens.domain.usecase.GoogleSignInUseCase
-import com.section11.expenselens.domain.usecase.StoreExpenseUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
+import com.section11.expenselens.domain.usecase.HouseholdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ExpenseHistoryViewModel @Inject constructor(
-    private val storeExpensesUseCase: StoreExpenseUseCase,
-    private val useCase: GoogleSignInUseCase,
+    private val householdUseCase: HouseholdUseCase,
+    private val useCase: SignInUseCase,
     dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -26,10 +26,9 @@ class ExpenseHistoryViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             val user = useCase.getCurrentUser().getOrNull()
             if (user != null) {
-                val householdIdResult = storeExpensesUseCase.getCurrentHouseholdIdAndName(user.id)
-                val householdId = householdIdResult.getOrNull()?.first
-                if (householdId != null) {
-                    val expenses = storeExpensesUseCase.getAllExpensesFromHousehold(householdId)
+                val household = householdUseCase.getCurrentHousehold(user.id)
+                if (household != null) {
+                    val expenses = householdUseCase.getAllExpensesFromHousehold(household.id)
 
                     expenses.getOrNull()?.let { expensesList ->
                         _uiState.value = expensesList.map {

@@ -7,21 +7,20 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.QuerySnapshot
 import com.section11.expenselens.data.dto.FirestoreExpense
-import com.section11.expenselens.data.dto.FirestoreHousehold.Companion.NAME_FIELD
 import com.section11.expenselens.domain.models.Category.HOME
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -32,75 +31,18 @@ private const val HOUSEHOLD_COLLECTION = "households"
 private const val EXPENSES_COLLECTION = "expenses"
 
 @ExperimentalCoroutinesApi
-class FirestoreExpensesRepositoryTest {
+class FirestoreHouseholdRepositoryTest {
 
-    private lateinit var repository: FirestoreExpensesRepository
+    private lateinit var repository: FirestoreHouseholdRepository
     private val mockFirestore: FirebaseFirestore = mock()
     private val mockCollection: CollectionReference = mock()
     private val mockDocument: DocumentReference = mock()
 
     @Before
     fun setUp() {
-        repository = FirestoreExpensesRepository(mockFirestore)
+        repository = FirestoreHouseholdRepository(mockFirestore)
     }
 
-    @Test
-    fun `getHousehold returns household ID when found`() = runTest {
-        // Given
-        val householdName = "Test Household"
-        val householdId = "household123"
-
-        // Mock the QuerySnapshot to return a document with the expected ID
-        val mockDocumentSnapshot: DocumentSnapshot = mock {
-            on { id } doReturn householdId
-        }
-
-        val mockQuerySnapshot: QuerySnapshot = mock {
-            on { documents } doReturn listOf(mockDocumentSnapshot)
-        }
-
-        // Use the actual mockQuerySnapshot in Tasks.forResult()
-        val mockTask: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
-
-        val queryMock: Query = mock()
-
-        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
-        whenever(mockCollection.whereEqualTo(NAME_FIELD, householdName)).thenReturn(queryMock)
-        whenever(queryMock.get()).thenReturn(mockTask) // Return the mock task directly
-
-        // When
-        val result = repository.getHousehold(householdName)
-        advanceUntilIdle()
-
-        // Then
-        assertEquals(householdId, result)
-    }
-
-    @Test
-    fun `getHousehold returns null when household is not found`() = runTest {
-        // Given
-        val householdName = "Nonexistent Household"
-
-        // Mock an empty QuerySnapshot
-        val mockQuerySnapshot: QuerySnapshot = mock {
-            on { documents } doReturn emptyList()
-        }
-
-        val mockTask: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
-
-        val queryMock: Query = mock()
-
-        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
-        whenever(mockCollection.whereEqualTo(NAME_FIELD, householdName)).thenReturn(queryMock)
-        whenever(queryMock.get()).thenReturn(mockTask) // Return the mock task directly
-
-        // When
-        val result = repository.getHousehold(householdName)
-        advanceUntilIdle()
-
-        // Then
-        assertNull(result)
-    }
     @Test
     fun `addExpenseToHousehold returns success when added successfully`() = runTest {
         // Given
@@ -149,13 +91,37 @@ class FirestoreExpensesRepositoryTest {
         whenever(mockDocument.set(any())).thenReturn(Tasks.forResult(null))
 
         // When
-        val result = repository.createHousehold(householdName, userId)
+        val result = repository.createHousehold(userId, householdName)
 
         // Then
         assertTrue(result.isSuccess)
-        assertEquals(householdId to householdName, result.getOrNull())
+        val household = result.getOrNull()
+        assertEquals(householdId, household?.id)
+        assertEquals(householdName, household?.name)
     }
 
+    @Test
+    fun `createHousehold returns failure on exception`() = runTest {
+        // Given
+        val householdName = "New Household"
+        val userId = "user123"
+        val mockDocument: DocumentReference = mock()
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document()).thenReturn(mockDocument)
+        whenever(mockDocument.id).thenReturn("household456")
+        val mockTask: Task<DocumentReference> = Tasks.forResult(mockDocument)
+        whenever(mockCollection.add(any())).thenReturn(mockTask)
+        whenever(mockCollection.document(anyString())).thenReturn(mockDocument)
+        val firebaseException: FirebaseFirestoreException = mock()
+        whenever(mockDocument.set(any())).thenReturn(Tasks.forException(firebaseException))
+
+        // When
+        val result = repository.createHousehold(userId, householdName)
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(result.isFailure)
+    }
 
     @Test
     fun `getAllExpensesFromHousehold returns list of expenses`() = runTest {
@@ -196,4 +162,20 @@ class FirestoreExpensesRepositoryTest {
         assertEquals(expenseList, result.getOrNull())
     }
 
+    @Test
+    fun `delete household should call delete`() = runTest {
+        // Given
+        val userId = "user123"
+        val householdId = "household456"
+        val mockTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.delete()).thenReturn(mockTask)
+
+        // When
+        val result = repository.deleteHousehold(userId, householdId)
+
+        // Then
+        assertTrue(result.isSuccess)
+    }
 }

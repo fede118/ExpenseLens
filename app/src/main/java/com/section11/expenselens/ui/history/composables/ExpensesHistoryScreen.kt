@@ -14,12 +14,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.section11.expenselens.R
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.framework.utils.toFormattedString
+import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.theme.LocalDimens
+import com.section11.expenselens.ui.utils.DarkAndLightPreviews
+import com.section11.expenselens.ui.utils.Preview
 
+// TODO UI model needed, we are using DATA model in the UI Layer
 @Composable
 fun ExpensesHistoryScreen(
     expenses: List<FirestoreExpense>,
@@ -74,11 +79,22 @@ fun ExpenseItem(expense: FirestoreExpense) {
             )
         }
 
-        expense.note?.let {
+        if (expense.note?.isNotEmpty() == true) {
             Text(
-                text = "Note: $it",
+                text = "Note: ${expense.note}",
                 style = MaterialTheme.typography.bodySmall
             )
         }
+    }
+}
+
+@DarkAndLightPreviews
+@Composable
+fun ExpenseHistoryPreview() {
+    val fakeRepo = FakeRepositoryForPreviews(LocalContext.current)
+    Preview {
+        ExpensesHistoryScreen(
+            expenses = fakeRepo.getExpenseHistoryList(),
+        )
     }
 }

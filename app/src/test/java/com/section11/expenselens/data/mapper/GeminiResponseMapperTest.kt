@@ -33,7 +33,7 @@ class GeminiResponseMapperTest {
         val expectedString = "```json\n{\n  \"estimatedCategory\": groceries,\n  \"total\": \$125.01\n}\n```\n"
         val response = getGeminiResponse(expectedString)
         whenever(gsonMock.fromJson(anyString(), eq(SuggestedExpenseInformation::class.java)))
-            .thenReturn(SuggestedExpenseInformation("$125.01", GROCERIES, "2021"))
+            .thenReturn(SuggestedExpenseInformation(125.01, GROCERIES, "2021"))
 
         mapper.toExpenseInformation(response)
 

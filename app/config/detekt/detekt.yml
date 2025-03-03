@@ -132,10 +132,12 @@ complexity:
   LongParameterList:
     active: true
     functionThreshold: 7
-    constructorThreshold: 7
+    constructorThreshold: 8
     ignoreDefaultParameters: false
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
+    ignoreAnnotated:
+      - Composable # Ignore functions annotated with @Composable
   MethodOverloading:
     active: false
     threshold: 6
@@ -175,7 +177,7 @@ complexity:
     ignoreDeprecated: false
     ignorePrivate: false
     ignoreOverridden: false
-    ignoreAnnotatedFunctions: []
+    ignoreAnnotatedFunctions: ["Composable"]
 
 coroutines:
   active: true

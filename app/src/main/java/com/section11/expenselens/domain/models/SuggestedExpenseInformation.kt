@@ -5,9 +5,9 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SuggestedExpenseInformation(
-    val total: String?,
+    val total: Double,
     val estimatedCategory: Category?,
-    val date: String
+    val date: String?
 ) : Parcelable {
     override fun hashCode(): Int {
         return super.hashCode()

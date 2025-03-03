@@ -1,7 +1,9 @@
 package com.section11.expenselens.framework.utils
 
+import android.os.Build
+import android.os.Bundle
 import com.google.firebase.Timestamp
-import com.section11.expenselens.domain.Constants.EXPECTED_DATE_FORMAT
+import com.section11.expenselens.domain.DomainConstants.EXPECTED_DATE_FORMAT
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -36,4 +38,13 @@ fun Timestamp.toFormattedString(dateFormat: String = EXPECTED_DATE_FORMAT): Stri
 fun String.toDate(dateFormat: String = EXPECTED_DATE_FORMAT): Date? {
     val sdf = SimpleDateFormat(dateFormat, Locale.getDefault())
     return sdf.parse(this)
+}
+
+inline fun <reified T> Bundle?.getArg(key: String): T? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        this?.getParcelable(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        this?.getParcelable(key) as? T
+    }
 }

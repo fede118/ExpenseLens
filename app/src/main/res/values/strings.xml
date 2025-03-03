@@ -4,11 +4,25 @@
     <string name="welcome_greeting">Hello, Welcome to ExpenseLens</string>
 
     <!--  Home Screen Content  -->
-    <string name="home_screen_household_name_prefix">Your household name is:\n</string>
-    <string name="home_screen_expense_history_label">My expenses</string>
-    <string name="home_screen_sign_out_success">Successfully signed out</string>
-    <string name="home_screen_profile_pic_content_description">Profile Picture</string>
     <string name="home_screen_sign_in_icon_content_description">Sign in</string>
+    <string name="home_screen_expense_history_label">My expenses</string>
+    <string name="home_screen_invite_to_household_label">Add user to household</string>
+    <string name="home_screen_invite_to_household_placeholder">User email</string>
+    <string name="home_screen_add_expense_label">Add Expense</string>
+    <string name="home_screen_create_household">Create household</string>
+    <string name="home_screen_no_household_message">No household found, you can get invited to one, or please create one:</string>
+    <string name="home_screen_create_household_name">Your Household name</string>
+    <string name="home_screen_household_name_prefix">Your household name is: %s</string>
+    <string name="home_screen_sign_out_success">Successfully signed out</string>
+    <string name="home_screen_household_creation_failure">Something went wrong creating household, try again later.</string>
+    <string name="home_screen_household_invite_user_not_found">User not found, they need to sign in to the app first</string>
+    <string name="home_screen_household_invite_failure">Something went wrong inviting the user to the household, try again later.</string>
+    <string name="home_screen_household_invite_success">Invitation Sent! you can invite another user.</string>
+
+    <!--  Profile Dialog  -->
+    <string name="profile_dialog_invitation_prefix">You have been invited to: %s</string>
+    <string name="profile_dialog_accept_invitation">Accept</string>
+    <string name="profile_dialog_reject_invitation">Reject</string>
 
     <!--  Expense Review Screen  -->
     <string name="expense_review_screen_total_title">Total</string>
@@ -17,14 +31,23 @@
     <string name="expense_review_screen_submit_expense">Submit Expense</string>
     <string name="expense_review_screen_no_date">No date found on image, please select one</string>
     <string name="expense_review_screen_note_title">Add note</string>
+    <string name="expense_review_screen_no_expense_found">Error when getting expense information, please fill out manually, or go back and try again.</string>
+    <string name="expense_review_screen_error_in_total">Something went wrong when validating the total, please double check value and try again.</string>
+    <string name="expense_review_screen_error_in_date">Something went wrong when validating the date, please double check value and try again.</string>
+    <string name="expense_review_screen_error_in_category">Something went wrong when validating the category, please double check value and try again.</string>
+    <string name="expense_review_screen_error_when_submitting">Couldn\'t validate one or more fields, please double check values.</string>"
 
     <!--  Expenses History Screen  -->
     <string name="expenses_history_title">Expenses History</string>
 
     <!--  Common Strings  -->
+    <string name="generic_error_message">Something went wrong, please try again later.</string>
     <string name="dollar_sign">$</string>
     <string name="date_picker_title">Expense Date</string>"
     <string name="date_picker_selected_label">Selected Date: %s</string>
     <string name="string_ok_caps">OK</string>
+    <string name="string_send">Send</string>
 
+    <!--  Content Descriptors  -->
+    <string name="content_description_profile_pic">Profile Picture</string>
 </resources>
