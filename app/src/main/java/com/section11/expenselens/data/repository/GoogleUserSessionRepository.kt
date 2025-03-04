@@ -56,4 +56,10 @@ class GoogleUserSessionRepository @Inject constructor(
     override suspend fun clearUser() {
         dataStorePreferences.edit { it.clear() }
     }
+
+    override suspend fun updateNotificationToken(newToken: String) {
+        dataStorePreferences.edit { prefs ->
+            prefs[notificationTokenPrefKey] = newToken
+        }
+    }
 }

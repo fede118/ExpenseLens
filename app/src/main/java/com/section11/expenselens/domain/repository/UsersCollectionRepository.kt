@@ -10,4 +10,6 @@ interface UsersCollectionRepository {
     suspend fun getUserHouseholds(userId: String): List<UserHousehold>
 
     suspend fun addHouseholdToUser(userId: String, household: UserHousehold): Result<Unit>
+
+    suspend fun updateNotificationToken(userId: String, newToken: String): Result<Unit>
 }

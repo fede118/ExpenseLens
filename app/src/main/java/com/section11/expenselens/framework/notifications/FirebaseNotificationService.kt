@@ -9,16 +9,29 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.section11.expenselens.R
+import com.section11.expenselens.domain.usecase.NotificationsTokenUpdateUseCase
 import com.section11.expenselens.ui.MainActivity
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val CHANNEL = "INVITE_CHANNEL"
 
-class FirebaseNotificationService @Inject constructor(): FirebaseMessagingService() {
+class FirebaseNotificationService @Inject constructor(
+    private val notificationsTokenUpdateUseCase: NotificationsTokenUpdateUseCase,
+    dispatcher: CoroutineDispatcher
+): FirebaseMessagingService() {
+
+    private val serviceJob = Job()
+    private val serviceScope = CoroutineScope(dispatcher + serviceJob)
+
 
     override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        // todo check if need to update this on firestore
+        serviceScope.launch {
+            notificationsTokenUpdateUseCase.onNewNotificationToken(token)
+        }
     }
 
     /**
@@ -32,7 +45,6 @@ class FirebaseNotificationService @Inject constructor(): FirebaseMessagingServic
      * putExtra("householdId", householdId)
      *
      * to actually do something to show the accept/refuse household invite.
-     *
      */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         remoteMessage.data.let {
@@ -55,5 +67,10 @@ class FirebaseNotificationService @Inject constructor(): FirebaseMessagingServic
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.notify(0, notificationBuilder.build())
         }
+    }
+
+    override fun onDestroy() {
+        serviceJob.cancel()
+        super.onDestroy()
     }
 }
