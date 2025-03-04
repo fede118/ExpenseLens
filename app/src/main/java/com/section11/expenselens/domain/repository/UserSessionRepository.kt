@@ -9,4 +9,6 @@ interface UserSessionRepository {
     suspend fun getUser(): UserData?
 
     suspend fun clearUser()
+
+    suspend fun updateNotificationToken(newToken: String)
 }

@@ -20,7 +20,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doAnswer
@@ -37,6 +39,7 @@ class FirestoreUsersCollectionRepositoryTest {
     private val mockDocumentReference: DocumentReference = mock()
     private val mockDocumentSnapshot: DocumentSnapshot = mock()
     private val mockTransaction: Transaction = mock()
+    private val mockUserCollection: CollectionReference = mock()
 
     private val testUserId = "testUserId"
     private val testHousehold = UserHousehold(id = "household1", name = "Test Household")
@@ -45,7 +48,7 @@ class FirestoreUsersCollectionRepositoryTest {
     fun setUp() {
         repository = FirestoreUsersCollectionRepository(mockFirestore)
 
-        whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mock())
+        whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mockUserCollection)
         whenever(mockFirestore.collection(USERS_COLLECTION).document(testUserId))
             .thenReturn(mockDocumentReference)
     }
@@ -53,9 +56,7 @@ class FirestoreUsersCollectionRepositoryTest {
     @Test
     fun `createOrUpdateUser calls set when snapshot doesn't exist`() = runTest {
         val userData = getUserData()
-        val mockCollection = mock<CollectionReference>()
-        whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mockCollection)
-        whenever(mockCollection.document(any())).thenReturn(mockDocumentReference)
+        whenever(mockUserCollection.document(any())).thenReturn(mockDocumentReference)
         val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
         whenever(mockDocumentReference.get()).thenReturn(task)
         whenever(mockDocumentSnapshot.exists()).thenReturn(false)
@@ -76,9 +77,7 @@ class FirestoreUsersCollectionRepositoryTest {
     @Test
     fun `createOrUpdateUser calls update when snapshot exists`() = runTest {
         val userData = getUserData()
-        val mockCollection = mock<CollectionReference>()
-        whenever(mockFirestore.collection(USERS_COLLECTION)).thenReturn(mockCollection)
-        whenever(mockCollection.document(any())).thenReturn(mockDocumentReference)
+        whenever(mockUserCollection.document(any())).thenReturn(mockDocumentReference)
         val task: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
         whenever(mockDocumentReference.get()).thenReturn(task)
         whenever(mockDocumentSnapshot.exists()).thenReturn(true)
@@ -161,6 +160,48 @@ class FirestoreUsersCollectionRepositoryTest {
         }.whenever(mockFirestore).runTransaction(any<Transaction.Function<Unit>>())
 
         val result = repository.addHouseholdToUser(testUserId, testHousehold)
+
+        assertThat(result.isFailure).isTrue()
+    }
+
+    @Test
+    fun `updateNotificationToken updates document with new token`() = runTest {
+        val newToken = "newToken"
+        val userDocRef: DocumentReference = mock()
+        whenever(mockUserCollection.document(anyString())).thenReturn(userDocRef)
+        whenever(userDocRef.get()).thenReturn(Tasks.forResult(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
+        whenever(userDocRef.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+
+        val result = repository.updateNotificationToken(testUserId, newToken)
+
+        assertThat(result.isSuccess).isTrue()
+        verify(userDocRef).update(NOTIFICATIONS_TOKEN_FIELD, newToken)
+    }
+
+    @Test
+    fun `updateNotificationToken if user doesn't exist returns failure`() = runTest {
+        val newToken = "newToken"
+        val userDocRef: DocumentReference = mock()
+        whenever(mockUserCollection.document(anyString())).thenReturn(userDocRef)
+        whenever(userDocRef.get()).thenReturn(Tasks.forResult(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.exists()).thenReturn(false)
+
+        val result = repository.updateNotificationToken(testUserId, newToken)
+
+        assertThat(result.isFailure).isTrue()
+        verify(userDocRef, never()).update(NOTIFICATIONS_TOKEN_FIELD, newToken)
+    }
+
+    @Test
+    fun `updateNotificationToken returns failure when firebase exception`() = runTest {
+        val newToken = "new Token"
+        val mockFirebaseException: FirebaseFirestoreException = mock()
+        whenever(mockUserCollection.document(anyString())).then {
+            throw mockFirebaseException
+        }
+
+        val result = repository.updateNotificationToken(testUserId, newToken)
 
         assertThat(result.isFailure).isTrue()
     }

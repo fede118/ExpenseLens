@@ -10,6 +10,7 @@ import com.section11.expenselens.data.constants.FirestoreConstants.Collections.U
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersHouseholdsArray.HOUSEHOLD_ID_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersHouseholdsArray.HOUSEHOLD_NAME_FIELD
 import com.section11.expenselens.data.mapper.mapToHouseholdsList
+import com.section11.expenselens.domain.exceptions.UserNotFoundException
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.UsersCollectionRepository
@@ -72,6 +73,24 @@ class FirestoreUsersCollectionRepository @Inject constructor(
             }.await()
 
             Result.success(Unit)
+        } catch (exception: FirebaseFirestoreException) {
+            Result.failure(exception)
+        }
+    }
+
+    override suspend fun updateNotificationToken(userId: String, newToken: String): Result<Unit> {
+        return try {
+            val usersCollection = firestore.collection(USERS_COLLECTION)
+            val userDocRef = usersCollection.document(userId)
+            val snapshot = userDocRef.get().await()
+            if (snapshot.exists()) {
+                userDocRef
+                    .update(NOTIFICATIONS_TOKEN_FIELD, newToken)
+                    .await()
+                Result.success(Unit)
+            } else {
+                Result.failure(UserNotFoundException())
+            }
         } catch (exception: FirebaseFirestoreException) {
             Result.failure(exception)
         }

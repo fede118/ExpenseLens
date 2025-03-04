@@ -132,4 +132,17 @@ class GoogleUserSessionRepositoryTest {
         // Then
         verify(dataStorePreferences).edit(anyOrNull())
     }
+
+    @Test
+    fun `updateNotificationToken should update notification token in preferences`() = runTest {
+        // Given
+        val newToken = "newToken"
+
+        // When
+        repository.updateNotificationToken(newToken)
+        advanceUntilIdle()
+
+        // Then
+        verify(dataStorePreferences).edit(anyOrNull())
+    }
 }
