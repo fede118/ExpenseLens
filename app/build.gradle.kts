@@ -195,7 +195,7 @@ tasks.create("jacocoTestReport", JacocoReport::class.java) {
         "**/ExpenseLensImageCapture.*", // Exclude expenseLensImageCapture since its a wrapper of ImageCapture because it cannot be mocked, ergo I cannot test it
         "**/META-INF/**/*.*" // Exclude META-INF
     )
-    val debugTree = fileTree("/build/tmp/kotlin-classes/debug") {
+    val debugTree = fileTree("build/tmp/kotlin-classes/debug") {
         exclude(fileFilter)
     }
     val mainSrc = fileTree("$projectDir/src/main/java") {
@@ -255,7 +255,9 @@ tasks.register("checkCoverage") {
         // Calculate coverage
         val coverage = (totalCovered.toDouble() / (totalCovered + totalMissed)) * 100
 
-        if (coverage < threshold) {
+        if (coverage.isNaN()) {
+            throw GradleException("Couldn't calculate coverage")
+        } else if (coverage < threshold) {
             throw GradleException(
                 "Coverage is below the threshold of ${threshold}%" +
                         "\nCoverage: ${coverage.format(2)}%"
