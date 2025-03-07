@@ -5,12 +5,15 @@ import com.google.common.truth.Truth.assertThat
 import com.google.firebase.Timestamp
 import com.section11.expenselens.R
 import com.section11.expenselens.domain.exceptions.UserNotFoundException
+import com.section11.expenselens.domain.models.HouseholdExpenses
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus.Pending
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
+import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
+import com.section11.expenselens.ui.home.model.CakeGraphUiModel
 import com.section11.expenselens.ui.home.model.InviteStatusUiModel
 import com.section11.expenselens.ui.home.model.PendingInvitesUiModel
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
@@ -89,7 +92,11 @@ class PendingInvitationsMapperTest {
                     )
                 )
             ),
-            householdInfo = UserSignedIn.HouseholdUiState("id", "name")
+            householdInfo = HouseholdUiState(
+                "id",
+                "name",
+                CakeGraphUiModel(emptyList(), "centerText")
+            )
         )
 
         val result = mapper.updateInvitesAndHousehold(userSignedInState, emptyList(), null)
@@ -110,6 +117,7 @@ class PendingInvitationsMapperTest {
             )
         )
         val newHousehold = UserHousehold(householdId, "Test Household")
+        val householdExpenses = HouseholdExpenses(newHousehold, emptyList())
         val newInvites = listOf(
             HouseholdInvite(
                 inviteId = "inviteId",
@@ -121,7 +129,7 @@ class PendingInvitationsMapperTest {
             )
         )
 
-        val result = mapper.updateInvitesAndHousehold(userSignedInState, newInvites, newHousehold)
+        val result = mapper.updateInvitesAndHousehold(userSignedInState, newInvites, householdExpenses)
 
         assertThat(result.user.pendingInvites).isNotEmpty()
         assertThat(result.householdInfo).isNotNull()

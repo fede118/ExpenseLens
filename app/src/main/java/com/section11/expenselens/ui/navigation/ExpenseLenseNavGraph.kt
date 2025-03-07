@@ -35,6 +35,7 @@ import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Comp
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.EXPENSE_REVIEW_ROUTE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.EXTRACTED_TEXT_KEY
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.HOME_ROUTE
+import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.HOME_SHOULD_UPDATE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.NAV_GRAPH_ROUTE
 import com.section11.expenselens.ui.navigation.route.CameraRoute
 import com.section11.expenselens.ui.navigation.route.ExpenseHistoryRoute
@@ -64,9 +65,13 @@ fun ExpenseLensNavGraph(
         modifier = modifier
     ) {
 
-        composable(route = HOME_ROUTE) {
+        composable(route = HOME_ROUTE) { navStackEntry ->
+            val shouldUpdateHome = navStackEntry.arguments?.getBoolean(HOME_SHOULD_UPDATE)
             val homeViewModel = getHomeViewModelFromParentEntry(navController)
             InterceptShowSnackBarDownStreamEvents(homeViewModel.uiEvent)
+            if (shouldUpdateHome == true) {
+                homeViewModel.updateHomeInformation()
+            }
 
             HomeRoute(
                 homeUiStateFlow = homeViewModel.uiState,
@@ -88,7 +93,7 @@ fun ExpenseLensNavGraph(
             }
         }
 
-        composable(route =  CAMERA_ROUTE) {  navStackEntry ->
+        composable(route = CAMERA_ROUTE) {  navStackEntry ->
             val cameraPreviewViewModel = hiltViewModel<CameraPreviewViewModel>(navStackEntry)
             CameraRoute(
                 downstreamUiEvent = cameraPreviewViewModel.uiEvent,

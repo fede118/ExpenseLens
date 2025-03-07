@@ -10,8 +10,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.QuerySnapshot
 import com.section11.expenselens.data.dto.FirestoreExpense
+import com.section11.expenselens.data.mapper.toDomainExpense
 import com.section11.expenselens.domain.models.Category.HOME
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
+import com.section11.expenselens.domain.models.Expense
 import com.section11.expenselens.domain.models.UserData
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -131,7 +133,7 @@ class FirestoreHouseholdRepositoryTest {
             FirestoreExpense(
                 category = HOME.displayName,
                 total = 100.0,
-                date = Timestamp(Date()),
+                timestamp = Timestamp(Date()),
                 userId = "user123",
                 note = "Dinner",
                 distributedExpense = emptyMap()
@@ -159,7 +161,7 @@ class FirestoreHouseholdRepositoryTest {
 
         // Then
         assertTrue(result.isSuccess)
-        assertEquals(expenseList, result.getOrNull())
+        assertEquals(expenseList.map { it.toDomainExpense() }, result.getOrNull())
     }
 
     @Test
@@ -177,5 +179,96 @@ class FirestoreHouseholdRepositoryTest {
 
         // Then
         assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `getExpensesForTimePeriod should return expenses`() = runTest {
+        // Given
+        val householdId = "household456"
+        val expenses = listOf(
+            FirestoreExpense(
+                total = 100.0,
+                category = HOME.displayName,
+                timestamp = Timestamp(Date()),
+                userId = "user123",
+                note = "Dinner",
+                distributedExpense = emptyMap()
+            )
+        )
+
+        val mockDocumentSnapshot: DocumentSnapshot = mock {
+            on { toObject(FirestoreExpense::class.java) } doReturn expenses[0]
+        }
+
+        val mockQuerySnapshot: QuerySnapshot = mock {
+            on { documents } doReturn listOf(mockDocumentSnapshot)
+        }
+
+        val mockTask: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.collection(EXPENSES_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.whereGreaterThanOrEqualTo(anyString(), any())).thenReturn(mockCollection)
+        whenever(mockCollection.whereLessThanOrEqualTo(anyString(), any())).thenReturn(mockCollection)
+        whenever(mockCollection.get()).thenReturn(mockTask) // Ensures get() returns mockTask
+
+        // When
+        val result = repository.getExpensesForTimePeriod(householdId, Date(), Date())
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals(expenses.map { it.toDomainExpense() }, result.getOrNull())
+    }
+
+    @Test
+    fun `getExpensesForTimePeriod return empty list if no expenses found`() = runTest {
+        // Given
+        val householdId = "household456"
+        val mockQuerySnapshot: QuerySnapshot = mock {
+            on { documents } doReturn emptyList()
+        }
+
+        val mockTask: Task<QuerySnapshot> = Tasks.forResult(mockQuerySnapshot)
+
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.collection(EXPENSES_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.whereGreaterThanOrEqualTo(anyString(), any())).thenReturn(
+            mockCollection
+        )
+        whenever(mockCollection.whereLessThanOrEqualTo(anyString(), any())).thenReturn(
+            mockCollection
+        )
+        whenever(mockCollection.get()).thenReturn(mockTask) // Ensures get() returns mockTask
+
+        // When
+        val result = repository.getExpensesForTimePeriod(householdId, Date(), Date())
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(result.isSuccess)
+        assertEquals(emptyList<Expense>(), result.getOrNull())
+    }
+
+    @Test
+    fun `getExpensesForTimePeriod should return failure on exception`() = runTest {
+        // Given
+        val householdId = "household456"
+        val firebaseException: FirebaseFirestoreException = mock()
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.collection(EXPENSES_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.whereGreaterThanOrEqualTo(anyString(), any())).thenReturn(mockCollection)
+        whenever(mockCollection.whereLessThanOrEqualTo(anyString(), any())).thenReturn(mockCollection)
+        whenever(mockCollection.get()).thenReturn(Tasks.forException(firebaseException))
+
+        // When
+        val result = repository.getExpensesForTimePeriod(householdId, Date(), Date())
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(result.isFailure)
     }
 }

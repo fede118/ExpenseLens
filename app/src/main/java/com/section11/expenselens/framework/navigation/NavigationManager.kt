@@ -13,7 +13,7 @@ interface NavigationManager {
     suspend fun navigate(event: NavigationEvent)
 
     sealed class NavigationEvent : UiEvent() {
-        data object NavigateHome : NavigationEvent()
+        data class NavigateHome(val shouldUpdateHome: Boolean = false) : NavigationEvent()
         data object NavigateToCameraScreen : NavigationEvent()
         data class NavigateToExpensePreview(
             val extractedText: String,

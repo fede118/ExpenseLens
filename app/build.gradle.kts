@@ -33,8 +33,8 @@ android {
         applicationId = "com.section11.expenselens"
         minSdk = 29
         targetSdk = 34
-        versionCode = 7
-        versionName = "0.2.0-beta2"
+        versionCode = 8
+        versionName = "0.2.0-beta3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -96,7 +96,6 @@ private fun getLocalProperties(): Properties {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -127,6 +126,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.coil.compose)
+    implementation(libs.mpandroidchart)
 
     ksp(libs.hilt.compiler)
 

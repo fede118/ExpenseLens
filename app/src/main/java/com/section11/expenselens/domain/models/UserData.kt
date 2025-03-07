@@ -6,5 +6,6 @@ data class UserData(
     val displayName: String?,
     val profilePic: String?,
     val email: String,
-    val notificationToken: String
+    val notificationToken: String,
+    val currentHouseholdId: String? = null
 )

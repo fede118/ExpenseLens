@@ -8,6 +8,7 @@ import com.section11.expenselens.domain.repository.UserSessionRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
+@Suppress("LongParameterList") // This is a DataStore, it needs all the keys
 class GoogleUserSessionRepository @Inject constructor(
     private val dataStorePreferences: DataStore<Preferences>,
     private val tokenPrefKey: Preferences.Key<String>,
@@ -15,7 +16,8 @@ class GoogleUserSessionRepository @Inject constructor(
     private val displayNamePrefKey: Preferences.Key<String>,
     private val profilePicPrefKey: Preferences.Key<String>,
     private val emailPrefKey: Preferences.Key<String>,
-    private val notificationTokenPrefKey: Preferences.Key<String>
+    private val notificationTokenPrefKey: Preferences.Key<String>,
+    private val currentHouseholdIdPrefKey: Preferences.Key<String>
 ) : UserSessionRepository {
 
     override suspend fun saveUser(userData: UserData) {
@@ -25,6 +27,7 @@ class GoogleUserSessionRepository @Inject constructor(
                 prefs[userIdPrefKey] = id
                 prefs[emailPrefKey] = email
                 prefs[notificationTokenPrefKey] = notificationToken
+                currentHouseholdId?.let { prefs[currentHouseholdIdPrefKey] = it }
                 displayName?.let { prefs[displayNamePrefKey] = it }
                 profilePic?.let { prefs[profilePicPrefKey] = it }
             }
@@ -35,10 +38,11 @@ class GoogleUserSessionRepository @Inject constructor(
         val prefs = dataStorePreferences.data.first()
         val idToken = prefs[tokenPrefKey].orEmpty()
         val id = prefs[userIdPrefKey].orEmpty()
-        val displayName = prefs[displayNamePrefKey]
-        val profilePic = prefs[profilePicPrefKey]
         val email = prefs[emailPrefKey].orEmpty()
         val notificationToken = prefs[notificationTokenPrefKey].orEmpty()
+        val displayName = prefs[displayNamePrefKey]
+        val profilePic = prefs[profilePicPrefKey]
+        val currentHouseholdId = prefs[currentHouseholdIdPrefKey]
         return  if (listOf(idToken, id, email, notificationToken).any { it.isEmpty() }) {
             null
         } else {
@@ -48,7 +52,8 @@ class GoogleUserSessionRepository @Inject constructor(
                 displayName = displayName,
                 profilePic = profilePic,
                 email = email,
-                notificationToken = notificationToken
+                notificationToken = notificationToken,
+                currentHouseholdId = currentHouseholdId
             )
         }
     }
@@ -60,6 +65,12 @@ class GoogleUserSessionRepository @Inject constructor(
     override suspend fun updateNotificationToken(newToken: String) {
         dataStorePreferences.edit { prefs ->
             prefs[notificationTokenPrefKey] = newToken
+        }
+    }
+
+    override suspend fun updateCurrentHouseholdId(householdId: String) {
+        dataStorePreferences.edit { prefs ->
+            prefs[currentHouseholdIdPrefKey] = householdId
         }
     }
 }

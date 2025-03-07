@@ -1,6 +1,7 @@
 package com.section11.expenselens.ui.home.mapper
 
 import com.section11.expenselens.R
+import com.section11.expenselens.domain.models.HouseholdExpenses
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.ui.utils.getUserData
@@ -8,6 +9,8 @@ import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -55,8 +58,13 @@ class HomeScreenUiMapperTest {
     fun `when getUserData then userData model is returned with household info`() {
         val mockUserData = getUserData()
         val household = UserHousehold("id", "name")
+        val householdExpenses = HouseholdExpenses(household, emptyList())
+        whenever(resourceProvider.getString(
+            eq(R.string.cake_graph_current_month_expenses),
+            any()
+        )).thenReturn("Total expenses")
 
-        val result = mapper.getUserSignInModel(mockUserData, household, null)
+        val result = mapper.getUserSignInModel(mockUserData, householdExpenses, null)
 
         with(result) {
             assertEquals(household.id, householdInfo?.id)
@@ -82,9 +90,14 @@ class HomeScreenUiMapperTest {
     fun `updateSignedInUiWithHousehold should return correct updated model`() {
         val mockUserData = getUserData()
         val household = UserHousehold("id", "name")
+        val householdExpenses = HouseholdExpenses(household, emptyList())
+        whenever(resourceProvider.getString(
+            eq(R.string.cake_graph_current_month_expenses),
+            any()
+        )).thenReturn("Total expenses")
 
-        val result = mapper.getUserSignInModel(mockUserData, household, null)
-        val updatedResult = mapper.updateSignedInUiWithHousehold(result, household)
+        val result = mapper.getUserSignInModel(mockUserData, householdExpenses, null)
+        val updatedResult = mapper.updateSignedInUiWhenHouseholdCreated(result, household)
 
         assertEquals(household.id, updatedResult.householdInfo?.id)
         assertEquals(household.name, updatedResult.householdInfo?.name)

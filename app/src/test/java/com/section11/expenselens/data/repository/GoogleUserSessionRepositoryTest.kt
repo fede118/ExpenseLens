@@ -32,6 +32,7 @@ class GoogleUserSessionRepositoryTest {
     private val profilePicPrefKey = stringPreferencesKey("profilePic")
     private val emailPrefKey = stringPreferencesKey("email")
     private val notificationTokenPrefKey = stringPreferencesKey("notificationToken")
+    private val currentHouseholdIdKey = stringPreferencesKey("currentHouseholdId")
 
     private lateinit var repository: GoogleUserSessionRepository
 
@@ -44,7 +45,8 @@ class GoogleUserSessionRepositoryTest {
             displayNamePrefKey,
             profilePicPrefKey,
             emailPrefKey,
-            notificationTokenPrefKey
+            notificationTokenPrefKey,
+            currentHouseholdIdKey
         )
     }
 
@@ -96,6 +98,7 @@ class GoogleUserSessionRepositoryTest {
         whenever(prefs[profilePicPrefKey]).thenReturn("https://example.com/profile.jpg")
         whenever(prefs[emailPrefKey]).thenReturn("email")
         whenever(prefs[notificationTokenPrefKey]).thenReturn("notificationToken")
+        whenever(prefs[currentHouseholdIdKey]).thenReturn("householdId")
 
         // When
         val user = repository.getUser()
@@ -108,6 +111,7 @@ class GoogleUserSessionRepositoryTest {
         assertEquals("https://example.com/profile.jpg", user?.profilePic)
         assertEquals("email", user?.email)
         assertEquals("notificationToken", user?.notificationToken)
+        assertEquals("householdId", user?.currentHouseholdId)
     }
 
     @Test
@@ -140,6 +144,19 @@ class GoogleUserSessionRepositoryTest {
 
         // When
         repository.updateNotificationToken(newToken)
+        advanceUntilIdle()
+
+        // Then
+        verify(dataStorePreferences).edit(anyOrNull())
+    }
+
+    @Test
+    fun `update current household id should update current household id in preferences`() = runTest {
+        // Given
+        val householdId = "householdId"
+
+        // When
+        repository.updateCurrentHouseholdId(householdId)
         advanceUntilIdle()
 
         // Then

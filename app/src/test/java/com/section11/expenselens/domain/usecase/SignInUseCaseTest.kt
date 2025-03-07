@@ -130,6 +130,15 @@ class SignInUseCaseTest {
         verify(userSessionRepository).clearUser()
     }
 
+    @Test
+    fun `updateCurrentHouseholdId should update the current household id`() = runTest {
+        val householdId = "householdId"
+
+        signInUseCase.updateCurrentHouseholdId(householdId)
+
+        verify(userSessionRepository).updateCurrentHouseholdId(householdId)
+    }
+
     private fun mockGetCredentialResponse(bundle: Bundle): GetCredentialResponse {
         val mockCredential: CustomCredential = mock()
         whenever(mockCredential.data).thenReturn(bundle)
