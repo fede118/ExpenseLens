@@ -51,7 +51,8 @@ class RepositoryModule {
         @Named(DISPLAY_NAME_KEY) displayNamePrefKey: Preferences.Key<String>,
         @Named(PROFILE_PIC_KEY) profilePicPrefKey: Preferences.Key<String>,
         @Named(EMAIL_PREFERENCES_KEY) emailPreferenceKey: Preferences.Key<String>,
-        @Named(NOTIFICATION_PREFERENCE_KEY) notificationTokenPrefKey: Preferences.Key<String>
+        @Named(NOTIFICATION_PREFERENCE_KEY) notificationTokenPrefKey: Preferences.Key<String>,
+        @Named(CURRENT_HOUSEHOLD_ID_KEY) currentHouseholdIdKey: Preferences.Key<String>
     ): UserSessionRepository {
         return GoogleUserSessionRepository(
             dataStore,
@@ -60,7 +61,8 @@ class RepositoryModule {
             displayNamePrefKey,
             profilePicPrefKey,
             emailPreferenceKey,
-            notificationTokenPrefKey
+            notificationTokenPrefKey,
+            currentHouseholdIdKey
         )
     }
 

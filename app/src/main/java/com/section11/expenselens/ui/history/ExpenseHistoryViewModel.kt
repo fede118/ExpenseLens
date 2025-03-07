@@ -2,9 +2,9 @@ package com.section11.expenselens.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.section11.expenselens.data.dto.FirestoreExpense
-import com.section11.expenselens.domain.usecase.SignInUseCase
+import com.section11.expenselens.domain.models.Expense
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ class ExpenseHistoryViewModel @Inject constructor(
     dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<List<FirestoreExpense>>(emptyList())
+    private val _uiState = MutableStateFlow<List<Expense>>(emptyList())
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -28,17 +28,7 @@ class ExpenseHistoryViewModel @Inject constructor(
             if (user != null) {
                 val household = householdUseCase.getCurrentHousehold(user.id)
                 if (household != null) {
-                    val expenses = householdUseCase.getAllExpensesFromHousehold(household.id)
-
-                    expenses.getOrNull()?.let { expensesList ->
-                        _uiState.value = expensesList.map {
-                            if (it.userDisplayName.isNullOrEmpty()) {
-                                it.copy(userDisplayName = null)
-                            } else {
-                                it
-                            }
-                        }
-                    }
+                    _uiState.value = household.expenses
                 }
             }
         }

@@ -3,10 +3,12 @@ package com.section11.expenselens.domain.usecase
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.HouseholdInvitationRepository
+import com.section11.expenselens.domain.repository.UserSessionRepository
 import javax.inject.Inject
 
 class HouseholdInvitationUseCase @Inject constructor(
-    private val householdInvitationRepository: HouseholdInvitationRepository
+    private val householdInvitationRepository: HouseholdInvitationRepository,
+    private val userSessionRepository: UserSessionRepository
 ) {
 
     suspend fun inviteToHousehold(
@@ -33,7 +35,12 @@ class HouseholdInvitationUseCase @Inject constructor(
         householdName: String
     ): Result<List<HouseholdInvite>> {
         if (inviteWasAccepted) {
-            householdInvitationRepository.acceptHouseholdInvite(inviteId, userId, householdId, householdName)
+            householdInvitationRepository.acceptHouseholdInvite(
+                inviteId,
+                userId,
+                householdId,
+                householdName
+            ).onSuccess { userSessionRepository.updateCurrentHouseholdId(householdId) }
         } else {
             householdInvitationRepository.deleteHouseholdInvite(inviteId, userId, householdId)
         }

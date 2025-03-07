@@ -11,4 +11,6 @@ interface UserSessionRepository {
     suspend fun clearUser()
 
     suspend fun updateNotificationToken(newToken: String)
+
+    suspend fun updateCurrentHouseholdId(householdId: String)
 }

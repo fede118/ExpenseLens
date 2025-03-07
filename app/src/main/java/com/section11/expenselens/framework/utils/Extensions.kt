@@ -2,7 +2,6 @@ package com.section11.expenselens.framework.utils
 
 import android.os.Build
 import android.os.Bundle
-import com.google.firebase.Timestamp
 import com.section11.expenselens.domain.DomainConstants.EXPECTED_DATE_FORMAT
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -30,9 +29,9 @@ fun Long.toDateString(dateFormat: String = EXPECTED_DATE_FORMAT): String {
     return localDate.format(DateTimeFormatter.ofPattern(dateFormat))
 }
 
-fun Timestamp.toFormattedString(dateFormat: String = EXPECTED_DATE_FORMAT): String {
+fun Date.toFormattedString(dateFormat: String = EXPECTED_DATE_FORMAT): String {
     val sdf = SimpleDateFormat(dateFormat, Locale.getDefault())
-    return sdf.format(this.toDate())
+    return sdf.format(this)
 }
 
 fun String.toDate(dateFormat: String = EXPECTED_DATE_FORMAT): Date? {

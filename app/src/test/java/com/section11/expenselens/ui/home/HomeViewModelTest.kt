@@ -5,6 +5,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+import com.section11.expenselens.domain.models.HouseholdExpenses
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
@@ -54,6 +55,7 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -289,7 +291,7 @@ class HomeViewModelTest {
         viewModel.onUiEvent(event)
         advanceUntilIdle()
 
-        verify(mapper).updateSignedInUiWithHousehold(mockUiModel, householdResult)
+        verify(mapper).updateSignedInUiWhenHouseholdCreated(mockUiModel, householdResult)
     }
 
     @Test
@@ -375,11 +377,12 @@ class HomeViewModelTest {
             householdInvitationsUseCase.handleHouseholdInviteResponse(eq(true), any(), any(), any(), any())
         ).thenReturn(Result.success(emptyList()))
         val household = UserHousehold("householdId", "householdName")
+        val householdExpenses = HouseholdExpenses(household, emptyList())
         val signedInState = mockSignIn()
         whenever(invitesMapper.setPendingInviteLoading(any(), any())).thenReturn(signedInState)
         whenever(invitesMapper.updateInvitesAndHousehold(any(), any(), any())).thenReturn(mock())
         viewModel.onUiEvent(SignInTapped(mock()))
-        whenever(householdUseCase.getCurrentHousehold(anyString())).thenReturn(household)
+        whenever(householdUseCase.getCurrentHousehold(anyString())).thenReturn(householdExpenses)
 
         viewModel.onUiEvent(event)
         advanceUntilIdle()
@@ -427,7 +430,7 @@ class HomeViewModelTest {
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserSignedIn = mock()
         if (withHousehold) {
-            val mockHousehold: UserHousehold = mock()
+            val mockHousehold: HouseholdExpenses = mock()
             whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
             val mockHouseholdUiState: HouseholdUiState = mock()
             with(mockHouseholdUiState) {
@@ -442,6 +445,28 @@ class HomeViewModelTest {
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(user))
     }
 
+    @Test
+    fun `updateHomeInformation should update home information`() = runTest {
+        // Given
+        val mockUserData = getUserData()
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
+        val mockHousehold: HouseholdExpenses = mock()
+        whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
+
+        // When
+        viewModel.updateHomeInformation()
+        advanceUntilIdle()
+
+        // Then
+        // called on init on the viewModel and in the updateHomeInformation
+        verify(signInUseCase, times(2)).getCurrentUser()
+        verify(householdUseCase).getCurrentHousehold(mockUserData.id)
+        verify(householdInvitationsUseCase).getPendingInvitations(mockUserData.id)
+        verify(mapper).getUserSignInModel(any(), anyOrNull(), anyOrNull())
+    }
+
     private suspend fun mockSignIn(
         withHousehold: Boolean = false,
         withPendingInvitations: Boolean = false
@@ -453,7 +478,7 @@ class HomeViewModelTest {
         whenever(signInUseCase.signInCredentialsFetched(any()))
             .thenReturn(Result.success(mockUserData))
         if (withHousehold) {
-            val household: UserHousehold = mock()
+            val household: HouseholdExpenses = mock()
             whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(household)
         } else {
             whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(null)

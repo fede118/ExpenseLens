@@ -64,15 +64,15 @@ object FirestoreConstants {
 //            const val ID_FIELD = "id"
 //            const val NAME_FIELD = "name"
 
-//            object ExpensesArray {
+            object ExpensesArray {
+                const val DATE_FIELD = "date"
 //                const val EXPENSE_ID_FIELD = "expenseId"
 //                const val CATEGORY_FIELD = "category"
 //                const val TOTAL_FIELD = "total"
-//                const val DATE_FIELD = "date"
 //                const val USER_ID_FIELD = "userId"
 //                const val USER_DISPLAY_NAME_FIELD = "userDisplayName"
 //                const val NOTE_FIELD = "note"
-//            }
+            }
         }
     }
 }

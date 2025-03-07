@@ -232,6 +232,13 @@ fun ExistingHouseholdUi(
     ) {
         SignedInGreetingAndIcon(userInfo, true, dialogDownstreamUiEvent, greeting, onEvent) {
             Text(stringResource(R.string.home_screen_household_name_prefix, household.name))
+            Spacer(Modifier.height(dimens.m1))
+            household.graphInfo?.let {
+                CakeGraph(
+                    graphUiModel = it,
+                    modifier = Modifier.fillMaxWidth().height(dimens.m40)
+                )
+            }
         }
     }
 }

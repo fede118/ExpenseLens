@@ -5,13 +5,17 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HOUSEHOLDS_COLLECTION
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.EXPENSES_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.ExpensesArray.DATE_FIELD
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
+import com.section11.expenselens.data.mapper.toDomainExpense
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
+import com.section11.expenselens.domain.models.Expense
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.HouseholdRepository
 import kotlinx.coroutines.tasks.await
+import java.util.Date
 import javax.inject.Inject
 
 class FirestoreHouseholdRepository @Inject constructor(
@@ -64,7 +68,7 @@ class FirestoreHouseholdRepository @Inject constructor(
         val firestoreExpense = FirestoreExpense(
             total = expense.total,
             category = expense.category.displayName,
-            date = Timestamp(expense.date),
+            timestamp = Timestamp(expense.date),
             userId = userData.id,
             userDisplayName = userData.displayName,
             note = expense.note,
@@ -84,7 +88,7 @@ class FirestoreHouseholdRepository @Inject constructor(
 
     override suspend fun getAllExpensesFromHousehold(
         householdId: String
-    ): Result<List<FirestoreExpense>> {
+    ): Result<List<Expense>> {
         return try {
             val expensesCollection = firestore.collection(HOUSEHOLDS_COLLECTION)
                 .document(householdId)
@@ -92,11 +96,38 @@ class FirestoreHouseholdRepository @Inject constructor(
 
             val querySnapshot = expensesCollection.get().await()
 
-            val expenses = mutableListOf<FirestoreExpense>()
+            val expenses = mutableListOf<Expense>()
             for (document in querySnapshot.documents) {
                 val expense = document.toObject(FirestoreExpense::class.java)
                 if (expense != null) {
-                    expenses.add(expense)
+                    expenses.add(expense.toDomainExpense())
+                }
+            }
+            Result.success(expenses)
+        } catch (exception: FirebaseFirestoreException) {
+            Result.failure(exception)
+        }
+    }
+
+    override suspend fun getExpensesForTimePeriod(
+        householdId: String,
+        firstDayOfCurrentMonth: Date,
+        lastDayOfCurrentMonth: Date
+    ): Result<List<Expense>> {
+        return try {
+            val expensesQuery = firestore.collection(HOUSEHOLDS_COLLECTION)
+                .document(householdId)
+                .collection(EXPENSES_FIELD)
+                .whereGreaterThanOrEqualTo(DATE_FIELD, Timestamp(firstDayOfCurrentMonth))
+                .whereLessThanOrEqualTo(DATE_FIELD, Timestamp(lastDayOfCurrentMonth))
+                .get()
+                .await()
+
+            val expenses = mutableListOf<Expense>()
+            for (document in expensesQuery.documents) {
+                val expense = document.toObject(FirestoreExpense::class.java)
+                if (expense != null) {
+                    expenses.add(expense.toDomainExpense())
                 }
             }
             Result.success(expenses)

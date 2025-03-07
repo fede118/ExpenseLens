@@ -3,16 +3,17 @@ package com.section11.expenselens.ui.home.mapper
 import androidx.compose.ui.graphics.Color
 import com.section11.expenselens.R
 import com.section11.expenselens.domain.exceptions.UserNotFoundException
+import com.section11.expenselens.domain.models.HouseholdExpenses
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus.Accepted
 import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus.Pending
 import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus.Rejected
-import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.HouseholdInviteResultEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
+import com.section11.expenselens.ui.home.model.CakeGraphUiModel
 import com.section11.expenselens.ui.home.model.InviteStatusUiModel
 import com.section11.expenselens.ui.home.model.PendingInvitesUiModel
 import com.section11.expenselens.ui.utils.UiState
@@ -54,10 +55,20 @@ class PendingInvitationsMapper @Inject constructor(private val resourceProvider:
     fun updateInvitesAndHousehold(
         userSignedInState: UserSignedIn,
         newPendingInvites: List<HouseholdInvite>?,
-        household: UserHousehold?
+        household: HouseholdExpenses?
     ): UserSignedIn {
         return userSignedInState.copy(
-            householdInfo = household?.let { HouseholdUiState(it.id, it.name) },
+            householdInfo = household?.let {
+                val totalExpenses = it.getTotalExpensesValue()
+                HouseholdUiState(
+                    it.householdInfo.id,
+                    it.householdInfo.name,
+                    CakeGraphUiModel(
+                        slices = it.getSlicesByCategory(totalExpenses),
+                        chartCenterText = "Monthly Expenses: \n \$${totalExpenses}"
+                    )
+                )
+            },
             user = userSignedInState.user.copy(
                 pendingInvites = newPendingInvites.toPendingInvitesUiModel()
             )
