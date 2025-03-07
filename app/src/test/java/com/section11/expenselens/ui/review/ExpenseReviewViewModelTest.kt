@@ -200,7 +200,7 @@ class ExpenseReviewViewModelTest {
 
         advanceUntilIdle()
         verify(householdUseCase).addExpenseToCurrentHousehold(userMock, expense)
-        verify(navigationManager).navigate(NavigateHome)
+        verify(navigationManager).navigate(NavigateHome(true))
     }
 
     @Test
@@ -229,7 +229,7 @@ class ExpenseReviewViewModelTest {
         advanceUntilIdle()
 
         job.join() // Ensure the coroutine completes
-        verify(navigationManager).navigate(NavigateHome)
+        verify(navigationManager).navigate(NavigateHome(false))
     }
 
     private fun mockUserData(id: String = "user_id", displayName: String = "display_name"): UserData {

@@ -19,6 +19,9 @@
     <string name="home_screen_household_invite_failure">Something went wrong inviting the user to the household, try again later.</string>
     <string name="home_screen_household_invite_success">Invitation Sent! you can invite another user.</string>
 
+    <!--  Home Screen Cake Graph Strings  -->
+    <string name="cake_graph_current_month_expenses">"Current Expenses:&#10;$%s"</string>
+
     <!--  Profile Dialog  -->
     <string name="profile_dialog_invitation_prefix">You have been invited to: %s</string>
     <string name="profile_dialog_accept_invitation">Accept</string>
@@ -38,7 +41,7 @@
     <string name="expense_review_screen_error_when_submitting">Couldn\'t validate one or more fields, please double check values.</string>"
 
     <!--  Expenses History Screen  -->
-    <string name="expenses_history_title">Expenses History</string>
+    <string name="expenses_history_title">Expenses History - Current Month</string>
 
     <!--  Common Strings  -->
     <string name="generic_error_message">Something went wrong, please try again later.</string>

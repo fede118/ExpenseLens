@@ -20,6 +20,7 @@ const val TOKEN_PREFERENCES_KEY = "user_token"
 const val PROFILE_PIC_KEY = "profile_pic"
 const val NOTIFICATION_PREFERENCE_KEY = "notification_token_key"
 const val EMAIL_PREFERENCES_KEY = "email_key"
+const val CURRENT_HOUSEHOLD_ID_KEY = "current_household_id"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -67,5 +68,11 @@ class PreferencesModule {
     @Named(EMAIL_PREFERENCES_KEY)
     fun providesEmailPreferencesKey(): Preferences.Key<String> {
         return stringPreferencesKey(EMAIL_PREFERENCES_KEY)
+    }
+
+    @Provides
+    @Named(CURRENT_HOUSEHOLD_ID_KEY)
+    fun providesCurrentHouseholdIdPreferencesKey(): Preferences.Key<String> {
+        return stringPreferencesKey(CURRENT_HOUSEHOLD_ID_KEY)
     }
 }

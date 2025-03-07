@@ -83,7 +83,7 @@ class FirebaseAuthenticationRepository @Inject constructor(
                             displayName,
                             profilePictureUri.toString(),
                             email,
-                            firebaseMessaging.token.await(),
+                            firebaseMessaging.token.await()
                         )
                     )
                 }

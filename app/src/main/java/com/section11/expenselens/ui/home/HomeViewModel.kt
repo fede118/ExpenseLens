@@ -31,6 +31,7 @@ import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.ToExpensesHistoryTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
 import com.section11.expenselens.ui.home.mapper.PendingInvitationsMapper
+import com.section11.expenselens.ui.home.model.CakeGraphUiModel
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
@@ -145,7 +146,7 @@ class HomeViewModel @Inject constructor(
             onSuccess = { household ->
                 _uiState.update {
                     if (it is UserSignedIn) {
-                        uiMapper.updateSignedInUiWithHousehold(it, household)
+                        uiMapper.updateSignedInUiWhenHouseholdCreated(it, household)
                     } else {
                         it
                     }
@@ -214,10 +215,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun updateHomeInformation() {
+        getSignInOrSignedOutStatus()
+    }
+
     // TODO remove this on first release version of the app
     fun dummyButtonForTesting(context: Context) {
         val fakeRepo = FakeRepositoryForPreviews(context)
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             navigationManager.navigate(
                 NavigateToExpensePreview(
                     extractedText = fakeRepo.getExtractedText(),
@@ -233,7 +238,11 @@ class HomeViewModel @Inject constructor(
             val user: UserInfoUiModel,
             val householdInfo: HouseholdUiState? = null
         ) : HomeUiState() {
-            data class HouseholdUiState(val id: String, val name: String)
+            data class HouseholdUiState(
+                val id: String,
+                val name: String,
+                val graphInfo: CakeGraphUiModel?
+            )
         }
         data class UserSignedOut(val greeting: String) : HomeUiState()
     }

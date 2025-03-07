@@ -8,13 +8,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.section11.expenselens.data.dto.FirestoreExpense
+import com.section11.expenselens.domain.models.Expense
 import com.section11.expenselens.ui.history.composables.ExpensesHistoryScreen
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun ExpenseHistoryRoute(
-    uiState: StateFlow<List<FirestoreExpense>>,
+    uiState: StateFlow<List<Expense>>,
     modifier: Modifier = Modifier
 ) {
     val expenses by uiState.collectAsState()

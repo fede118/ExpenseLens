@@ -1,10 +1,12 @@
 package com.section11.expenselens.ui.history
 
 import com.section11.expenselens.data.dto.FirestoreExpense
+import com.section11.expenselens.domain.models.Expense
+import com.section11.expenselens.domain.models.HouseholdExpenses
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
-import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -47,16 +49,21 @@ class ExpenseHistoryViewModelTest {
     fun `uiState contains expenses when household exists`() = runTest {
         // Given
         val householdId = "household123"
+        val userId = "user123"
         val userHouseHold = UserHousehold(householdId, "Test Household")
         val expenses = listOf(
-            FirestoreExpense("Food", 100.0, mock(), "user123", "Dinner"),
-            FirestoreExpense("Transport", 50.0, mock(), "user123", "Taxi")
+            Expense("Food", 100.0, mock(), userId, "ted","Dinner"),
+            Expense("Transport", 50.0, mock(), userId, "ted", "Taxi")
         )
-
-        whenever(householdUseCase.getCurrentHousehold("user123"))
-            .thenReturn(userHouseHold)
-        whenever(householdUseCase.getAllExpensesFromHousehold(householdId))
-            .thenReturn(Result.success(expenses))
+        val householdExpenses = HouseholdExpenses(
+            userHouseHold,
+            expenses
+            )
+        val mockUserData: UserData = mock()
+        whenever(mockUserData.currentHouseholdId).thenReturn(householdId)
+        whenever(mockUserData.id).thenReturn(userId)
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
+        whenever(householdUseCase.getCurrentHousehold(userId)).thenReturn(householdExpenses)
 
         // When
         viewModel = ExpenseHistoryViewModel(householdUseCase, signInUseCase, dispatcher)

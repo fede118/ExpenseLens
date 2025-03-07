@@ -28,7 +28,7 @@ fun NavigationEffects(navController: NavController) {
     LaunchedEffect(navManager.navigationEvent) {
         navManager.navigationEvent.collect { event ->
             when(event) {
-                is NavigateHome -> navActions.navigateHome()
+                is NavigateHome -> navActions.navigateHome(event.shouldUpdateHome)
                 is NavigateToCameraScreen -> navActions.navigateToCameraScreen()
                 is NavigateToExpensePreview -> navActions.navigateToExpensePreview(
                     event.extractedText,

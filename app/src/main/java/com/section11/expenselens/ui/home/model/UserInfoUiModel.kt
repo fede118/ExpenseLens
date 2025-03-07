@@ -28,3 +28,14 @@ enum class InviteStatusUiModel : Parcelable {
     Accepted,
     Rejected
 }
+
+data class CakeGraphUiModel(
+    val slices: List<Slice>,
+    val chartCenterText: String
+) {
+    data class Slice(
+        val label: String,
+        val value: Float,
+//        val percentage: Float
+    )
+}

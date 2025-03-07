@@ -9,11 +9,13 @@ import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 
 class ExpenseLensNavigationActions(private val navController: NavController) {
 
-    fun navigateHome() = navController.navigate(HOME_ROUTE) {
-        popUpTo(navController.graph.startDestinationId) {
-            inclusive = true
-        }
-    }
+    fun navigateHome(shouldUpdateInformation: Boolean) = navController.navigate(
+        route = HOME_ROUTE,
+        args = bundleOf(HOME_SHOULD_UPDATE to shouldUpdateInformation),
+        navOptions = NavOptions.Builder()
+            .setPopUpTo(navController.graph.startDestinationId, true)
+            .build()
+    )
 
     fun navigateToCameraScreen() = navController.navigate(CAMERA_ROUTE)
 
@@ -44,6 +46,7 @@ class ExpenseLensNavigationActions(private val navController: NavController) {
     companion object {
         const val NAV_GRAPH_ROUTE = "expenseLensNavGraph"
         const val HOME_ROUTE = "home"
+        const val HOME_SHOULD_UPDATE = "shouldUpdateInformation"
         const val CAMERA_ROUTE = "camera"
         const val EXPENSE_INFORMATION_KEY = "expenseInformation"
         const val EXTRACTED_TEXT_KEY = "extractedText"

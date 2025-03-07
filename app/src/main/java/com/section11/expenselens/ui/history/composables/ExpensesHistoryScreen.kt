@@ -17,17 +17,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.section11.expenselens.R
-import com.section11.expenselens.data.dto.FirestoreExpense
+import com.section11.expenselens.domain.models.Expense
 import com.section11.expenselens.framework.utils.toFormattedString
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.Preview
 
-// TODO UI model needed, we are using DATA model in the UI Layer
+// TODO UI model needed, we are using a domain object
 @Composable
 fun ExpensesHistoryScreen(
-    expenses: List<FirestoreExpense>,
+    expenses: List<Expense>,
     modifier: Modifier = Modifier
 ) {
     val dimens = LocalDimens.current
@@ -53,9 +53,9 @@ fun ExpensesHistoryScreen(
     }
 }
 
-// move labels and formatting to uiModel
+// Todo move labels and formatting to uiModel
 @Composable
-fun ExpenseItem(expense: FirestoreExpense) {
+fun ExpenseItem(expense: Expense) {
     val dimens = LocalDimens.current
 
     Column(

@@ -51,4 +51,8 @@ class SignInUseCase @Inject constructor(
         userSessionRepository.clearUser()
         authenticationRepository.signOut()
     }
+
+    suspend fun updateCurrentHouseholdId(householdId: String) {
+        userSessionRepository.updateCurrentHouseholdId(householdId)
+    }
 }

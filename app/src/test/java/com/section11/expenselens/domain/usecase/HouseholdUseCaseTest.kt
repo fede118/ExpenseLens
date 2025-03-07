@@ -1,13 +1,12 @@
 package com.section11.expenselens.domain.usecase
 
-import com.google.firebase.Timestamp
-import com.section11.expenselens.data.dto.FirestoreExpense
-import com.section11.expenselens.domain.exceptions.HouseholdNotFoundException
 import com.section11.expenselens.domain.models.Category.HOME
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
+import com.section11.expenselens.domain.models.Expense
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.HouseholdRepository
+import com.section11.expenselens.domain.repository.UserSessionRepository
 import com.section11.expenselens.domain.repository.UsersCollectionRepository
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
@@ -29,10 +28,15 @@ class HouseholdUseCaseTest {
     private lateinit var useCase: HouseholdUseCase
     private val householdRepository: HouseholdRepository = mock()
     private val usersHouseholdRepository: UsersCollectionRepository = mock()
+    private val userSessionRepository: UserSessionRepository = mock()
 
     @Before
     fun setup() {
-        useCase = HouseholdUseCase(householdRepository, usersHouseholdRepository)
+        useCase = HouseholdUseCase(
+            householdRepository,
+            usersHouseholdRepository,
+            userSessionRepository
+        )
     }
 
     @Test
@@ -42,12 +46,42 @@ class HouseholdUseCaseTest {
         val householdId = "household456"
         val households = listOf(UserHousehold(householdId, TEST_HOUSEHOLD_NAME))
         whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
+        whenever(householdRepository.getExpensesForTimePeriod(any(), any(), any()))
+            .thenReturn(Result.success(emptyList()))
 
         // When
         val result = useCase.getCurrentHousehold(userId)
 
         // Then
-        assertEquals(householdId, result?.id)
+        assertEquals(householdId, result?.householdInfo?.id)
+    }
+
+    @Test
+    fun `getCurrentHousehold also returns expenseList`() = runTest {
+        // Given
+        val userId = "user123"
+        val householdId = "household456"
+        val households = listOf(UserHousehold(householdId, TEST_HOUSEHOLD_NAME))
+        whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
+        val expenses = listOf(
+            Expense(
+                total = 100.0,
+                category = "Home",
+                date = Date(),
+                userId = "user123",
+                note = "Dinner",
+                userDisplayName = "Test User",
+                distributedExpense = emptyMap()
+            )
+        )
+        whenever(householdRepository.getExpensesForTimePeriod(any(), any(), any()))
+            .thenReturn(Result.success(expenses))
+
+        // When
+        val result = useCase.getCurrentHousehold(userId)
+
+        // Then
+        assertEquals(expenses, result?.expenses)
     }
 
     @Test
@@ -57,6 +91,7 @@ class HouseholdUseCaseTest {
         val userMock: UserData = mock()
         whenever(userMock.id).thenReturn(userId)
         whenever(userMock.displayName).thenReturn("Test User")
+        whenever(userMock.currentHouseholdId).thenReturn("someId")
         val householdId = "household456"
         val expense = ConsolidatedExpenseInformation(
             total = 100.0,
@@ -65,8 +100,6 @@ class HouseholdUseCaseTest {
             note = "Dinner",
             distributedExpense = mapOf(userId to 50.0)
         )
-        val households = listOf(UserHousehold(householdId, TEST_HOUSEHOLD_NAME))
-        whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
         whenever(householdRepository.addExpenseToHousehold(userMock, householdId, expense))
             .thenReturn(Result.success(Unit))
 
@@ -78,13 +111,14 @@ class HouseholdUseCaseTest {
     }
 
     @Test
-    fun `addExpense retrieves household ID before adding expense`() = runTest {
+    fun `addExpense retrieves fails if no householdId`() = runTest {
         // Given
         val userId = "user123"
         val userMock: UserData = mock()
         whenever(userMock.id).thenReturn(userId)
         whenever(userMock.displayName).thenReturn("Test User")
-        val householdId = "household456"
+        whenever(userMock.currentHouseholdId).thenReturn(null)
+
         val expense = ConsolidatedExpenseInformation(
             total = 100.0,
             category = HOME,
@@ -92,44 +126,12 @@ class HouseholdUseCaseTest {
             note = "Dinner",
             distributedExpense = mapOf(userId to 50.0)
         )
-
-        val households = listOf(UserHousehold(householdId, TEST_HOUSEHOLD_NAME))
-        whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
-        whenever(householdRepository.addExpenseToHousehold(userMock, householdId, expense))
-            .thenReturn(Result.success(Unit))
-
-        // When
-        val result = useCase.addExpenseToCurrentHousehold(userMock, expense)
-
-        // Then
-        assertTrue(result.isSuccess)
-        verify(usersHouseholdRepository).getUserHouseholds(userId)
-    }
-
-    @Test
-    fun `addExpense fails if no household is found`() = runTest {
-        // Given
-        val userId = "user123"
-        val userMock: UserData = mock()
-        whenever(userMock.id).thenReturn(userId)
-        whenever(userMock.displayName).thenReturn("Test User")
-        val expense = ConsolidatedExpenseInformation(
-            total = 100.0,
-            category = HOME,
-            date = Date(),
-            note = "Dinner",
-            distributedExpense = mapOf(userId to 50.0)
-        )
-
-        val households = listOf<UserHousehold>()
-        whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
 
         // When
         val result = useCase.addExpenseToCurrentHousehold(userMock, expense)
 
         // Then
         assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull() is HouseholdNotFoundException)
     }
 
     @Test
@@ -137,12 +139,13 @@ class HouseholdUseCaseTest {
         // Given
         val householdId = "household456"
         val expenses = listOf(
-            FirestoreExpense(
+            Expense(
                 total = 100.0,
                 category = "Home",
-                date = Timestamp(Date()),
+                date = Date(),
                 userId = "user123",
                 note = "Dinner",
+                userDisplayName = "Test User",
                 distributedExpense = emptyMap()
             )
         )

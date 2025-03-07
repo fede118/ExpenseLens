@@ -7,8 +7,8 @@ import com.google.firebase.Timestamp
  */
 data class FirestoreExpense(
     val category: String = "",
-    val total: Double = 0.0,
-    val date: Timestamp = Timestamp.now(),
+    val total: Double = 0.00,
+    val timestamp: Timestamp = Timestamp.now(),
     val userId: String = "",
     val userDisplayName: String? = "",
     val note: String? = null,

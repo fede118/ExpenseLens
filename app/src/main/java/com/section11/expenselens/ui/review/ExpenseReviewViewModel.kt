@@ -86,7 +86,7 @@ class ExpenseReviewViewModel @Inject constructor(
                         }
                     } else {
                         _uiEvent.emit(ShowSnackBar(AUTHENTICATION_ERROR))
-                        navigationManager.navigate(NavigateHome)
+                        navigationManager.navigate(NavigateHome())
                     }
                     _uiEvent.emit(Loading(false))
                 }
@@ -103,7 +103,7 @@ class ExpenseReviewViewModel @Inject constructor(
         if (result.isSuccess) {
             _uiEvent.emit(ShowSnackBar(SUBMIT_EXPENSE_SUCCESS))
             delay(SNACKBAR_DELAY)
-            navigationManager.navigate(NavigateHome)
+            navigationManager.navigate(NavigateHome(shouldUpdateHome = true))
         } else {
             _uiEvent.emit(ShowSnackBar(SUBMIT_EXPENSE_ERROR))
         }
