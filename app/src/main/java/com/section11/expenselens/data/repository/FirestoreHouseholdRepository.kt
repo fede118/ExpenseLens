@@ -5,7 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HOUSEHOLDS_COLLECTION
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.EXPENSES_FIELD
-import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.ExpensesArray.DATE_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.ExpensesArray.TIMESTAMP_FIELD
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
 import com.section11.expenselens.data.mapper.toDomainExpense
@@ -118,8 +118,8 @@ class FirestoreHouseholdRepository @Inject constructor(
             val expensesQuery = firestore.collection(HOUSEHOLDS_COLLECTION)
                 .document(householdId)
                 .collection(EXPENSES_FIELD)
-                .whereGreaterThanOrEqualTo(DATE_FIELD, Timestamp(firstDayOfCurrentMonth))
-                .whereLessThanOrEqualTo(DATE_FIELD, Timestamp(lastDayOfCurrentMonth))
+                .whereGreaterThanOrEqualTo(TIMESTAMP_FIELD, Timestamp(firstDayOfCurrentMonth))
+                .whereLessThanOrEqualTo(TIMESTAMP_FIELD, Timestamp(lastDayOfCurrentMonth))
                 .get()
                 .await()
 
