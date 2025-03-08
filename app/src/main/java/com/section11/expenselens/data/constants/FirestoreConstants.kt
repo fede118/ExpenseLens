@@ -14,6 +14,7 @@ package com.section11.expenselens.data.constants
  *              - inviterId
  *              - status (pending, accepted, rejected)
  *              - timestamp
+ *          - notificationsToken
  *      - households/{householdId} (collection)
  *              - id
  *              - name
@@ -22,7 +23,7 @@ package com.section11.expenselens.data.constants
  *                  - expenseId
  *                  - category
  *                  - total
- *                  - date
+ *                  - timestamp
  *                  - userId
  *                  - userDisplayName
  *                  - note
@@ -55,23 +56,14 @@ object FirestoreConstants {
         }
 
         /**
-         * Commented Fields are not being used right now. But will be used in the future. Thats how
-         * the structure should be.
+         * Not all fields are used right now. Add them when needed.
          */
         object HouseholdsCollection {
             const val USERS_FIELD = "users"
             const val EXPENSES_FIELD = "expenses"
-//            const val ID_FIELD = "id"
-//            const val NAME_FIELD = "name"
 
             object ExpensesArray {
-                const val DATE_FIELD = "date"
-//                const val EXPENSE_ID_FIELD = "expenseId"
-//                const val CATEGORY_FIELD = "category"
-//                const val TOTAL_FIELD = "total"
-//                const val USER_ID_FIELD = "userId"
-//                const val USER_DISPLAY_NAME_FIELD = "userDisplayName"
-//                const val NOTE_FIELD = "note"
+                const val TIMESTAMP_FIELD = "timestamp"
             }
         }
     }
