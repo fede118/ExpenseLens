@@ -183,6 +183,56 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `when SignInTapped event and sign in successful then should update currentHousehold with Id`() = runTest {
+        val mockContext: Context = mock()
+        val mockUserData = getUserData(currentHouseHoldId = null)
+        val mockCredentialResponse: GetCredentialResponse = mock()
+        val mockCredential: CustomCredential = mock()
+        whenever(mockCredentialResponse.credential).thenReturn(mockCredential)
+        whenever(mockCredential.type).thenReturn(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)
+        whenever(credentialManager.getCredentials(mockContext)).thenReturn(mockCredentialResponse)
+        whenever(signInUseCase.signInCredentialsFetched(any()))
+            .thenReturn(Result.success(mockUserData))
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
+        val householdExpenses: HouseholdExpenses = mock()
+        val userHousehold = UserHousehold("id", "name")
+        whenever(householdExpenses.householdInfo).thenReturn(userHousehold)
+        whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(householdExpenses)
+
+        viewModel.onUiEvent(SignInTapped(mockContext))
+        advanceUntilIdle()
+
+        assert(viewModel.uiState.value is UserSignedIn)
+        verify(signInUseCase).updateCurrentHouseholdId(userHousehold.id)
+    }
+
+    @Test
+    fun `when SignInTapped event and sign in successful but userData has householdId shouln't be updated`() = runTest {
+        val mockContext: Context = mock()
+        val userHousehold = UserHousehold("id", "name")
+        val mockUserData = getUserData(currentHouseHoldId = userHousehold.id)
+        val mockCredentialResponse: GetCredentialResponse = mock()
+        val mockCredential: CustomCredential = mock()
+        whenever(mockCredentialResponse.credential).thenReturn(mockCredential)
+        whenever(mockCredential.type).thenReturn(TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)
+        whenever(credentialManager.getCredentials(mockContext)).thenReturn(mockCredentialResponse)
+        whenever(signInUseCase.signInCredentialsFetched(any()))
+            .thenReturn(Result.success(mockUserData))
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
+        val householdExpenses: HouseholdExpenses = mock()
+        whenever(householdExpenses.householdInfo).thenReturn(userHousehold)
+        whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(householdExpenses)
+
+        viewModel.onUiEvent(SignInTapped(mockContext))
+        advanceUntilIdle()
+
+        assert(viewModel.uiState.value is UserSignedIn)
+        verify(signInUseCase, never()).updateCurrentHouseholdId(userHousehold.id)
+    }
+
+    @Test
     fun `when SignInTapped event and user cancels then should hide loader`() = runTest {
         val mockContext: Context = mock()
         whenever(credentialManager.getCredentials(mockContext))
@@ -338,6 +388,7 @@ class HomeViewModelTest {
         mockInitWithSomeUserInfo(withHousehold = true)
         whenever(invitesMapper.getHouseholdInviteResultEvent(mockException))
             .thenReturn(mock())
+
         viewModel = HomeViewModel(
             navigationManager,
             credentialManager,
@@ -348,6 +399,7 @@ class HomeViewModelTest {
             invitesMapper,
             testDispatcher
         )
+        advanceUntilIdle()
 
         val job = launch {
             viewModel.profileDialogUiEvent.collectIndexed { index, value ->
@@ -426,16 +478,22 @@ class HomeViewModelTest {
     }
 
     private suspend fun mockInitWithSomeUserInfo(withHousehold: Boolean = false) {
-        val mockUserData = getUserData()
+        val householdId = "someHouseholdId"
+        val householdName = "someHouseholdName"
+        val mockUserData = getUserData(currentHouseHoldId = householdId)
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserSignedIn = mock()
         if (withHousehold) {
+            val mockHouseholdInfo: UserHousehold = mock()
+            whenever(mockHouseholdInfo.id).thenReturn(householdId)
+            whenever(mockHouseholdInfo.name).thenReturn(householdId)
             val mockHousehold: HouseholdExpenses = mock()
+            whenever(mockHousehold.householdInfo).thenReturn(mockHouseholdInfo)
             whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
             val mockHouseholdUiState: HouseholdUiState = mock()
             with(mockHouseholdUiState) {
-                whenever(id).thenReturn("someHouseholdId")
-                whenever(name).thenReturn("someHouseholdName")
+                whenever(id).thenReturn(householdId)
+                whenever(name).thenReturn(householdName)
                 whenever(mockUiModel.householdInfo).thenReturn(this)
             }
         }
@@ -443,16 +501,19 @@ class HomeViewModelTest {
         val user: UserData = mock()
         whenever(user.id).thenReturn("uid")
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(user))
+        whenever(signInUseCase.updateCurrentHouseholdId(any())).thenReturn(mock())
     }
 
     @Test
     fun `updateHomeInformation should update home information`() = runTest {
         // Given
-        val mockUserData = getUserData()
+        val mockUserData = getUserData(currentHouseHoldId = null)
         val mockUiModel: UserSignedIn = mock()
         whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockHousehold: HouseholdExpenses = mock()
+        val userHousehold = UserHousehold("id", "name")
+        whenever(mockHousehold.householdInfo).thenReturn(userHousehold)
         whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
 
         // When

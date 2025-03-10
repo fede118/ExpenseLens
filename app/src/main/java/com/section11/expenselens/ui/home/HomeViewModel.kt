@@ -81,6 +81,12 @@ class HomeViewModel @Inject constructor(
     private suspend fun onSignIn(userData: UserData) {
         val householdsResult = householdUseCase.getCurrentHousehold(userData.id)
         val pendingInvites = householdInvitationUseCase.getPendingInvitations(userData.id)
+        householdsResult?.let {
+            if (it.householdInfo.id != userData.currentHouseholdId) {
+                signInUseCase.updateCurrentHouseholdId(householdsResult.householdInfo.id)
+            }
+        }
+
         _uiState.value = uiMapper.getUserSignInModel(
             userData,
             householdsResult,
