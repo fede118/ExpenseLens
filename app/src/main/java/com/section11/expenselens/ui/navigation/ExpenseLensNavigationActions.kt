@@ -31,6 +31,8 @@ class ExpenseLensNavigationActions(private val navController: NavController) {
         )
     }
 
+    fun navigateToManualExpenseInput() = navController.navigate(MANUAL_EXPENSE_INPUT_ROUTE)
+
     private fun NavController.navigate(
         route: String,
         args: Bundle = bundleOf(),
@@ -51,6 +53,7 @@ class ExpenseLensNavigationActions(private val navController: NavController) {
         const val EXPENSE_INFORMATION_KEY = "expenseInformation"
         const val EXTRACTED_TEXT_KEY = "extractedText"
         const val EXPENSE_REVIEW_ROUTE = "expenseReview"
+        const val MANUAL_EXPENSE_INPUT_ROUTE = "manualExpenseInput"
         const val EXPENSES_HISTORY_ROUTE = "expensesHistory"
     }
 }

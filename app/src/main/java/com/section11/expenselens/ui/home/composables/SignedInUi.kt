@@ -11,12 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,7 +41,6 @@ import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdLoading
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.HouseholdInviteResultEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
-import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHouseholdTapped
@@ -214,21 +209,7 @@ fun ExistingHouseholdUi(
 ) {
     val dimens = LocalDimens.current
     BoxHomeScreenContainer(
-        boxContent = {
-            FloatingActionButton(
-                onClick = { onEvent(AddExpenseTapped) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(dimens.m2),
-
-                ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.home_screen_add_expense_label)
-                )
-            }
-        }
+        boxContent = { AddExpenseButton(onEvent = onEvent) }
     ) {
         SignedInGreetingAndIcon(userInfo, true, dialogDownstreamUiEvent, greeting, onEvent) {
             Text(stringResource(R.string.home_screen_household_name_prefix, household.name))
@@ -236,7 +217,9 @@ fun ExistingHouseholdUi(
             household.graphInfo?.let {
                 CakeGraph(
                     graphUiModel = it,
-                    modifier = Modifier.fillMaxWidth().height(dimens.m40)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimens.m40)
                 )
             }
         }

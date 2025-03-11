@@ -11,25 +11,32 @@ import com.google.firebase.messaging.RemoteMessage
 import com.section11.expenselens.R
 import com.section11.expenselens.domain.usecase.NotificationsTokenUpdateUseCase
 import com.section11.expenselens.ui.MainActivity
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 private const val CHANNEL = "INVITE_CHANNEL"
 
-class FirebaseNotificationService @Inject constructor(
-    private val notificationsTokenUpdateUseCase: NotificationsTokenUpdateUseCase,
-    dispatcher: CoroutineDispatcher
-): FirebaseMessagingService() {
+@AndroidEntryPoint
+class FirebaseNotificationService : FirebaseMessagingService() {
 
     private val serviceJob = Job()
-    private val serviceScope = CoroutineScope(dispatcher + serviceJob)
 
+    @Inject lateinit var notificationsTokenUpdateUseCase: NotificationsTokenUpdateUseCase
+    @Inject lateinit var dispatcher: CoroutineDispatcher
+    private lateinit var serviceScope: CoroutineScope
+
+    override fun onCreate() {
+        super.onCreate()
+        serviceScope = CoroutineScope(dispatcher + serviceJob)
+    }
 
     override fun onNewToken(token: String) {
-        serviceScope.launch {
+        serviceScope.launch(dispatcher) {
             notificationsTokenUpdateUseCase.onNewNotificationToken(token)
         }
     }

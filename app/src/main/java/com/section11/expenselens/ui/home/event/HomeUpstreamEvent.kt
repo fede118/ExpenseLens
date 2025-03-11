@@ -5,6 +5,7 @@ import com.section11.expenselens.ui.utils.UpstreamUiEvent
 
 sealed class HomeUpstreamEvent : UpstreamUiEvent() {
     data object AddExpenseTapped : HomeUpstreamEvent()
+    data object AddManualExpenseTapped : HomeUpstreamEvent()
     data class SignInTapped(val context: Context): HomeUpstreamEvent()
     data class CreateHouseholdTapped(
         val userId: String,

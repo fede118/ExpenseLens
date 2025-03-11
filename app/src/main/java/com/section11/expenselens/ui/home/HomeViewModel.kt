@@ -14,6 +14,7 @@ import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.framework.credentials.GoogleCredentialManager
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToManualExpenseInput
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
 import com.section11.expenselens.ui.common.AbstractViewModel
@@ -23,6 +24,7 @@ import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdLoading
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTapped
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddManualExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
@@ -98,6 +100,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             when(homeEvent) {
                 is AddExpenseTapped -> navigationManager.navigate(NavigateToCameraScreen)
+                is AddManualExpenseTapped -> navigationManager.navigate(NavigateToManualExpenseInput)
                 is SignInTapped -> handleSignInEvent(homeEvent)
                 is SignOutTapped -> handleSignOutEvent()
                 is ToExpensesHistoryTapped -> navigationManager.navigate(NavigateToExpensesHistory)

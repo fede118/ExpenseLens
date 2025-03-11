@@ -5,11 +5,13 @@ import com.section11.expenselens.data.dto.request.GeminiRequestBody
 import com.section11.expenselens.data.dto.request.GeminiRequestBody.Content
 import com.section11.expenselens.data.mapper.GeminiResponseMapper
 import com.section11.expenselens.data.service.GeminiService
-import com.section11.expenselens.domain.DomainConstants.EXPECTED_DATE_FORMAT
+import com.section11.expenselens.domain.DomainConstants.DATE_FORMAT
 import com.section11.expenselens.domain.models.Category
+import com.section11.expenselens.domain.models.Category.GROCERIES
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.repository.ExpenseInfoExtractorRepository
 import com.section11.expenselens.framework.networking.safeApiCall
+import java.util.Locale
 import javax.inject.Inject
 
 class GeminiAiRepository @Inject constructor(
@@ -45,8 +47,9 @@ class GeminiAiRepository @Inject constructor(
             WHERE:
             - total: Mandatory, a representation of the total in that text including gratuity/tips if it applies. 
             If no total is found default value: 0.00
-            - date: OPTIONAL, the date of the transaction if shown on the receipt with the format 
-              $EXPECTED_DATE_FORMAT, if its not clear, then null
+            - date: OPTIONAL, the date of the transaction if shown on the receipt, if its not clear, then null. 
+            Be aware that the format of the date might depend on the country, so be sure to check the format. This is the
+            current Locale: ${Locale.getDefault()}. Whatever the date format you read, transform it to this format: $DATE_FORMAT
             - category: OPTIONAL, the best estimation of the Category of the receipt. Based on the following categories:
             $categoriesToString.
             IMPORTANT: the category must be in lowercase
@@ -56,7 +59,7 @@ class GeminiAiRepository @Inject constructor(
             """
 
         private fun generateJsonStructure(): String {
-            val exampleInstance = SuggestedExpenseInformation(TOTAL_EXAMPLE, Category.GROCERIES, EXPECTED_DATE_FORMAT)
+            val exampleInstance = SuggestedExpenseInformation(TOTAL_EXAMPLE, GROCERIES, DATE_FORMAT)
             val gson = GsonBuilder().setPrettyPrinting().create()
             val json = gson.toJson(exampleInstance)
 

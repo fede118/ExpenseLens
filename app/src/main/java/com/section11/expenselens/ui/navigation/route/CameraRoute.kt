@@ -2,16 +2,17 @@ package com.section11.expenselens.ui.navigation.route
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.section11.expenselens.ui.camera.CameraPreviewViewModel
 import com.section11.expenselens.ui.camera.composables.CameraScreenContent
-import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
-import com.section11.expenselens.ui.utils.DownstreamUiEvent
-import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
-fun CameraRoute(
-    modifier: Modifier = Modifier,
-    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    onUpstreamEvent: (CameraPreviewEvents) -> Unit
-) {
-    CameraScreenContent(modifier, downstreamUiEvent, onUpstreamEvent)
+fun CameraRoute(modifier: Modifier = Modifier) {
+    val cameraPreviewViewModel = hiltViewModel<CameraPreviewViewModel>()
+
+    CameraScreenContent(
+        downstreamUiEvent = cameraPreviewViewModel.uiEvent,
+        onUiEvent = cameraPreviewViewModel::onUiEvent,
+        modifier
+    )
 }

@@ -40,6 +40,15 @@ class ExpenseReviewScreenUiMapper @Inject constructor(
         )
     }
 
+    fun getEmptyExpenseReviewUiModel(): ExpenseReviewUiModel {
+        val emptySuggestedExpenseInformation = SuggestedExpenseInformation(
+            date = null,
+            total = 0.00,
+            estimatedCategory = null,
+        )
+        return mapExpenseInfoToUiModel(emptySuggestedExpenseInformation, null)
+    }
+
     private fun MutableList<ReviewRow>.addSection(
         section: ExpenseReviewSections,
         suggestedExpenseInformation: SuggestedExpenseInformation

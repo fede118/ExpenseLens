@@ -1,25 +1,30 @@
 package com.section11.expenselens.ui.navigation.route
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.section11.expenselens.ui.home.HomeViewModel
 import com.section11.expenselens.ui.home.composables.HomeScreenContent
-import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
+import com.section11.expenselens.ui.navigation.InterceptShowSnackBarDownStreamEvents
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
-import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.UiState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-fun HomeRoute(
-    homeUiStateFlow: StateFlow<UiState>,
-    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    onUpstreamEvent: (HomeUpstreamEvent) -> Unit = {}
-) {
-    HomeScreenContent(homeUiStateFlow, downstreamUiEvent, dialogDownstreamUiEvent, onUpstreamEvent)
+fun HomeRoute(shouldUpdateHome: Boolean?) {
+    val homeViewModel = hiltViewModel<HomeViewModel>()
+    InterceptShowSnackBarDownStreamEvents(homeViewModel.uiEvent)
+    if (shouldUpdateHome == true) {
+        homeViewModel.updateHomeInformation()
+    }
+
+    HomeScreenContent(
+        homeUiStateFlow = homeViewModel.uiState,
+        downstreamUiEvent = homeViewModel.uiEvent,
+        dialogDownstreamUiEvent = homeViewModel.profileDialogUiEvent,
+        onEvent = homeViewModel::onUiEvent
+    )
 }
 
 @DarkAndLightPreviews
@@ -27,7 +32,7 @@ fun HomeRoute(
 fun HomeScreenPreview() {
     val homeUiState = MutableStateFlow<UiState>(UiState.Idle)
     Preview {
-        HomeRoute(
+        HomeScreenContent(
             homeUiStateFlow = homeUiState,
             dialogDownstreamUiEvent = MutableSharedFlow(),
             downstreamUiEvent = MutableSharedFlow(),
