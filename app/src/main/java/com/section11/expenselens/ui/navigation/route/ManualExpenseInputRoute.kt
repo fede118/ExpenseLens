@@ -1,12 +1,11 @@
 package com.section11.expenselens.ui.navigation.route
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
-import com.section11.expenselens.ui.navigation.InitExpenseReviewViewModel
 import com.section11.expenselens.ui.navigation.InterceptShowSnackBarDownStreamEvents
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
@@ -18,14 +17,14 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
-fun ExpenseReviewRoute(expenseInfo: SuggestedExpenseInformation?, extractedTextFromImage: String?) {
+fun ManualExpenseInputRoute() {
     val expenseReviewViewModel = hiltViewModel<ExpenseReviewViewModel>()
 
     InterceptShowSnackBarDownStreamEvents(expenseReviewViewModel.uiEvent)
 
-    InitExpenseReviewViewModel(expenseReviewViewModel, expenseInfo, extractedTextFromImage)
-
-    InterceptShowSnackBarDownStreamEvents(expenseReviewViewModel.uiEvent)
+    LaunchedEffect(expenseReviewViewModel) {
+        expenseReviewViewModel.initEmpty()
+    }
 
     ExpenseReviewScreen(
         expenseReviewUiStateFlow = expenseReviewViewModel.uiState,
@@ -36,7 +35,7 @@ fun ExpenseReviewRoute(expenseInfo: SuggestedExpenseInformation?, extractedTextF
 
 @DarkAndLightPreviews
 @Composable
-fun ExpenseReviewRoutePreview(modifier: Modifier = Modifier) {
+fun ManualExpenseInputRoutePreview(modifier: Modifier = Modifier) {
     val fakeRepository = FakeRepositoryForPreviews(LocalContext.current)
     val expenseInfo = fakeRepository.getExpenseReviewUiModel()
     val uiState = MutableStateFlow<UiState>(ShowExpenseReview(expenseInfo))

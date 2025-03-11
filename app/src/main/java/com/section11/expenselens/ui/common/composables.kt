@@ -52,6 +52,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
+import com.section11.expenselens.BuildConfig.VERSION_CODE
+import com.section11.expenselens.BuildConfig.VERSION_NAME
 import com.section11.expenselens.R
 import com.section11.expenselens.ui.common.UiConstants.MAX_INPUT_CHARACTERS
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
@@ -91,8 +93,13 @@ fun ProfileDialog(
 
         // Logout Button
         Button(onClick = { onLogout() }) {
-            Text("Sign Out")
+            Text(stringResource(R.string.profile_dialog_sign_out))
         }
+        Spacer(modifier = Modifier.height(dimens.m2))
+        Text(
+            text = stringResource(R.string.profile_dialog_app_info, VERSION_NAME, VERSION_CODE),
+            style = MaterialTheme.typography.labelSmall,
+        )
     }
 }
 

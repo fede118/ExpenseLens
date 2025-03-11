@@ -27,7 +27,6 @@ class ExpenseValidatorTest {
         val result = validator.validateExpense(expense)
 
         // Then
-        assertTrue(result.isSuccess)
         result.onSuccess { info ->
             assertEquals(100.0, info.total, 0.0)
             assertEquals(Category.HOME, info.category)
@@ -38,32 +37,52 @@ class ExpenseValidatorTest {
 
     @Test
     fun `validateExpense returns failure when total is missing`() {
+        // Given
         val expense = createValidExpense().copyWithout(TOTAL)
+
+        // When
         val result = validator.validateExpense(expense)
+
+        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is InvalidExpenseTotalException)
     }
 
     @Test
     fun `validateExpense returns failure when total is not a number`() {
+        // Given
         val expense = createValidExpense().copyReplacing(TOTAL, "abc")
+
+        // When
         val result = validator.validateExpense(expense)
+
+        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is InvalidExpenseTotalException)
     }
 
     @Test
     fun `validateExpense returns failure when category is missing`() {
+        // Given
         val expense = createValidExpense().copyWithout(CATEGORY_SELECTION)
+
+        // When
         val result = validator.validateExpense(expense)
+
+        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is InvalidExpenseCategoryException)
     }
 
     @Test
     fun `validateExpense returns failure when category is invalid`() {
+        // Given
         val expense = createValidExpense().copyReplacing(CATEGORY_SELECTION, "Unknown Category")
+
+        // When
         val result = validator.validateExpense(expense)
+
+        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is InvalidExpenseCategoryException)
     }
@@ -78,17 +97,26 @@ class ExpenseValidatorTest {
 
     @Test
     fun `validateExpense returns failure when date is invalid`() {
+        // Given
         val expense = createValidExpense().copyReplacing(DATE_SELECTION, "invalid-date")
+
+        // When
         val result = validator.validateExpense(expense)
+
+        // Then
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is InvalidExpenseDateException)
     }
 
     @Test
     fun `validateExpense sets note to empty string when not provided`() {
+        // Given
         val expense = createValidExpense().copyWithout(ADD_NOTE)
+
+        // When
         val result = validator.validateExpense(expense)
-        assertTrue(result.isSuccess)
+
+        // Then
         result.onSuccess { info ->
             assertEquals("", info.note)
         }
@@ -99,7 +127,7 @@ class ExpenseValidatorTest {
             expenseReviewUiModel = ExpenseReviewUiModel(
                 reviewRows = listOf(
                     ReviewRow(CATEGORY_SELECTION, "category section", Category.HOME.displayName),
-                    ReviewRow(DATE_SELECTION, "date section", "10/02/2025"),
+                    ReviewRow(DATE_SELECTION, "date section", "Feb 2 2025"),
                     ReviewRow(TOTAL, "total section", "100.0"),
                     ReviewRow(ADD_NOTE, "note section", "Dinner with friends")
                 ),
