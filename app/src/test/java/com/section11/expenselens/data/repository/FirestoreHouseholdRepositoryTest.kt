@@ -140,8 +140,10 @@ class FirestoreHouseholdRepositoryTest {
             )
         )
 
+        val expenseId = "id"
         val mockDocumentSnapshot: DocumentSnapshot = mock {
             on { toObject(FirestoreExpense::class.java) } doReturn expenseList[0]
+            on { id } doReturn expenseId
         }
 
         val mockQuerySnapshot: QuerySnapshot = mock {
@@ -161,7 +163,7 @@ class FirestoreHouseholdRepositoryTest {
 
         // Then
         assertTrue(result.isSuccess)
-        assertEquals(expenseList.map { it.toDomainExpense() }, result.getOrNull())
+        assertEquals(expenseList.map { it.toDomainExpense(expenseId) }, result.getOrNull())
     }
 
     @Test
@@ -196,8 +198,10 @@ class FirestoreHouseholdRepositoryTest {
             )
         )
 
+        val expenseId = "id"
         val mockDocumentSnapshot: DocumentSnapshot = mock {
             on { toObject(FirestoreExpense::class.java) } doReturn expenses[0]
+            on { id } doReturn expenseId
         }
 
         val mockQuerySnapshot: QuerySnapshot = mock {
@@ -219,7 +223,7 @@ class FirestoreHouseholdRepositoryTest {
 
         // Then
         assertTrue(result.isSuccess)
-        assertEquals(expenses.map { it.toDomainExpense() }, result.getOrNull())
+        assertEquals(expenses.map { it.toDomainExpense(expenseId) }, result.getOrNull())
     }
 
     @Test
@@ -267,6 +271,41 @@ class FirestoreHouseholdRepositoryTest {
         // When
         val result = repository.getExpensesForTimePeriod(householdId, Date(), Date())
         advanceUntilIdle()
+
+        // Then
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `when deleteExpense is called then it should call firestore delete`() = runTest {
+        // Given
+        val householdId = "household456"
+        val expenseId = "expense123"
+        val mockTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.collection(EXPENSES_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(expenseId)).thenReturn(mockDocument)
+        whenever(mockDocument.delete()).thenReturn(mockTask)
+
+        // When
+        val result = repository.deleteExpenseFromHousehold(householdId, expenseId)
+
+        // Then
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `when deleteExpense throws exception then result is failure`() = runTest {
+        // Given
+        val householdId = "household456"
+        val expenseId = "expense123"
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        val mockFirebaseException: FirebaseFirestoreException = mock()
+        whenever(mockCollection.document(householdId)).then { throw mockFirebaseException }
+
+        // When
+        val result = repository.deleteExpenseFromHousehold(householdId, expenseId)
 
         // Then
         assertTrue(result.isFailure)

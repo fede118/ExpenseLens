@@ -82,6 +82,10 @@ class HouseholdUseCase @Inject constructor(
         }
     }
 
+    suspend fun deleteExpenseFromHousehold(householdId: String, expenseId: String): Result<Unit> {
+        return householdRepository.deleteExpenseFromHousehold(householdId, expenseId)
+    }
+
     suspend fun getAllExpensesFromHousehold(householdId: String): Result<List<Expense>> {
         return householdRepository.getAllExpensesFromHousehold(householdId)
     }

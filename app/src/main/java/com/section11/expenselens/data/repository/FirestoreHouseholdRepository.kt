@@ -86,6 +86,24 @@ class FirestoreHouseholdRepository @Inject constructor(
         }
     }
 
+    override suspend fun deleteExpenseFromHousehold(
+        householdId: String,
+        expenseId: String
+    ): Result<Unit> {
+        return try {
+            firestore.collection(HOUSEHOLDS_COLLECTION)
+                .document(householdId)
+                .collection(EXPENSES_FIELD)
+                .document(expenseId)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+        } catch (exception: FirebaseFirestoreException) {
+            Result.failure(exception)
+        }
+    }
+
     override suspend fun getAllExpensesFromHousehold(
         householdId: String
     ): Result<List<Expense>> {
@@ -100,7 +118,7 @@ class FirestoreHouseholdRepository @Inject constructor(
             for (document in querySnapshot.documents) {
                 val expense = document.toObject(FirestoreExpense::class.java)
                 if (expense != null) {
-                    expenses.add(expense.toDomainExpense())
+                    expenses.add(expense.toDomainExpense(document.id))
                 }
             }
             Result.success(expenses)
@@ -127,7 +145,7 @@ class FirestoreHouseholdRepository @Inject constructor(
             for (document in expensesQuery.documents) {
                 val expense = document.toObject(FirestoreExpense::class.java)
                 if (expense != null) {
-                    expenses.add(expense.toDomainExpense())
+                    expenses.add(expense.toDomainExpense(document.id))
                 }
             }
             Result.success(expenses)

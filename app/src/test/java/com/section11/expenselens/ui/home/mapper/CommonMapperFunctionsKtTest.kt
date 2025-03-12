@@ -47,9 +47,9 @@ class CommonMapperFunctionsKtTest {
 
         // Then
         assertEquals(2, result.size)
-        assertEquals("category1 - $33.33%", result[0].label)
+        assertEquals("category1 - 33.33%", result[0].label)
         assertEquals(100.0f, result[0].value)
-        assertEquals("category2 - $66.67%", result[1].label)
+        assertEquals("category2 - 66.67%", result[1].label)
         assertEquals(200.0f, result[1].value)
     }
 }
