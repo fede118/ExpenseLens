@@ -16,7 +16,7 @@ fun HouseholdExpenses.getSlicesByCategory(totalExpenses: Float): List<Slice> {
         .map { (category, value) ->
             val totalOfCurrentCategory = value.sumOf { it.total }.toFloat()
             Slice(
-                "$category - $${calculatePercentage(totalOfCurrentCategory, totalExpenses)}%",
+                "$category - ${calculatePercentage(totalOfCurrentCategory, totalExpenses)}%",
                 totalOfCurrentCategory
             )
         }

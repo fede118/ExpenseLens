@@ -47,6 +47,10 @@
     <!--  Expenses History Screen  -->
     <string name="expenses_history_title">Expenses History - Current Month</string>
     <string name="expenses_history_empty_state_string">No expenses found</string>
+    <string name="expense_history_total_prefix">Amount: $%s</string>
+    <string name="expense_history_date_prefix">Date: %s</string>
+    <string name="expense_history_submitted_by">Submitted by: %s</string>
+    <string name="expense_history_note_prefix">Note: %s</string>
 
     <!--  Common Strings  -->
     <string name="generic_error_message">Something went wrong, please try again later.</string>

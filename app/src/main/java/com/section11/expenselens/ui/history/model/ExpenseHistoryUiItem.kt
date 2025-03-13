@@ -1,12 +1,10 @@
-package com.section11.expenselens.domain.models
+package com.section11.expenselens.ui.history.model
 
-import java.util.Date
-
-data class Expense(
+data class ExpenseHistoryUiItem(
     val expenseId: String,
     val category: String,
     val total: Double,
-    val date: Date,
+    val date: String,
     val userId: String,
     val userDisplayName: String?,
     val note: String?,

@@ -10,6 +10,7 @@ class FirestoreExpenseMapperKtTest {
     @Test
     fun `toDomainExpense should return Expense`() {
         // Given
+        val someId = "someId"
         val firestoreExpense = FirestoreExpense(
             category = "category",
             total = 100.0,
@@ -21,9 +22,10 @@ class FirestoreExpenseMapperKtTest {
         )
 
         // When
-        val result = firestoreExpense.toDomainExpense()
+        val result = firestoreExpense.toDomainExpense(someId)
 
         // Then
+        assertEquals(someId, result.expenseId)
         assertEquals(firestoreExpense.category, result.category)
         assertEquals(firestoreExpense.total, result.total)
         assertEquals(firestoreExpense.timestamp.toDate(), result.date)

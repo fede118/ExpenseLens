@@ -65,6 +65,7 @@ class HouseholdUseCaseTest {
         whenever(usersHouseholdRepository.getUserHouseholds(any())).thenReturn(households)
         val expenses = listOf(
             Expense(
+                expenseId = "expenseId",
                 total = 100.0,
                 category = "Home",
                 date = Date(),
@@ -140,6 +141,7 @@ class HouseholdUseCaseTest {
         val householdId = "household456"
         val expenses = listOf(
             Expense(
+                expenseId = "expenseId",
                 total = 100.0,
                 category = "Home",
                 date = Date(),
@@ -238,5 +240,21 @@ class HouseholdUseCaseTest {
         // Then
         assertTrue(result.isFailure)
         verify(householdRepository).deleteHousehold(userId, householdId)
+    }
+
+    @Test
+    fun `deleteExpenseFromHousehold calls repository`() = runTest {
+        // Given
+        val householdId = "householdId"
+        val expenseId = "expenseId"
+        whenever(householdRepository.deleteExpenseFromHousehold(householdId, expenseId))
+            .thenReturn(Result.success(Unit))
+
+        // When
+        val result = useCase.deleteExpenseFromHousehold(householdId, expenseId)
+
+        // Then
+        assertTrue(result.isSuccess)
+        verify(householdRepository).deleteExpenseFromHousehold(householdId, expenseId)
     }
 }
