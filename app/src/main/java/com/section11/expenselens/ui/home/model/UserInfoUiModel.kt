@@ -35,7 +35,6 @@ data class CakeGraphUiModel(
 ) {
     data class Slice(
         val label: String,
-        val value: Float,
-//        val percentage: Float
+        val value: Float
     )
 }

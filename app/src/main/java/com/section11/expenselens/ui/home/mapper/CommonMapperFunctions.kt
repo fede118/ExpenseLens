@@ -2,10 +2,9 @@ package com.section11.expenselens.ui.home.mapper
 
 import com.section11.expenselens.domain.models.HouseholdExpenses
 import com.section11.expenselens.ui.home.model.CakeGraphUiModel.Slice
-import java.util.Locale
+import com.section11.expenselens.ui.utils.formatToTwoDecimal
 
 private const val HUNDRED = 100
-private const val PERCENTAGE_FORMAT = "%.2f"
 
 fun HouseholdExpenses.getTotalExpensesValue(): Float {
     return expenses.sumOf { expense -> expense.total }.toFloat()
@@ -23,5 +22,5 @@ fun HouseholdExpenses.getSlicesByCategory(totalExpenses: Float): List<Slice> {
 }
 
 private fun calculatePercentage(sliceValue: Float, total: Float): String {
-    return String.format(Locale.getDefault(), PERCENTAGE_FORMAT, (sliceValue / total) * HUNDRED)
+    return ((sliceValue / total) * HUNDRED).formatToTwoDecimal()
 }

@@ -35,7 +35,7 @@ class ExpenseHistoryUiMapperTest {
         val expected = ExpenseHistoryUiItem(
             expenseId = "1",
             category = "Grocery",
-            total = 100.0,
+            total = "100.00", // 2 decimals are expected
             date = Date().toFormattedString(),
             userId = "1",
             userDisplayName = "John Doe",
@@ -53,7 +53,7 @@ class ExpenseHistoryUiMapperTest {
                 ExpenseHistoryUiItem(
                     expenseId = "1",
                     category = "Grocery",
-                    total = 100.0,
+                    total = "100.0",
                     date = Date().toFormattedString(),
                     userId = "1",
                     userDisplayName = "John Doe",
