@@ -18,6 +18,8 @@ interface HouseholdRepository {
         expense: ConsolidatedExpenseInformation
     ): Result<Unit>
 
+    suspend fun deleteExpenseFromHousehold(householdId: String, expenseId: String): Result<Unit>
+
     suspend fun getAllExpensesFromHousehold(householdId: String): Result<List<Expense>>
 
     suspend fun getExpensesForTimePeriod(

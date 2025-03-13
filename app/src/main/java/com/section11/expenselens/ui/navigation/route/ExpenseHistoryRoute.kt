@@ -11,7 +11,9 @@ import com.section11.expenselens.ui.history.composables.ExpensesHistoryScreen
 @Composable
 fun ExpenseHistoryRoute(modifier: Modifier = Modifier) {
     val expenseHistoryViewModel = hiltViewModel<ExpenseHistoryViewModel>()
-    val expenses by expenseHistoryViewModel.uiState.collectAsState()
+    val expenseHistoryUiState by expenseHistoryViewModel.uiState.collectAsState()
 
-    ExpensesHistoryScreen(expenses, modifier)
+    ExpensesHistoryScreen(expenseHistoryUiState, modifier) { event ->
+        expenseHistoryViewModel.onUpstreamEvent(event)
+    }
 }

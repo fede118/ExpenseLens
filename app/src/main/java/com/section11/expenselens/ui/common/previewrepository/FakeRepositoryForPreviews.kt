@@ -12,6 +12,8 @@ import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.framework.utils.ResourceProviderImpl
+import com.section11.expenselens.ui.history.mapper.ExpenseHistoryUiMapper
+import com.section11.expenselens.ui.history.model.ExpenseHistoryUiItem
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper
@@ -25,10 +27,11 @@ private val loremIpsum = LoremIpsum(LOREM_IPSUM_SIZE).values.first()
 class FakeRepositoryForPreviews(context: Context) {
 
     private val resourceProvider = ResourceProviderImpl(context)
-    private val mapper = HomeScreenUiMapper(resourceProvider)
+    private val homeMapper = HomeScreenUiMapper(resourceProvider)
+    private val expenseHistoryMapper = ExpenseHistoryUiMapper()
 
     fun getUserSignedInState(withHousehold: Boolean = true): UserSignedIn {
-        return mapper.getUserSignInModel(
+        return homeMapper.getUserSignInModel(
             userData = UserData(
                 id = "id",
                 idToken = "idToken",
@@ -64,6 +67,7 @@ class FakeRepositoryForPreviews(context: Context) {
     private fun getExpenseHistoryList(): List<Expense> {
         return List(4) {
             Expense(
+                expenseId = "item$it",
                 category = "Category $it",
                 total = Random.nextDouble(100.0, 1000.0),
                 userDisplayName = "Name $it",
@@ -88,9 +92,10 @@ class FakeRepositoryForPreviews(context: Context) {
     }
 
     @Suppress("MagicNumber") // this is just for Previews
-    fun getExpenseHistoryList(size: Int = 4): List<Expense> {
-        return List(size) {
+    fun getExpenseHistoryList(size: Int = 4): List<ExpenseHistoryUiItem> {
+        val expenseList =  List(size) {
             Expense(
+                expenseId = "item$it",
                 category = "Category $it",
                 total = Random.nextDouble(100.0, 1000.0),
                 userDisplayName = "Name $it",
@@ -99,5 +104,7 @@ class FakeRepositoryForPreviews(context: Context) {
                 userId = "userId",
             )
         }
+
+        return expenseHistoryMapper.mapExpensesToUiItems(expenseList)
     }
 }
