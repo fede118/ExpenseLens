@@ -28,6 +28,7 @@ import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPr
 import com.section11.expenselens.ui.home.model.CakeGraphUiModel
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.Preview
+import com.section11.expenselens.ui.utils.formatToTwoDecimal
 
 private const val SPIN_ANIMATION_DURATION = 1000
 private const val SPIN_ANIMATION_FULL_SPIN_DEGREES = 360
@@ -47,7 +48,7 @@ fun CakeGraph(
 
     val valueChangeListener = object : OnChartValueSelectedListener {
         override fun onValueSelected(entry: Entry?, highlight: Highlight?) {
-            centerText = "\$${entry?.y} - ${entry?.data}"
+            centerText = "\$${entry?.y?.formatToTwoDecimal()} - ${entry?.data}"
 
         }
         override fun onNothingSelected() {

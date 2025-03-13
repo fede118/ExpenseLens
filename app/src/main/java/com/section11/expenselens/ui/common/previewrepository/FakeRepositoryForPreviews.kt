@@ -24,6 +24,7 @@ import kotlin.random.Random
 private const val LOREM_IPSUM_SIZE = 200
 private val loremIpsum = LoremIpsum(LOREM_IPSUM_SIZE).values.first()
 
+@Suppress("MagicNumber") // this is just for Previews
 class FakeRepositoryForPreviews(context: Context) {
 
     private val resourceProvider = ResourceProviderImpl(context)
@@ -63,7 +64,6 @@ class FakeRepositoryForPreviews(context: Context) {
         )
     }
 
-    @Suppress("MagicNumber") // this is just for Previews
     private fun getExpenseHistoryList(): List<Expense> {
         return List(4) {
             Expense(
@@ -91,7 +91,6 @@ class FakeRepositoryForPreviews(context: Context) {
         return expenseReviewMapper.mapExpenseInfoToUiModel(getExpenseInformation(), loremIpsum)
     }
 
-    @Suppress("MagicNumber") // this is just for Previews
     fun getExpenseHistoryList(size: Int = 4): List<ExpenseHistoryUiItem> {
         val expenseList =  List(size) {
             Expense(

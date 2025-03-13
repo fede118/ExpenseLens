@@ -27,14 +27,14 @@ class HouseholdUseCase @Inject constructor(
      * It also fetches the expenses for the current month and returns both in [HouseholdExpenses]
      */
     suspend fun getCurrentHousehold(userId: String): HouseholdExpenses? {
-        val household = usersCollectionRepository.getUserHouseholds(userId).ifEmpty { null }?.first()
-        return household?.let {
+        val householdResult = usersCollectionRepository.getUserHouseholds(userId).ifEmpty { null }?.first()
+        return householdResult?.let { household ->
             val thisMonthExpenses = householdRepository.getExpensesForTimePeriod(
-                it.id,
+                household.id,
                 firstDayOfCurrentMonth,
                 lastDayOfCurrentMonth
             ).getOrElse { emptyList() }
-            HouseholdExpenses(it, thisMonthExpenses)
+            HouseholdExpenses(household, thisMonthExpenses.sortedByDescending { it.date })
         }
     }
 

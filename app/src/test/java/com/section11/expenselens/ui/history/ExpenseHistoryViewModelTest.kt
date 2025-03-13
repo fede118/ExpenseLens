@@ -57,16 +57,8 @@ class ExpenseHistoryViewModelTest {
         val userId = "user123"
         val userHouseHold = UserHousehold(householdId, "Test Household")
         val expenses = listOf(
-            ExpenseHistoryUiItem("idFood", "Food", 100.0, "Mar 3 2025", userId, "ted", "Dinner"),
-            ExpenseHistoryUiItem(
-                "idTransport",
-                "Transport",
-                50.0,
-                "Mar 3 2025",
-                userId,
-                "ted",
-                "Taxi"
-            )
+            ExpenseHistoryUiItem("idFood", "Food", "100.0", "Mar 3 2025", userId, "ted", "Dinner"),
+            ExpenseHistoryUiItem("idTransport", "Transport", "50.0", "Mar 3 2025", userId, "ted", "Taxi")
         )
         val householdExpenses = HouseholdExpenses(
             userHouseHold,
@@ -122,16 +114,8 @@ class ExpenseHistoryViewModelTest {
         val userId = "user123"
         val userHouseHold = UserHousehold("household123", "Test Household")
         val expenses = listOf(
-            ExpenseHistoryUiItem("idFood", "Food", 100.0, "Mar 3 2025", userId, "ted", "Dinner"),
-            ExpenseHistoryUiItem(
-                "idTransport",
-                "Transport",
-                50.0,
-                "Mar 3 2025",
-                userId,
-                "ted",
-                "Taxi"
-            )
+            ExpenseHistoryUiItem("idFood", "Food", "100.0", "Mar 3 2025", userId, "ted", "Dinner"),
+            ExpenseHistoryUiItem("idTransport", "Transport", "50.0", "Mar 3 2025", userId, "ted", "Taxi")
         )
         val householdExpenses = HouseholdExpenses(
             userHouseHold,
@@ -164,16 +148,8 @@ class ExpenseHistoryViewModelTest {
         val userId = "user123"
         val userHouseHold = UserHousehold("household123", "Test Household")
         val expenses = listOf(
-            ExpenseHistoryUiItem("idFood", "Food", 100.0, "Mar 3 2025", userId, "ted", "Dinner"),
-            ExpenseHistoryUiItem(
-                "idTransport",
-                "Transport",
-                50.0,
-                "Mar 3 2025",
-                userId,
-                "ted",
-                "Taxi"
-            )
+            ExpenseHistoryUiItem("idFood", "Food", "100.0", "Mar 3 2025", userId, "ted", "Dinner"),
+            ExpenseHistoryUiItem("idTransport", "Transport", "50.0",  "Mar 3 2025", userId, "ted", "Taxi")
         )
         val householdExpenses = HouseholdExpenses(
             userHouseHold,
