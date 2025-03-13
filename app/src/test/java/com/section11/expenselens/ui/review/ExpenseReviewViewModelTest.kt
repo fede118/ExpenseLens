@@ -4,8 +4,8 @@ import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.models.UserData
-import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
@@ -240,6 +240,24 @@ class ExpenseReviewViewModelTest {
             whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUser))
         }
         return mockUser
+    }
+
+    @Test
+    fun `initEmpty should call getEmpty from mapper`() {
+        // Given
+        val expectedUiModel = ExpenseReviewUiModel(
+            extractedText = "",
+            reviewRows = emptyList()
+        )
+        whenever(expenseReviewUiMapper.getEmptyExpenseReviewUiModel()).thenReturn(expectedUiModel)
+
+        // When
+        viewModel.initEmpty()
+
+        // Then
+        val result = viewModel.uiState.value
+        assertEquals(result, ShowExpenseReview(expectedUiModel))
+        verify(expenseReviewUiMapper).getEmptyExpenseReviewUiModel()
     }
 
     private fun getListOfRows(): List<ReviewRow> {

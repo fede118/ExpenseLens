@@ -8,6 +8,7 @@ import androidx.navigation.NavController
 import com.section11.expenselens.framework.di.NavManagerEntryPoint
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToManualExpenseInput
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions
@@ -34,6 +35,7 @@ fun NavigationEffects(navController: NavController) {
                     event.extractedText,
                     event.suggestedExpenseInformation
                 )
+                is NavigateToManualExpenseInput -> navActions.navigateToManualExpenseInput()
                 is NavigateToExpensesHistory -> navActions.navigateToExpensesHistory()
             }
         }

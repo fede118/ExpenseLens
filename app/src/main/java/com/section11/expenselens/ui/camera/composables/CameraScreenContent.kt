@@ -47,9 +47,9 @@ import kotlinx.coroutines.flow.SharedFlow
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CameraScreenContent(
-    modifier: Modifier = Modifier,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    onUiEvent: (CameraPreviewEvents) -> Unit
+    onUiEvent: (CameraPreviewEvents) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val appContext = LocalContext.current.applicationContext
     val imageCapture = remember { EntryPointAccessors.fromApplication(
@@ -149,6 +149,6 @@ fun CaptureImageButton(onEvent: (CameraPreviewEvents) -> Unit) {
 @Composable
 fun CameraScreenContentPreview() {
     Preview {
-        CameraScreenContent(downstreamUiEvent = MutableSharedFlow()) {}
+        CameraScreenContent(downstreamUiEvent = MutableSharedFlow(), {})
     }
 }

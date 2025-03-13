@@ -195,4 +195,33 @@ class ExpenseReviewScreenUiMapperTest {
 
         assertEquals(error, result)
     }
+
+    @Test
+    fun `getEmptyExpenseReviewUiModel should return empty UI model`() {
+        // When
+        val result = mapper.getEmptyExpenseReviewUiModel()
+
+        // Then
+        assertEquals(ExpenseReviewSections.entries.size, result.reviewRows.size)
+        result.reviewRows.forEach { row ->
+            when(row.section) {
+                CATEGORY_SELECTION -> {
+                    assertEquals(noCategoryFallback, row.value)
+                    assertEquals(categoryTitle, row.title)
+                }
+                DATE_SELECTION -> {
+                    assertEquals(noDateFallback, row.value)
+                    assertEquals(datePickerTitle, row.title)
+                }
+                TOTAL -> {
+                    assertEquals("0.0", row.value)
+                    assertEquals(totalTitle, row.title)
+                }
+                ADD_NOTE -> {
+                    assertEquals(String(), row.value)
+                    assertEquals(noteTitle, row.title)
+                }
+            }
+        }
+    }
 }

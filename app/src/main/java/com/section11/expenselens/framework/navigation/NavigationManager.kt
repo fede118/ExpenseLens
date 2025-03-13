@@ -19,6 +19,7 @@ interface NavigationManager {
             val extractedText: String,
             val suggestedExpenseInformation: SuggestedExpenseInformation
         ) : NavigationEvent()
+        data object NavigateToManualExpenseInput : NavigationEvent()
         data object NavigateToExpensesHistory : NavigationEvent()
     }
 }

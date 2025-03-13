@@ -61,9 +61,9 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun ExpenseReviewScreen(
-    modifier: Modifier = Modifier,
     expenseReviewUiStateFlow: StateFlow<UiState>,
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
+    modifier: Modifier = Modifier,
     onUpstreamUiEvent: (ExpenseReviewUpstreamEvent) -> Unit = {}
 ) {
     val dimens = LocalDimens.current

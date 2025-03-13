@@ -69,6 +69,12 @@ class ExpenseReviewViewModel @Inject constructor(
         }
     }
 
+    fun initEmpty() {
+        _uiState.value = ShowExpenseReview(
+            expenseReviewUiMapper.getEmptyExpenseReviewUiModel()
+        )
+    }
+
     fun onUpstreamEvent(event: ExpenseReviewUpstreamEvent) {
         when(event) {
             is ExpenseSubmitted -> {

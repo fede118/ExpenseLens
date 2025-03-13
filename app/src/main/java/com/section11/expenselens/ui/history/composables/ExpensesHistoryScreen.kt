@@ -1,5 +1,6 @@
 package com.section11.expenselens.ui.history.composables
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,23 +34,33 @@ fun ExpensesHistoryScreen(
 ) {
     val dimens = LocalDimens.current
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(dimens.m2)
-    ) {
-        item {
+    if (expenses.isEmpty()) {
+        Box(Modifier.fillMaxSize()) {
             Text(
-                modifier = Modifier.statusBarsPadding(),
-                text = stringResource(R.string.expenses_history_title),
-                style = MaterialTheme.typography.titleLarge
+                stringResource(R.string.expenses_history_empty_state_string),
+                modifier = Modifier.align(Alignment.Center)
             )
-            Spacer(Modifier.height(dimens.m1))
         }
+    } else {
 
-        items(expenses) { expense ->
-            ExpenseItem(expense = expense)
-            HorizontalDivider()
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(dimens.m2)
+        ) {
+            item {
+                Text(
+                    modifier = Modifier.statusBarsPadding(),
+                    text = stringResource(R.string.expenses_history_title),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(Modifier.height(dimens.m1))
+            }
+
+            items(expenses) { expense ->
+                ExpenseItem(expense = expense)
+                HorizontalDivider()
+            }
         }
     }
 }
