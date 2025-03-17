@@ -20,12 +20,14 @@ import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Comp
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.EXTRACTED_TEXT_KEY
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.HOME_ROUTE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.HOME_SHOULD_UPDATE
+import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.HOUSEHOLD_DETAILS_ROUTE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.MANUAL_EXPENSE_INPUT_ROUTE
 import com.section11.expenselens.ui.navigation.ExpenseLensNavigationActions.Companion.NAV_GRAPH_ROUTE
 import com.section11.expenselens.ui.navigation.route.CameraRoute
 import com.section11.expenselens.ui.navigation.route.ExpenseHistoryRoute
 import com.section11.expenselens.ui.navigation.route.ExpenseReviewRoute
 import com.section11.expenselens.ui.navigation.route.HomeRoute
+import com.section11.expenselens.ui.navigation.route.HouseholdDetailsRoute
 import com.section11.expenselens.ui.navigation.route.ManualExpenseInputRoute
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel
 import com.section11.expenselens.ui.theme.LocalSnackbarHostState
@@ -71,6 +73,10 @@ fun ExpenseLensNavGraph(
 
         composable(route = EXPENSES_HISTORY_ROUTE) {
             ExpenseHistoryRoute()
+        }
+
+        composable(route = HOUSEHOLD_DETAILS_ROUTE) {
+            HouseholdDetailsRoute()
         }
     }
 }
