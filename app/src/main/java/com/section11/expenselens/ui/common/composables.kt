@@ -7,7 +7,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -52,57 +49,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
-import com.section11.expenselens.BuildConfig.VERSION_CODE
-import com.section11.expenselens.BuildConfig.VERSION_NAME
 import com.section11.expenselens.R
 import com.section11.expenselens.ui.common.UiConstants.MAX_INPUT_CHARACTERS
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.theme.LocalDimens
-import com.section11.expenselens.ui.utils.DarkAndLightPreviews
-import com.section11.expenselens.ui.utils.Preview
-
-@Composable
-fun ProfileDialog(
-    modifier: Modifier = Modifier,
-    profileImageUrl: String?,
-    userName: String?,
-    onDismiss: () -> Unit,
-    onLogout: () -> Unit,
-    content: @Composable () -> Unit = {}
-) {
-    val dimens = LocalDimens.current
-
-    CardDialog(modifier, onDismiss = onDismiss) {
-        val shape = RoundedCornerShape(dimens.m5)
-        Image(
-            painter = rememberAsyncImagePainter(profileImageUrl),
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(dimens.m10)
-                .background(Color.Gray, shape = shape)
-                .clip(shape)
-        )
-
-        Spacer(modifier = Modifier.height(dimens.m2))
-
-        userName?.let { Text(text = it, style = MaterialTheme.typography.headlineSmall) }
-
-        Spacer(modifier = Modifier.height(dimens.m2))
-
-        content()
-
-        // Logout Button
-        Button(onClick = { onLogout() }) {
-            Text(stringResource(R.string.profile_dialog_sign_out))
-        }
-        Spacer(modifier = Modifier.height(dimens.m2))
-        Text(
-            text = stringResource(R.string.profile_dialog_app_info, VERSION_NAME, VERSION_CODE),
-            style = MaterialTheme.typography.labelSmall,
-        )
-    }
-}
-
 
 @Composable
 fun CardDialog(
@@ -337,23 +287,4 @@ fun RedDot(modifier: Modifier = Modifier) {
                 )
             }
     )
-}
-
-@DarkAndLightPreviews
-@Composable
-fun ProfileDialogPreview(modifier: Modifier = Modifier) {
-    Preview(modifier.fillMaxWidth()) {
-        ProfileDialog(
-            modifier = Modifier,
-            profileImageUrl = "",
-            userName = "Test User",
-            onDismiss = {},
-            onLogout = {}
-        ) {
-            TransformingButton(
-                stringResource(R.string.home_screen_invite_to_household_label),
-                onSubmit = { _ -> }
-            )
-        }
-    }
 }

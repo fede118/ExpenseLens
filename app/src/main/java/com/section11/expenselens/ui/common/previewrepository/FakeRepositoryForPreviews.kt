@@ -16,6 +16,8 @@ import com.section11.expenselens.ui.history.mapper.ExpenseHistoryUiMapper
 import com.section11.expenselens.ui.history.model.ExpenseHistoryUiItem
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
+import com.section11.expenselens.ui.household.HouseholdDetailsUiMapper
+import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel
 import com.section11.expenselens.ui.review.mapper.ExpenseReviewScreenUiMapper
 import com.section11.expenselens.ui.review.model.ExpenseReviewUiModel
 import java.util.Date
@@ -30,6 +32,7 @@ class FakeRepositoryForPreviews(context: Context) {
     private val resourceProvider = ResourceProviderImpl(context)
     private val homeMapper = HomeScreenUiMapper(resourceProvider)
     private val expenseHistoryMapper = ExpenseHistoryUiMapper()
+    private val householdDetailsUiMapper = HouseholdDetailsUiMapper(resourceProvider)
 
     fun getUserSignedInState(withHousehold: Boolean = true): UserSignedIn {
         return homeMapper.getUserSignInModel(
@@ -105,5 +108,12 @@ class FakeRepositoryForPreviews(context: Context) {
         }
 
         return expenseHistoryMapper.mapExpensesToUiItems(expenseList)
+    }
+
+    fun getHouseholdDetails(usersInHousehold: Int = 1): HouseholdDetailsUiModel {
+        return householdDetailsUiMapper.getHouseholdDetailsUiModel(
+            "Preview Test Household",
+            List(usersInHousehold) { "User $it" }
+        )
     }
 }

@@ -540,6 +540,16 @@ class HomeViewModelTest {
         verify(navigationManager).navigate(NavigateToManualExpenseInput)
     }
 
+    @Test
+    fun `when householdDetails tap then should navigate to household details`() = runTest {
+        val event = ProfileDialogEvents.ToHouseholdDetailsTapped
+
+        viewModel.onUiEvent(event)
+        advanceUntilIdle()
+
+        verify(navigationManager).navigate(NavigationEvent.NavigateToHouseholdDetails)
+    }
+
     private suspend fun mockSignIn(
         withHousehold: Boolean = false,
         withPendingInvitations: Boolean = false

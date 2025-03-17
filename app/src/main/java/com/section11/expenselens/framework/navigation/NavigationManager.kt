@@ -21,6 +21,7 @@ interface NavigationManager {
         ) : NavigationEvent()
         data object NavigateToManualExpenseInput : NavigationEvent()
         data object NavigateToExpensesHistory : NavigationEvent()
+        data object NavigateToHouseholdDetails : NavigationEvent()
     }
 }
 

@@ -14,9 +14,10 @@ import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.framework.credentials.GoogleCredentialManager
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
-import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToManualExpenseInput
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToHouseholdDetails
+import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToManualExpenseInput
 import com.section11.expenselens.ui.common.AbstractViewModel
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
@@ -31,6 +32,7 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHouseholdTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.ToExpensesHistoryTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.ToHouseholdDetailsTapped
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
 import com.section11.expenselens.ui.home.mapper.PendingInvitationsMapper
 import com.section11.expenselens.ui.home.model.CakeGraphUiModel
@@ -107,6 +109,7 @@ class HomeViewModel @Inject constructor(
                 is CreateHouseholdTapped -> handleHouseholdCreation(homeEvent)
                 is AddUserToHouseholdTapped -> handleInvitingUserToHousehold(homeEvent)
                 is HouseholdInviteTap -> handleHouseholdInviteTap(homeEvent)
+                is ToHouseholdDetailsTapped -> navigationManager.navigate(NavigateToHouseholdDetails)
             }
         }
     }

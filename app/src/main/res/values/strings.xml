@@ -5,6 +5,7 @@
 
     <!--  Home Screen Content  -->
     <string name="home_screen_sign_in_icon_content_description">Sign in</string>
+    <string name="home_screen_my_household_label">My household</string>
     <string name="home_screen_expense_history_label">My expenses</string>
     <string name="home_screen_invite_to_household_label">Add user to household</string>
     <string name="home_screen_invite_to_household_placeholder">User email</string>
@@ -51,6 +52,12 @@
     <string name="expense_history_date_prefix">Date: %s</string>
     <string name="expense_history_submitted_by">Submitted by: %s</string>
     <string name="expense_history_note_prefix">Note: %s</string>
+
+    <!--  Household Details Screen  -->
+    <string name="household_details_title">Your household: %s</string>
+    <string name="household_details_members_title">Members:</string>
+    <string name="household_details_leave_household_label">Leave Household</string>
+    <string name="household_details_delete_household_label">Delete Household</string>
 
     <!--  Common Strings  -->
     <string name="generic_error_message">Something went wrong, please try again later.</string>

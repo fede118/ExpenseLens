@@ -21,6 +21,7 @@ sealed class HomeUpstreamEvent : UpstreamUiEvent() {
 }
 
 sealed class ProfileDialogEvents: HomeUpstreamEvent() {
+    data object ToHouseholdDetailsTapped : HomeUpstreamEvent()
     data object ToExpensesHistoryTapped : HomeUpstreamEvent()
     data class AddUserToHouseholdTapped(
         val invitingUserId: String,

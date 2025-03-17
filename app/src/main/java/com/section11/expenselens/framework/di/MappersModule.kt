@@ -3,6 +3,7 @@ package com.section11.expenselens.framework.di
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.ui.history.mapper.ExpenseHistoryUiMapper
 import com.section11.expenselens.ui.home.mapper.HomeScreenUiMapper
+import com.section11.expenselens.ui.household.HouseholdDetailsUiMapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,5 +21,10 @@ class MappersModule {
     @Provides
     fun provideExpenseHistoryUiMapper(): ExpenseHistoryUiMapper {
         return ExpenseHistoryUiMapper()
+    }
+
+    @Provides
+    fun provideHouseholdDetailsUiMapper(resourceProvider: ResourceProvider): HouseholdDetailsUiMapper {
+        return HouseholdDetailsUiMapper(resourceProvider)
     }
 }
