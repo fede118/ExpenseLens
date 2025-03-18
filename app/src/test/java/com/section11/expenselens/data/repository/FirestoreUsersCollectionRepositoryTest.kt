@@ -205,4 +205,43 @@ class FirestoreUsersCollectionRepositoryTest {
 
         assertThat(result.isFailure).isTrue()
     }
+
+    @Test
+    fun `getListOfUserEmails returns list of emails`() = runTest {
+        val userIds = listOf("id", "id2")
+        val fakeEmails = listOf("email1", "email2")
+        userIds.forEachIndexed { index, idString ->
+            val docRef: DocumentReference = mock()
+            val docSnapshot: DocumentSnapshot = mock()
+            whenever(docSnapshot.getString(EMAIL_FIELD)).thenReturn(fakeEmails[index])
+            val task = Tasks.forResult(docSnapshot)
+            whenever(docRef.get()).thenReturn(task)
+            whenever(mockUserCollection.document(idString)).thenReturn(docRef)
+        }
+
+        val result = repository.getListOfUserEmails(userIds)
+
+        assert(result.isEmpty().not())
+        assert(result.size == fakeEmails.size)
+        result.forEachIndexed { index, email ->
+            assertThat(email).isEqualTo(fakeEmails[index])
+        }
+    }
+
+    @Test
+    fun `getListOfUserEmails returns empty list when no emails found`() = runTest {
+        val userIds = listOf("id", "id2")
+        userIds.forEach { idString ->
+            val docRef: DocumentReference = mock()
+            val docSnapshot: DocumentSnapshot = mock()
+            whenever(docSnapshot.getString(EMAIL_FIELD)).thenReturn(null)
+            val task = Tasks.forResult(docSnapshot)
+            whenever(docRef.get()).thenReturn(task)
+            whenever(mockUserCollection.document(idString)).thenReturn(docRef)
+        }
+
+        val result = repository.getListOfUserEmails(userIds)
+
+        assert(result.isEmpty())
+    }
 }

@@ -58,6 +58,7 @@
     <string name="household_details_members_title">Members:</string>
     <string name="household_details_leave_household_label">Leave Household</string>
     <string name="household_details_delete_household_label">Delete Household</string>
+    <string name="household_details_no_household_id_error">Oops. Something went wrong. No household found</string>
 
     <!--  Common Strings  -->
     <string name="generic_error_message">Something went wrong, please try again later.</string>

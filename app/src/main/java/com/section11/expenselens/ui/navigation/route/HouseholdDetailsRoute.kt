@@ -10,7 +10,7 @@ import com.section11.expenselens.ui.household.composables.HouseholdDetailsScreen
 fun HouseholdDetailsRoute(modifier: Modifier = Modifier) {
     val householdDetailsViewModel = hiltViewModel<HouseholdDetailsViewModel>()
 
-    HouseholdDetailsScreen(householdDetailsViewModel.uiState, modifier) { event ->
+    HouseholdDetailsScreen(householdDetailsViewModel.uiState, householdDetailsViewModel.uiEvent, modifier) { event ->
         householdDetailsViewModel.onHouseholdDetailsUpstreamEvent(event)
     }
 }

@@ -37,6 +37,7 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.UiState
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -52,12 +53,12 @@ fun HomeScreenContent(
     onEvent: (HomeUpstreamEvent) -> Unit = {}
 ) {
     val uiState by homeUiStateFlow.collectAsState()
+    HandleDownstreamEvents(downstreamUiEvent, initialState = Loading(uiState == UiState.Idle))
+
     when (uiState) {
         is UserSignedIn -> SignedInUi(uiState as UserSignedIn, dialogDownstreamUiEvent, onEvent)
         is UserSignedOut -> LoggedOutUi(uiState as UserSignedOut, onEvent)
     }
-
-    HandleDownstreamEvents(downstreamUiEvent)
 }
 
 @Composable

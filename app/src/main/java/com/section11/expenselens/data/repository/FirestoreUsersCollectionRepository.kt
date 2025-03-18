@@ -95,4 +95,14 @@ class FirestoreUsersCollectionRepository @Inject constructor(
             Result.failure(exception)
         }
     }
+
+    override suspend fun getListOfUserEmails(userIds: List<String>): List<String> {
+        val userNames = mutableListOf<String>()
+        val usersCollection = firestore.collection(USERS_COLLECTION)
+        for (userId in userIds) {
+            val userDoc = usersCollection.document(userId).get().await()
+            userDoc.getString(EMAIL_FIELD)?.let { userNames.add(it) }
+        }
+        return userNames
+    }
 }

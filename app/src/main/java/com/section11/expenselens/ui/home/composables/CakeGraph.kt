@@ -1,5 +1,6 @@
 package com.section11.expenselens.ui.home.composables
 
+import android.content.Context
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,33 +60,7 @@ fun CakeGraph(
     AndroidView(
         modifier = modifier,
         factory = { context ->
-            PieChart(context).apply {
-                description.isEnabled = false
-                isDrawHoleEnabled = true
-                legend.isEnabled = true
-                legend.textColor = surfaceColor
-                transparentCircleRadius = 0f
-                renderer = PieChartRenderer(this, this.animator, this.viewPortHandler)
-                layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-                setUsePercentValues(true)
-                setHoleColor(transparent)
-                setHoleColor(transparent)
-                setHoleColor(transparent)
-                setTransparentCircleColor(transparent)
-                setDrawCenterText(true)
-                setCenterTextColor(surfaceColor)
-                setTransparentCircleAlpha(0)
-                setDrawRoundedSlices(false)
-                setDrawEntryLabels(false)
-                spin(
-                    SPIN_ANIMATION_DURATION,
-                    rotationAngle,
-                    rotationAngle + SPIN_ANIMATION_FULL_SPIN_DEGREES,
-                    Easing.EaseInOutCubic
-                )
-                highlightValues(null)
-                setOnChartValueSelectedListener(valueChangeListener)
-            }
+            getPieChart(context, surfaceColor, transparent, valueChangeListener)
         },
         update = { pieChart ->
             val entries = graphUiModel.slices.map { slice ->
@@ -108,6 +83,42 @@ fun CakeGraph(
             pieChart.invalidate()
         }
     )
+}
+
+private fun getPieChart(
+    context: Context,
+    surfaceColor: Int,
+    transparentColor: Int,
+    valueChangeListener: OnChartValueSelectedListener
+): PieChart {
+    return PieChart(context).apply {
+        description.isEnabled = false
+        isDrawHoleEnabled = true
+        legend.isEnabled = true
+        legend.textColor = surfaceColor
+        legend.isWordWrapEnabled = true
+        transparentCircleRadius = 0f
+        renderer = PieChartRenderer(this, this.animator, this.viewPortHandler)
+        layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+        setUsePercentValues(true)
+        setHoleColor(transparentColor)
+        setHoleColor(transparentColor)
+        setHoleColor(transparentColor)
+        setTransparentCircleColor(transparentColor)
+        setDrawCenterText(true)
+        setCenterTextColor(surfaceColor)
+        setTransparentCircleAlpha(0)
+        setDrawRoundedSlices(false)
+        setDrawEntryLabels(false)
+        spin(
+            SPIN_ANIMATION_DURATION,
+            rotationAngle,
+            rotationAngle + SPIN_ANIMATION_FULL_SPIN_DEGREES,
+            Easing.EaseInOutCubic
+        )
+        highlightValues(null)
+        setOnChartValueSelectedListener(valueChangeListener)
+    }
 }
 
 @DarkAndLightPreviews

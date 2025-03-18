@@ -24,4 +24,8 @@ class HouseholdDetailsUiMapper(private val resourceProvider: ResourceProvider) {
             Leave(resourceProvider.getString(R.string.household_details_leave_household_label))
         }
     }
+
+    fun getNoHouseholdIdError(): String {
+        return resourceProvider.getString(R.string.household_details_no_household_id_error)
+    }
 }

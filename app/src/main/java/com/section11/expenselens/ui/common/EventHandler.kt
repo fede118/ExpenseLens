@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.SharedFlow
 @Composable
 fun HandleDownstreamEvents(
     downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialState: DownstreamUiEvent? = Loading(true)
 ) {
-    var isLoading by remember { mutableStateOf(false) }
-    val uiEvent by downstreamUiEvent.collectAsState(null)
+    val uiEvent by downstreamUiEvent.collectAsState(initialState)
+    var isLoading by remember { mutableStateOf((uiEvent as? Loading)?.isLoading ?: false) }
 
     LaunchedEffect(uiEvent) {
         when(uiEvent) {
