@@ -9,8 +9,11 @@ import com.section11.expenselens.data.constants.FirestoreConstants.Collections.H
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
 import com.section11.expenselens.data.mapper.toDomainExpense
+import com.section11.expenselens.data.mapper.toHouseholdDetails
+import com.section11.expenselens.domain.exceptions.HouseholdNotFoundException
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.Expense
+import com.section11.expenselens.domain.models.HouseholdDetails
 import com.section11.expenselens.domain.models.UserData
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.domain.repository.HouseholdRepository
@@ -149,6 +152,27 @@ class FirestoreHouseholdRepository @Inject constructor(
                 }
             }
             Result.success(expenses)
+        } catch (exception: FirebaseFirestoreException) {
+            Result.failure(exception)
+        }
+    }
+
+    override suspend fun getHouseholdDetails(householdId: String): Result<HouseholdDetails> {
+        return try {
+            val householdDoc = firestore.collection(HOUSEHOLDS_COLLECTION)
+                .document(householdId)
+                .get()
+                .await()
+
+            val householdDetails = householdDoc
+                .toObject(FirestoreHousehold::class.java)
+                ?.toHouseholdDetails()
+
+            if (householdDetails == null) {
+                Result.failure(HouseholdNotFoundException())
+            } else {
+                Result.success(householdDetails)
+            }
         } catch (exception: FirebaseFirestoreException) {
             Result.failure(exception)
         }

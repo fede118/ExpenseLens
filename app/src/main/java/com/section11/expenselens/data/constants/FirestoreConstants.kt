@@ -44,7 +44,6 @@ object FirestoreConstants {
             object UsersHouseholdsArray {
                 const val HOUSEHOLD_ID_FIELD = "id"
                 const val HOUSEHOLD_NAME_FIELD = "name"
-                const val HOUSEHOLD_USERS_FIELD = "users"
             }
 
             object UsersInvitationsArray {

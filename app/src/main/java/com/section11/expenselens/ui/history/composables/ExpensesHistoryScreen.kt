@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.section11.expenselens.R
+import com.section11.expenselens.ui.common.HandleDownstreamEvents
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.history.ExpenseHistoryViewModel.ExpenseHistoryUiState.ShowExpenseHistory
 import com.section11.expenselens.ui.history.event.ExpenseHistoryUpstreamEvent
@@ -36,17 +37,22 @@ import com.section11.expenselens.ui.history.event.ExpenseHistoryUpstreamEvent.On
 import com.section11.expenselens.ui.history.model.ExpenseHistoryUiItem
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.UiState
 import com.section11.expenselens.ui.utils.UiState.Error
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 @Composable
 fun ExpensesHistoryScreen(
     expenseHistoryUiState: UiState,
+    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     modifier: Modifier = Modifier,
     onEvent: (ExpenseHistoryUpstreamEvent) -> Unit
 ) {
+    HandleDownstreamEvents(downstreamUiEvent)
     when(expenseHistoryUiState) {
         is ShowExpenseHistory -> ExpenseHistoryList(
             expenseHistoryUiState.expenses,
@@ -170,6 +176,7 @@ fun ExpenseHistoryPreview() {
     Preview {
         ExpensesHistoryScreen(
             expenseHistoryUiState = ShowExpenseHistory(fakeRepo.getExpenseHistoryList()),
+            downstreamUiEvent = MutableSharedFlow(),
             onEvent = {}
         )
     }

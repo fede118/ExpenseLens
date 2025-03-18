@@ -10,6 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.QuerySnapshot
 import com.section11.expenselens.data.dto.FirestoreExpense
+import com.section11.expenselens.data.dto.FirestoreHousehold
 import com.section11.expenselens.data.mapper.toDomainExpense
 import com.section11.expenselens.domain.models.Category.HOME
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
@@ -306,6 +307,48 @@ class FirestoreHouseholdRepositoryTest {
 
         // When
         val result = repository.deleteExpenseFromHousehold(householdId, expenseId)
+
+        // Then
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `getHouseholdDetails returns householdDetails`() = runTest {
+        // Given
+        val householdId = "household123"
+        val householdName = "Test Household"
+        val usersIds = listOf("user123", "user456")
+        val firestoreHousehold = FirestoreHousehold(householdId, householdName, usersIds)
+        val mockDocumentSnapshot: DocumentSnapshot = mock {
+            on { toObject(FirestoreHousehold::class.java) } doReturn firestoreHousehold
+        }
+        val mockTask: Task<DocumentSnapshot> = Tasks.forResult(mockDocumentSnapshot)
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.get()).thenReturn(mockTask)
+
+        // When
+        val result = repository.getHouseholdDetails(householdId)
+
+        // Then
+        assertTrue(result.isSuccess)
+        val householdDetails = result.getOrNull()
+        assertEquals(householdId, householdDetails?.id)
+        assertEquals(householdName, householdDetails?.name)
+        assertEquals(usersIds, householdDetails?.usersIds)
+    }
+
+    @Test
+    fun `getHouseholdDetails returns failure on exception`() = runTest {
+        // Given
+        val householdId = "household123"
+        val firebaseException: FirebaseFirestoreException = mock()
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.get()).thenReturn(Tasks.forException(firebaseException))
+
+        // When
+        val result = repository.getHouseholdDetails(householdId)
 
         // Then
         assertTrue(result.isFailure)

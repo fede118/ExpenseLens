@@ -9,6 +9,7 @@ import com.section11.expenselens.ui.history.event.ExpenseHistoryUpstreamEvent
 import com.section11.expenselens.ui.history.event.ExpenseHistoryUpstreamEvent.OnExpenseHistoryItemDeleted
 import com.section11.expenselens.ui.history.mapper.ExpenseHistoryUiMapper
 import com.section11.expenselens.ui.history.model.ExpenseHistoryUiItem
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.ShowSnackBar
 import com.section11.expenselens.ui.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,6 +44,7 @@ class ExpenseHistoryViewModel @Inject constructor(
             } else {
                 _uiState.value = UiState.Error("User not found")
             }
+            _uiEvent.emit(Loading(false))
         }
     }
 

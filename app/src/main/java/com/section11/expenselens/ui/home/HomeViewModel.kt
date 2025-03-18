@@ -1,6 +1,5 @@
 package com.section11.expenselens.ui.home
 
-import android.content.Context
 import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.viewModelScope
@@ -14,12 +13,10 @@ import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.framework.credentials.GoogleCredentialManager
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToCameraScreen
-import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensesHistory
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToHouseholdDetails
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToManualExpenseInput
 import com.section11.expenselens.ui.common.AbstractViewModel
-import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedOut
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.AddUserToHouseholdLoading
@@ -229,19 +226,6 @@ class HomeViewModel @Inject constructor(
 
     fun updateHomeInformation() {
         getSignInOrSignedOutStatus()
-    }
-
-    // TODO remove this on first release version of the app
-    fun dummyButtonForTesting(context: Context) {
-        val fakeRepo = FakeRepositoryForPreviews(context)
-        viewModelScope.launch(dispatcher) {
-            navigationManager.navigate(
-                NavigateToExpensePreview(
-                    extractedText = fakeRepo.getExtractedText(),
-                    suggestedExpenseInformation = fakeRepo.getExpenseInformation()
-                )
-            )
-        }
     }
 
     sealed class HomeUiState : UiState() {

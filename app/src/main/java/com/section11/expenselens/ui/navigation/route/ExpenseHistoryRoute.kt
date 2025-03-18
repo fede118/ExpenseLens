@@ -13,7 +13,7 @@ fun ExpenseHistoryRoute(modifier: Modifier = Modifier) {
     val expenseHistoryViewModel = hiltViewModel<ExpenseHistoryViewModel>()
     val expenseHistoryUiState by expenseHistoryViewModel.uiState.collectAsState()
 
-    ExpensesHistoryScreen(expenseHistoryUiState, modifier) { event ->
+    ExpensesHistoryScreen(expenseHistoryUiState, expenseHistoryViewModel.uiEvent,  modifier) { event ->
         expenseHistoryViewModel.onUpstreamEvent(event)
     }
 }

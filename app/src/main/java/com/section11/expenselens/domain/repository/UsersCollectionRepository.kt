@@ -12,4 +12,6 @@ interface UsersCollectionRepository {
     suspend fun addHouseholdToUser(userId: String, household: UserHousehold): Result<Unit>
 
     suspend fun updateNotificationToken(userId: String, newToken: String): Result<Unit>
+
+    suspend fun getListOfUserEmails(userIds: List<String>): List<String>
 }

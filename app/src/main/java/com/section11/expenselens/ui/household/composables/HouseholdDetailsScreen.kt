@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.section11.expenselens.R
+import com.section11.expenselens.ui.common.HandleDownstreamEvents
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.household.HouseholdDetailsViewModel.HouseholdDetailsUiState.ShowHouseholdDetails
 import com.section11.expenselens.ui.household.HouseholdDetailsViewModel.HouseholdDetailsUpstreamEvent
@@ -26,17 +27,22 @@ import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel
 import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel.HouseholdDetailsCta.Delete
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
+import com.section11.expenselens.ui.utils.DownstreamUiEvent
 import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.UiState
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun HouseholdDetailsScreen(
     uiStateFlow: StateFlow<UiState>,
+    downstreamUiEvent: SharedFlow<DownstreamUiEvent>,
     modifier: Modifier = Modifier,
     onEvent: (HouseholdDetailsUpstreamEvent) -> Unit
 ) {
+    HandleDownstreamEvents(downstreamUiEvent)
     val uiState by uiStateFlow.collectAsState()
 
     when(val valState = uiState) {
@@ -106,6 +112,6 @@ fun HouseholdDetailsScreenPreview() {
 
     val uiState = MutableStateFlow(ShowHouseholdDetails(fakeRepo.getHouseholdDetails()))
     Preview {
-        HouseholdDetailsScreen(uiState) {}
+        HouseholdDetailsScreen(uiState, MutableSharedFlow()) {}
     }
 }
