@@ -19,7 +19,8 @@ data class HouseholdDetails(
  * - returning a Pair or something similar
  */
 data class HouseholdDetailsWithUserEmails(
-    var id: String,
+    var currentUserId: String,
+    var householdId: String,
     var name: String,
     var usersEmails: List<String>
 )

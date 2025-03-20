@@ -9,6 +9,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.QuerySnapshot
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.USERS_FIELD
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
 import com.section11.expenselens.data.mapper.toDomainExpense
@@ -27,6 +28,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.util.Date
 
@@ -352,5 +354,52 @@ class FirestoreHouseholdRepositoryTest {
 
         // Then
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `removeUserFromHousehold should call update with new empty list for 1 user`() = runTest {
+        // Given
+        val userId = "user123"
+        val householdId = "household456"
+        val docSnapshot: DocumentSnapshot = mock()
+        val mockTask: Task<DocumentSnapshot> = Tasks.forResult(docSnapshot)
+        val mockHousehold: FirestoreHousehold = mock()
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.get()).thenReturn(mockTask)
+        whenever(docSnapshot.toObject(FirestoreHousehold::class.java)).thenReturn(mockHousehold)
+        whenever(mockHousehold.users).thenReturn(List(1) { userId })
+        val mockUpdateTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockDocument.update(anyString(), any())).thenReturn(mockUpdateTask)
+
+        // When
+        repository.removeUserFromHousehold(userId, householdId)
+
+        // Then
+        verify(mockDocument).update(USERS_FIELD, emptyList<String>())
+    }
+
+    @Test
+    fun `removeUserFromHousehold should call update with rest of the users`() = runTest {
+        // Given
+        val userId = "user123"
+        val someOtherUser = "otherUserId"
+        val householdId = "household456"
+        val docSnapshot: DocumentSnapshot = mock()
+        val mockTask: Task<DocumentSnapshot> = Tasks.forResult(docSnapshot)
+        val mockHousehold: FirestoreHousehold = mock()
+        whenever(mockFirestore.collection(HOUSEHOLD_COLLECTION)).thenReturn(mockCollection)
+        whenever(mockCollection.document(householdId)).thenReturn(mockDocument)
+        whenever(mockDocument.get()).thenReturn(mockTask)
+        whenever(docSnapshot.toObject(FirestoreHousehold::class.java)).thenReturn(mockHousehold)
+        whenever(mockHousehold.users).thenReturn(listOf(userId, someOtherUser))
+        val mockUpdateTask: Task<Void> = Tasks.forResult(null)
+        whenever(mockDocument.update(anyString(), any())).thenReturn(mockUpdateTask)
+
+        // When
+        repository.removeUserFromHousehold(userId, householdId)
+
+        // Then
+        verify(mockDocument).update(USERS_FIELD, listOf(someOtherUser))
     }
 }

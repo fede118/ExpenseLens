@@ -3,10 +3,11 @@ package com.section11.expenselens.ui.review
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
-import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.domain.usecase.HouseholdUseCase
+import com.section11.expenselens.domain.usecase.SignInUseCase
 import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateHome
+import com.section11.expenselens.ui.common.UiConstants.SNACKBAR_DELAY
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUiState.ShowExpenseReview
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.ExpenseSubmitted
 import com.section11.expenselens.ui.review.ExpenseReviewViewModel.ExpenseReviewUpstreamEvent.UserInputEvent
@@ -31,7 +32,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val SNACKBAR_DELAY = 1000L
 private const val AUTHENTICATION_ERROR = "Authentication Error occurred, please sign in again"
 private const val SUBMIT_EXPENSE_SUCCESS = "Expense added successfully"
 private const val SUBMIT_EXPENSE_ERROR = "Couldn't submit expense, try again later"

@@ -30,4 +30,6 @@ interface HouseholdRepository {
     ): Result<List<Expense>>
 
     suspend fun getHouseholdDetails(householdId: String): Result<HouseholdDetails>
+
+    suspend  fun removeUserFromHousehold(userId: String, householdId: String)
 }

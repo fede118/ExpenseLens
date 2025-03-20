@@ -14,6 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -24,6 +27,7 @@ import com.section11.expenselens.ui.household.HouseholdDetailsViewModel.Househol
 import com.section11.expenselens.ui.household.HouseholdDetailsViewModel.HouseholdDetailsUpstreamEvent
 import com.section11.expenselens.ui.household.HouseholdDetailsViewModel.HouseholdDetailsUpstreamEvent.OnCtaClicked
 import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel
+import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel.HouseholdDetailsCta
 import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel.HouseholdDetailsCta.Delete
 import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
@@ -46,7 +50,7 @@ fun HouseholdDetailsScreen(
     val uiState by uiStateFlow.collectAsState()
 
     when(val valState = uiState) {
-       is ShowHouseholdDetails -> HouseholdDetails(valState.householdDetails, modifier, onEvent)
+        is ShowHouseholdDetails -> HouseholdDetails(valState.householdDetails, modifier, onEvent)
     }
 }
 
@@ -59,7 +63,8 @@ fun HouseholdDetails(
     val dimens = LocalDimens.current
 
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
             .padding(dimens.m2)
             .statusBarsPadding()
     ) {
@@ -88,29 +93,55 @@ fun HouseholdDetails(
         }
 
         Spacer(Modifier.height(dimens.m1))
-        with(householdDetailsModel.cta) {
-            Button(
-                onClick = { onEvent(OnCtaClicked(this)) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = if (this is Delete) {
-                    ButtonDefaults.buttonColors()
-                        .copy(containerColor = MaterialTheme.colorScheme.error)
-                } else {
-                    ButtonDefaults.buttonColors()
-                }
-            ) {
-                Text(text = label)
+        LeaveOrDeleteButton(householdDetailsModel.cta, onEvent)
+    }
+}
+
+@Composable
+fun LeaveOrDeleteButton(
+    ctaModel: HouseholdDetailsCta,
+    onEvent: (HouseholdDetailsUpstreamEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isButtonEnabled by remember { mutableStateOf(true) }
+    Button(
+        onClick = {
+            if (isButtonEnabled) {
+                onEvent(OnCtaClicked(ctaModel))
+                isButtonEnabled = false
             }
-        }
+        },
+        modifier = modifier.fillMaxWidth(),
+        colors = if (ctaModel is Delete) {
+            ButtonDefaults.buttonColors()
+                .copy(containerColor = MaterialTheme.colorScheme.error)
+        } else {
+            ButtonDefaults.buttonColors()
+        },
+        enabled = isButtonEnabled
+    ) {
+        Text(text = ctaModel.label)
     }
 }
 
 @DarkAndLightPreviews
 @Composable
-fun HouseholdDetailsScreenPreview() {
+fun HouseholdDetailsOneUserPreviewScreenPreview() {
     val fakeRepo = FakeRepositoryForPreviews(LocalContext.current)
 
     val uiState = MutableStateFlow(ShowHouseholdDetails(fakeRepo.getHouseholdDetails()))
+    Preview {
+        HouseholdDetailsScreen(uiState, MutableSharedFlow()) {}
+    }
+}
+
+@Suppress("MagicNumber") // This is just a preview
+@DarkAndLightPreviews
+@Composable
+fun HouseholdDetailsMoreUsersScreenPreview() {
+    val fakeRepo = FakeRepositoryForPreviews(LocalContext.current)
+
+    val uiState = MutableStateFlow(ShowHouseholdDetails(fakeRepo.getHouseholdDetails(3)))
     Preview {
         HouseholdDetailsScreen(uiState, MutableSharedFlow()) {}
     }

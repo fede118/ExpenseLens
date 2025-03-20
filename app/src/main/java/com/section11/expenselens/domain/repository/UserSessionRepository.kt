@@ -12,5 +12,5 @@ interface UserSessionRepository {
 
     suspend fun updateNotificationToken(newToken: String)
 
-    suspend fun updateCurrentHouseholdId(householdId: String)
+    suspend fun updateCurrentHouseholdId(householdId: String?)
 }
