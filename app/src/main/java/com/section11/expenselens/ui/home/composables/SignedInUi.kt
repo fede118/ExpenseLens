@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -25,7 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import com.section11.expenselens.R
+import com.section11.expenselens.ui.common.BoxFullScreenContainer
 import com.section11.expenselens.ui.common.ContentWithBadge
 import com.section11.expenselens.ui.common.MaxCharsOutlinedTextField
 import com.section11.expenselens.ui.common.ProfilePictureIcon
@@ -125,7 +128,20 @@ fun ColumnScope.SignedInGreetingAndIcon(
     }
 }
 
-
+@Composable
+fun Greeting(greeting: String) {
+    val dimens = LocalDimens.current
+    Spacer(modifier = Modifier.padding(dimens.m3))
+    Column {
+        Text(
+            modifier = Modifier
+                .padding(horizontal = dimens.m2)
+                .fillMaxWidth(),
+            text = greeting,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
 
 @Composable
 fun ExistingHouseholdUi(
@@ -136,7 +152,7 @@ fun ExistingHouseholdUi(
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
     val dimens = LocalDimens.current
-    BoxHomeScreenContainer(
+    BoxFullScreenContainer(
         boxContent = { AddExpenseButton(onEvent = onEvent) }
     ) {
         SignedInGreetingAndIcon(userInfo, true, dialogDownstreamUiEvent, greeting, onEvent) {
@@ -165,7 +181,7 @@ fun CreateHouseholdUi(
     var text by remember { mutableStateOf(String()) }
     val dimens = LocalDimens.current
 
-    BoxHomeScreenContainer {
+    BoxFullScreenContainer {
         SignedInGreetingAndIcon(userInfo, false, dialogDownstreamUiEvent, greeting, onEvent) {
             Spacer(Modifier.height(dimens.m1))
             Text(

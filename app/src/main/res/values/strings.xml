@@ -4,7 +4,7 @@
     <string name="welcome_greeting">Hello, Welcome to ExpenseLens</string>
 
     <!--  Home Screen Content  -->
-    <string name="home_screen_sign_in_icon_content_description">Sign in</string>
+    <string name="home_screen_sign_in">Sign In</string>
     <string name="home_screen_my_household_label">My household</string>
     <string name="home_screen_expense_history_label">My expenses</string>
     <string name="home_screen_invite_to_household_label">Add user to household</string>
@@ -72,4 +72,5 @@
 
     <!--  Content Descriptors  -->
     <string name="content_description_profile_pic">Profile Picture</string>
+    <string name="content_description_app_icon">App logo</string>
 </resources>
