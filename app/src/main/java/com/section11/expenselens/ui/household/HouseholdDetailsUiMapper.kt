@@ -1,6 +1,7 @@
 package com.section11.expenselens.ui.household
 
 import com.section11.expenselens.R
+import com.section11.expenselens.domain.models.HouseholdDetailsWithUserEmails
 import com.section11.expenselens.framework.utils.ResourceProvider
 import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel
 import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel.HouseholdDetailsCta
@@ -9,12 +10,18 @@ import com.section11.expenselens.ui.household.model.HouseholdDetailsUiModel.Hous
 
 class HouseholdDetailsUiMapper(private val resourceProvider: ResourceProvider) {
 
-    fun getHouseholdDetailsUiModel(householdName: String, usersIds: List<String>): HouseholdDetailsUiModel {
-        return HouseholdDetailsUiModel(
-            householdName = householdName,
-            users = usersIds,
-            cta = getLeaverOrDeleteCta(usersIds)
-        )
+    fun getHouseholdDetailsUiModel(
+        householdDetails: HouseholdDetailsWithUserEmails
+    ): HouseholdDetailsUiModel {
+        return with(householdDetails) {
+            HouseholdDetailsUiModel(
+                userId = currentUserId,
+                householdId = householdId,
+                householdName = name,
+                users = usersEmails,
+                cta = getLeaverOrDeleteCta(usersEmails)
+            )
+        }
     }
 
     private fun getLeaverOrDeleteCta(users: List<String>): HouseholdDetailsCta {
@@ -27,5 +34,23 @@ class HouseholdDetailsUiMapper(private val resourceProvider: ResourceProvider) {
 
     fun getNoHouseholdIdError(): String {
         return resourceProvider.getString(R.string.household_details_no_household_id_error)
+    }
+
+    fun getLeaveHouseholdSuccessMessage(householdName: String): String {
+        return resourceProvider.getString(
+            R.string.household_details_leave_household_success,
+            householdName
+        )
+    }
+
+    fun getLeaveHouseholdErrorMessage(): String {
+        return resourceProvider.getString(R.string.generic_error_message)
+    }
+
+    fun getHouseholdDeletedSuccessMessage(householdName: String): String {
+        return resourceProvider.getString(
+            R.string.household_details_delete_household_success,
+            householdName
+        )
     }
 }

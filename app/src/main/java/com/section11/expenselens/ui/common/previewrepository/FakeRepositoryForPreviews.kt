@@ -5,6 +5,7 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.firebase.Timestamp
 import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.Expense
+import com.section11.expenselens.domain.models.HouseholdDetailsWithUserEmails
 import com.section11.expenselens.domain.models.HouseholdExpenses
 import com.section11.expenselens.domain.models.HouseholdInvite
 import com.section11.expenselens.domain.models.HouseholdInvite.HouseholdInviteStatus.Pending
@@ -112,8 +113,12 @@ class FakeRepositoryForPreviews(context: Context) {
 
     fun getHouseholdDetails(usersInHousehold: Int = 1): HouseholdDetailsUiModel {
         return householdDetailsUiMapper.getHouseholdDetailsUiModel(
-            "Preview Test Household",
-            List(usersInHousehold) { "User $it" }
+            HouseholdDetailsWithUserEmails(
+                "id",
+                "userId",
+                "Preview Test Household",
+                List(usersInHousehold) { "User $it" }
+            )
         )
     }
 }

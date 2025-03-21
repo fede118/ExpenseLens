@@ -68,9 +68,15 @@ class GoogleUserSessionRepository @Inject constructor(
         }
     }
 
-    override suspend fun updateCurrentHouseholdId(householdId: String) {
-        dataStorePreferences.edit { prefs ->
-            prefs[currentHouseholdIdPrefKey] = householdId
+    override suspend fun updateCurrentHouseholdId(householdId: String?) {
+        if (householdId == null) {
+            dataStorePreferences.edit { prefs ->
+                prefs.remove(currentHouseholdIdPrefKey)
+            }
+        } else {
+            dataStorePreferences.edit { prefs ->
+                prefs[currentHouseholdIdPrefKey] = householdId
+            }
         }
     }
 }

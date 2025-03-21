@@ -78,6 +78,27 @@ class FirestoreUsersCollectionRepository @Inject constructor(
         }
     }
 
+    override suspend fun removeHouseholdFromUser(
+        userId: String,
+        householdId: String
+    ): Result<Unit> {
+        val userDocRef = firestore.collection(USERS_COLLECTION).document(userId)
+        return try {
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(userDocRef)
+                val households = (snapshot.get(HOUSEHOLDS_FIELD) as? List<*>)?.mapToHouseholdsList()
+
+                val updatedHouseholds = households?.filterNot { it.id == householdId }
+
+                transaction.update(userDocRef, HOUSEHOLDS_FIELD, updatedHouseholds)
+            }.await()
+
+            Result.success(Unit)
+        } catch (exception: FirebaseFirestoreException) {
+            Result.failure(exception)
+        }
+    }
+
     override suspend fun updateNotificationToken(userId: String, newToken: String): Result<Unit> {
         return try {
             val usersCollection = firestore.collection(USERS_COLLECTION)

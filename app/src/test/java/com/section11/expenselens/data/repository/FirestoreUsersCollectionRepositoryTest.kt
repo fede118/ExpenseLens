@@ -14,6 +14,8 @@ import com.section11.expenselens.data.constants.FirestoreConstants.Collections.U
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.EMAIL_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.HOUSEHOLDS_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.NOTIFICATIONS_TOKEN_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersHouseholdsArray.HOUSEHOLD_ID_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.UsersCollection.UsersHouseholdsArray.HOUSEHOLD_NAME_FIELD
 import com.section11.expenselens.domain.models.UserHousehold
 import com.section11.expenselens.ui.utils.getUserData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -243,5 +245,65 @@ class FirestoreUsersCollectionRepositoryTest {
         val result = repository.getListOfUserEmails(userIds)
 
         assert(result.isEmpty())
+    }
+
+    @Test
+    fun `removeHouseholdFromUser removes household from user document`() = runTest {
+        val existingHousehold = UserHousehold("someHouseholdId", "Test Household 1")
+        val existingHouseholds = listOf(
+            mapOf("id" to existingHousehold.id, "name" to existingHousehold.name)
+        )
+
+        doAnswer { invocation ->
+            val transactionFunction = invocation.arguments[0] as Transaction.Function<Unit>
+            transactionFunction.apply(mockTransaction) // Call it with the mock transaction
+            Tasks.forResult(Unit) // Return a successful Task
+        }.whenever(mockFirestore).runTransaction(any<Transaction.Function<Unit>>())
+
+        whenever(mockTransaction.get(mockDocumentReference)).thenReturn(mockDocumentSnapshot)
+        whenever(mockDocumentSnapshot.get(HOUSEHOLDS_FIELD)).thenReturn(existingHouseholds)
+
+        val result = repository.removeHouseholdFromUser(testUserId, existingHousehold.id)
+
+        verify(mockTransaction).update(
+            mockDocumentReference,
+            HOUSEHOLDS_FIELD,
+            emptyList<String>()
+        )
+        assertThat(result.isSuccess).isTrue()
+    }
+
+    @Test
+    fun `removeHouseholdFromUser removes household from user document with more than 1 household`() = runTest {
+        val existingHousehold = UserHousehold("someHouseholdId", "Test Household 1")
+        val someOtherHousehold = UserHousehold("someOtherHouseholdId", "Test Household 2")
+        val existingHouseholds = listOf(
+            mapOf(
+                HOUSEHOLD_ID_FIELD to existingHousehold.id,
+                HOUSEHOLD_NAME_FIELD to existingHousehold.name
+            ),
+            mapOf(
+                HOUSEHOLD_ID_FIELD to someOtherHousehold.id,
+                HOUSEHOLD_NAME_FIELD to someOtherHousehold.name
+            )
+        )
+
+        doAnswer { invocation ->
+            val transactionFunction = invocation.arguments[0] as Transaction.Function<Unit>
+            transactionFunction.apply(mockTransaction) // Call it with the mock transaction
+            Tasks.forResult(Unit) // Return a successful Task
+        }.whenever(mockFirestore).runTransaction(any<Transaction.Function<Unit>>())
+
+        whenever(mockTransaction.get(mockDocumentReference)).thenReturn(mockDocumentSnapshot)
+        whenever(mockDocumentSnapshot.get(HOUSEHOLDS_FIELD)).thenReturn(existingHouseholds)
+
+        val result = repository.removeHouseholdFromUser(testUserId, existingHousehold.id)
+
+        verify(mockTransaction).update(
+            mockDocumentReference,
+            HOUSEHOLDS_FIELD,
+            listOf(someOtherHousehold)
+        )
+        assertThat(result.isSuccess).isTrue()
     }
 }

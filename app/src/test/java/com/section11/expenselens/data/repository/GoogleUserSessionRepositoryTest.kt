@@ -1,31 +1,27 @@
 package com.section11.expenselens.data.repository
 
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.section11.expenselens.domain.models.UserData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.verify
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
+import java.nio.file.Files
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GoogleUserSessionRepositoryTest {
 
-    private val prefs: Preferences = mock()
-    private val dataStorePreferences: DataStore<Preferences> = mock()
     private val tokenPrefKey = stringPreferencesKey("token")
     private val userIdPrefKey = stringPreferencesKey("userId")
     private val displayNamePrefKey = stringPreferencesKey("displayName")
@@ -33,13 +29,20 @@ class GoogleUserSessionRepositoryTest {
     private val emailPrefKey = stringPreferencesKey("email")
     private val notificationTokenPrefKey = stringPreferencesKey("notificationToken")
     private val currentHouseholdIdKey = stringPreferencesKey("currentHouseholdId")
-
+    private val testScope = TestScope()
+    
+    private lateinit var testDataStore: DataStore<Preferences>
     private lateinit var repository: GoogleUserSessionRepository
 
     @Before
     fun setup() {
+        testDataStore = PreferenceDataStoreFactory.create(
+            scope = testScope.backgroundScope,
+            produceFile = { Files.createTempFile("test_prefs", ".preferences_pb").toFile() }
+        )
+        
         repository = GoogleUserSessionRepository(
-            dataStorePreferences,
+            testDataStore,
             tokenPrefKey,
             userIdPrefKey,
             displayNamePrefKey,
@@ -51,25 +54,7 @@ class GoogleUserSessionRepositoryTest {
     }
 
     @Test
-    fun `saveUser should store user data in preferences`() = runTest {
-        // Given
-        val user = UserData(
-            "testToken",
-            "user123",
-            "John Doe",
-            "ProfilePic",
-            "email",
-            "notificationToken"
-        )
-
-        // When
-        repository.saveUser(user)
-
-        verify(dataStorePreferences).edit(anyOrNull())
-    }
-
-    @Test
-    fun `saveUser should save user data to preferences`() = runTest {
+    fun `saveUser should save user data to preferences`() = testScope.runTest {
         // Given
         val user = UserData(
             "testToken",
@@ -83,22 +68,28 @@ class GoogleUserSessionRepositoryTest {
         repository.saveUser(user)
         advanceUntilIdle()
 
-        val captor = argumentCaptor<suspend(MutablePreferences) -> Unit>()
         // Then
-        verify(dataStorePreferences).edit(captor.capture())
+        val prefs = testDataStore.data.first()
+        assertEquals("testToken", prefs[tokenPrefKey])
+        assertEquals("user123", prefs[userIdPrefKey])
+        assertEquals("John Doe", prefs[displayNamePrefKey])
+        assertEquals("ProfilePic", prefs[profilePicPrefKey])
+        assertEquals("email", prefs[emailPrefKey])
+        assertEquals("notificationToken", prefs[notificationTokenPrefKey])
     }
 
     @Test
-    fun `getUser should return user data when stored`() = runTest {
+    fun `getUser should return user data when stored`() = testScope.runTest {
         // Given
-        whenever(dataStorePreferences.data).thenReturn(flowOf(prefs))
-        whenever(prefs[tokenPrefKey]).thenReturn("testToken")
-        whenever(prefs[userIdPrefKey]).thenReturn("user123")
-        whenever(prefs[displayNamePrefKey]).thenReturn("John Doe")
-        whenever(prefs[profilePicPrefKey]).thenReturn("https://example.com/profile.jpg")
-        whenever(prefs[emailPrefKey]).thenReturn("email")
-        whenever(prefs[notificationTokenPrefKey]).thenReturn("notificationToken")
-        whenever(prefs[currentHouseholdIdKey]).thenReturn("householdId")
+        testDataStore.edit { prefs ->
+            prefs[tokenPrefKey] = "testToken"
+            prefs[userIdPrefKey] = "user123"
+            prefs[displayNamePrefKey] = "John Doe"
+            prefs[profilePicPrefKey] = "https://example.com/profile.jpg"
+            prefs[emailPrefKey] = "email"
+            prefs[notificationTokenPrefKey] = "notificationToken"
+            prefs[currentHouseholdIdKey] = "householdId"
+        }
 
         // When
         val user = repository.getUser()
@@ -115,11 +106,14 @@ class GoogleUserSessionRepositoryTest {
     }
 
     @Test
-    fun `getUser should return null if token or id is missing`() = runTest {
+    fun `getUser should return null if token or id is missing`() = testScope.runTest {
         // Given
-        whenever(dataStorePreferences.data).thenReturn(flowOf(prefs))
-        whenever(prefs[tokenPrefKey]).thenReturn(null)
-        whenever(prefs[userIdPrefKey]).thenReturn(null)
+        testDataStore.edit {
+            it.remove(tokenPrefKey)
+            it.remove(userIdPrefKey)
+            it[displayNamePrefKey] = "John Doe"
+            it[profilePicPrefKey] = "https://example.com/profile.jpg"
+        }
 
         // When
         val user = repository.getUser()
@@ -129,16 +123,22 @@ class GoogleUserSessionRepositoryTest {
     }
 
     @Test
-    fun `clearUser should clear preferences`() = runTest {
+    fun `clearUser should clear preferences`() = testScope.runTest {
         // When
         repository.clearUser()
 
         // Then
-        verify(dataStorePreferences).edit(anyOrNull())
+        val prefs = testDataStore.data.first()
+        assertFalse(prefs.contains(userIdPrefKey))
+        assertFalse(prefs.contains(tokenPrefKey))
+        assertFalse(prefs.contains(displayNamePrefKey))
+        assertFalse(prefs.contains(profilePicPrefKey))
+        assertFalse(prefs.contains(emailPrefKey))
+        assertFalse(prefs.contains(notificationTokenPrefKey))
     }
 
     @Test
-    fun `updateNotificationToken should update notification token in preferences`() = runTest {
+    fun `updateNotificationToken should update notification token in preferences`() = testScope.runTest {
         // Given
         val newToken = "newToken"
 
@@ -147,19 +147,30 @@ class GoogleUserSessionRepositoryTest {
         advanceUntilIdle()
 
         // Then
-        verify(dataStorePreferences).edit(anyOrNull())
+        val prefs = testDataStore.data.first()
+        assert(prefs[notificationTokenPrefKey] == newToken)
+    }
+    
+    @Test
+    fun `updateCurrentHouseholdId should remove current household id from preferences`() = testScope.runTest {
+        // Given
+        testDataStore.edit { it[currentHouseholdIdKey] = "testHouseholdId" }
+
+        // When
+        repository.updateCurrentHouseholdId(null)
+
+        // Then
+        val prefs = testDataStore.data.first()
+        assertFalse(prefs.contains(currentHouseholdIdKey))
     }
 
     @Test
-    fun `update current household id should update current household id in preferences`() = runTest {
-        // Given
-        val householdId = "householdId"
-
+    fun `updateCurrentHouseholdId should save current household id to preferences`() = testScope.runTest {
         // When
-        repository.updateCurrentHouseholdId(householdId)
-        advanceUntilIdle()
+        repository.updateCurrentHouseholdId("newHouseholdId")
 
         // Then
-        verify(dataStorePreferences).edit(anyOrNull())
+        val prefs = testDataStore.data.first()
+        assertEquals("newHouseholdId", prefs[currentHouseholdIdKey])
     }
 }

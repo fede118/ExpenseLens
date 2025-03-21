@@ -25,8 +25,6 @@ fun ExpenseReviewRoute(expenseInfo: SuggestedExpenseInformation?, extractedTextF
 
     InitExpenseReviewViewModel(expenseReviewViewModel, expenseInfo, extractedTextFromImage)
 
-    InterceptShowSnackBarDownStreamEvents(expenseReviewViewModel.uiEvent)
-
     ExpenseReviewScreen(
         expenseReviewUiStateFlow = expenseReviewViewModel.uiState,
         downstreamUiEvent = expenseReviewViewModel.uiEvent,

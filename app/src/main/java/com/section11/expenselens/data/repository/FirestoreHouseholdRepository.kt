@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HOUSEHOLDS_COLLECTION
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.EXPENSES_FIELD
 import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.ExpensesArray.TIMESTAMP_FIELD
+import com.section11.expenselens.data.constants.FirestoreConstants.Collections.HouseholdsCollection.USERS_FIELD
 import com.section11.expenselens.data.dto.FirestoreExpense
 import com.section11.expenselens.data.dto.FirestoreHousehold
 import com.section11.expenselens.data.mapper.toDomainExpense
@@ -175,6 +176,20 @@ class FirestoreHouseholdRepository @Inject constructor(
             }
         } catch (exception: FirebaseFirestoreException) {
             Result.failure(exception)
+        }
+    }
+
+    override suspend fun removeUserFromHousehold(userId: String, householdId: String) {
+        val householdDocRef = firestore.collection(HOUSEHOLDS_COLLECTION)
+            .document(householdId)
+        val householdDocSnapshot = householdDocRef.get().await()
+
+        val household = householdDocSnapshot.toObject(FirestoreHousehold::class.java)
+        val users = household?.users?.toMutableList()
+        users?.remove(userId)
+
+        if (users != null) {
+            householdDocRef.update(USERS_FIELD, users).await()
         }
     }
 }

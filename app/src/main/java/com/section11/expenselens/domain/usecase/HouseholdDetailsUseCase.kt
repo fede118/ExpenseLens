@@ -22,9 +22,31 @@ class HouseholdDetailsUseCase @Inject constructor(
                 onFailure = { Result.failure(it) },
                 onSuccess = {
                     val userEmails = usersCollectionRepository.getListOfUserEmails(it.usersIds)
-                    Result.success(HouseholdDetailsWithUserEmails(it.id, it.name, userEmails))
+                    Result.success(
+                        HouseholdDetailsWithUserEmails(userData.id, it.id, it.name, userEmails)
+                    )
                 }
             )
         }
+    }
+
+    suspend fun leaveHousehold(userId: String, householdId: String): Result<Unit> {
+        usersCollectionRepository.removeHouseholdFromUser(userId, householdId)
+        householdRepository.removeUserFromHousehold(userId, householdId)
+        val userHouseholds = usersCollectionRepository.getUserHouseholds(userId)
+        if (userHouseholds.isEmpty()) {
+            userSessionRepository.updateCurrentHouseholdId(null)
+        } else {
+            userSessionRepository.updateCurrentHouseholdId(userHouseholds.first().id)
+        }
+        return Result.success(Unit)
+    }
+
+    suspend fun deleteHousehold(userId: String, householdId: String): Result<Unit> {
+        return usersCollectionRepository.removeHouseholdFromUser(userId, householdId)
+            .fold(
+                onSuccess = { householdRepository.deleteHousehold(userId, householdId) },
+                onFailure = { Result.failure(it) }
+            )
     }
 }
