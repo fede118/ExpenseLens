@@ -72,25 +72,28 @@ class HomeViewModelTest {
     private val signInUseCase: SignInUseCase = mock()
     private val householdUseCase: HouseholdUseCase = mock()
     private val householdInvitationsUseCase: HouseholdInvitationUseCase = mock()
-    private val greeting = "hello"
 
     private lateinit var viewModel: HomeViewModel
 
     @Before
     fun setup() {
-        whenever(mapper.getGreeting()).thenReturn(greeting)
         Dispatchers.setMain(testDispatcher)
-        viewModel = HomeViewModel(
-            navigationManager,
-            credentialManager,
-            signInUseCase,
-            householdUseCase,
-            householdInvitationsUseCase,
-            mapper,
-            invitesMapper,
-            testDispatcher
-        )
+        runTest {
+            whenever(signInUseCase.getCurrentUser()).thenReturn(Result.failure(Exception("")))
+        }
+        viewModel = initViewModel()
     }
+
+    private fun initViewModel() = HomeViewModel(
+        navigationManager,
+        credentialManager,
+        signInUseCase,
+        householdUseCase,
+        householdInvitationsUseCase,
+        mapper,
+        invitesMapper,
+        testDispatcher
+    )
 
     @After
     fun tearDown() {
@@ -101,54 +104,27 @@ class HomeViewModelTest {
     fun `on init should get user information to update uiState to user signed in`() = runTest {
         mockInitWithSomeUserInfo()
 
-        viewModel = HomeViewModel(
-            navigationManager,
-            credentialManager,
-            signInUseCase,
-            householdUseCase,
-            householdInvitationsUseCase,
-            mapper,
-            invitesMapper,
-            testDispatcher
-        )
+        val newViewModel = initViewModel()
         advanceUntilIdle()
 
-        assert(viewModel.uiState.value is UserSignedIn)
+        assert(newViewModel.uiState.value is UserSignedIn)
     }
 
     @Test
     fun `on init should get user information if null update uiState to user signed out`() = runTest {
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.failure(mock()))
 
-        viewModel = HomeViewModel(
-            navigationManager,
-            credentialManager,
-            signInUseCase,
-            householdUseCase,
-            householdInvitationsUseCase,
-            mapper,
-            invitesMapper,
-            testDispatcher
-        )
+        val newViewModel = initViewModel()
         advanceUntilIdle()
 
-        assertEquals(UserSignedOut(greeting), viewModel.uiState.value)
+        assertEquals(UserSignedOut, newViewModel.uiState.value)
     }
 
     @Test
     fun `on init if user signed in then should try to get household`() = runTest {
         mockInitWithSomeUserInfo()
 
-        viewModel = HomeViewModel(
-            navigationManager,
-            credentialManager,
-            signInUseCase,
-            householdUseCase,
-            householdInvitationsUseCase,
-            mapper,
-            invitesMapper,
-            testDispatcher
-        )
+        initViewModel()
         advanceUntilIdle()
 
         verify(householdUseCase).getCurrentHousehold(any())
@@ -479,33 +455,6 @@ class HomeViewModelTest {
         assert(viewModel.uiState.value is UserSignedOut)
     }
 
-    private suspend fun mockInitWithSomeUserInfo(withHousehold: Boolean = false) {
-        val householdId = "someHouseholdId"
-        val householdName = "someHouseholdName"
-        val mockUserData = getUserData(currentHouseHoldId = householdId)
-        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
-        val mockUiModel: UserSignedIn = mock()
-        if (withHousehold) {
-            val mockHouseholdInfo: UserHousehold = mock()
-            whenever(mockHouseholdInfo.id).thenReturn(householdId)
-            whenever(mockHouseholdInfo.name).thenReturn(householdId)
-            val mockHousehold: HouseholdExpenses = mock()
-            whenever(mockHousehold.householdInfo).thenReturn(mockHouseholdInfo)
-            whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
-            val mockHouseholdUiState: HouseholdUiState = mock()
-            with(mockHouseholdUiState) {
-                whenever(id).thenReturn(householdId)
-                whenever(name).thenReturn(householdName)
-                whenever(mockUiModel.householdInfo).thenReturn(this)
-            }
-        }
-        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
-        val user: UserData = mock()
-        whenever(user.id).thenReturn("uid")
-        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(user))
-        whenever(signInUseCase.updateCurrentHouseholdId(any())).thenReturn(mock())
-    }
-
     @Test
     fun `updateHomeInformation should update home information`() = runTest {
         // Given
@@ -548,6 +497,32 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         verify(navigationManager).navigate(NavigationEvent.NavigateToHouseholdDetails)
+    }
+
+    private suspend fun mockInitWithSomeUserInfo(withHousehold: Boolean = false) {
+        val householdId = "someHouseholdId"
+        val householdName = "someHouseholdName"
+        val mockUserData = getUserData(currentHouseHoldId = householdId)
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
+        val mockUiModel: UserSignedIn = mock()
+        whenever(mockUiModel.greeting).thenReturn("Greeting")
+        if (withHousehold) {
+            val mockHouseholdInfo: UserHousehold = mock()
+            whenever(mockHouseholdInfo.id).thenReturn(householdId)
+            whenever(mockHouseholdInfo.name).thenReturn(householdId)
+            val mockHousehold: HouseholdExpenses = mock()
+            whenever(mockHousehold.householdInfo).thenReturn(mockHouseholdInfo)
+            whenever(householdUseCase.getCurrentHousehold(any())).thenReturn(mockHousehold)
+            val mockHouseholdUiState: HouseholdUiState = mock()
+            with(mockHouseholdUiState) {
+                whenever(id).thenReturn(householdId)
+                whenever(name).thenReturn(householdName)
+                whenever(mockUiModel.householdInfo).thenReturn(this)
+            }
+        }
+        whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
+        whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
+        whenever(signInUseCase.updateCurrentHouseholdId(any())).thenReturn(mock())
     }
 
     private suspend fun mockSignIn(

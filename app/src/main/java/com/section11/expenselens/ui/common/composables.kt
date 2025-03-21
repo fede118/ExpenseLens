@@ -9,7 +9,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -132,7 +135,6 @@ fun ExpenseLensDatePicker(
         }
     }
 }
-
 
 @Composable
 fun MaxCharsOutlinedTextField(
@@ -253,7 +255,7 @@ fun RowScope.OutlinedTextFieldWithCallBack(
 fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
     Image(
         painter = rememberAsyncImagePainter(user.profilePic),
-        contentDescription = stringResource(R.string.home_screen_sign_in_icon_content_description),
+        contentDescription = stringResource(R.string.content_description_profile_pic),
         modifier = modifier
     )
 }
@@ -287,4 +289,29 @@ fun RedDot(modifier: Modifier = Modifier) {
                 )
             }
     )
+}
+
+@Composable
+fun BoxFullScreenContainer(
+    modifier: Modifier = Modifier,
+    boxContent: @Composable BoxScope.() -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val dimens = LocalDimens.current
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .padding(dimens.m2)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(dimens.m2)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            content()
+        }
+        boxContent()
+    }
 }

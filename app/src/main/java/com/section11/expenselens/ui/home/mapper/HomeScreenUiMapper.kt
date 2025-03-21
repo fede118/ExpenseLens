@@ -14,15 +14,13 @@ import javax.inject.Inject
 
 class HomeScreenUiMapper @Inject constructor(private val resourceProvider: ResourceProvider) {
 
-    fun getGreeting(): String = resourceProvider.getString(R.string.welcome_greeting)
-
     fun getUserSignInModel(
         userData: UserData,
         userHousehold: HouseholdExpenses?,
         pendingInvites: List<HouseholdInvite>?
     ): UserSignedIn {
         return UserSignedIn(
-            getGreeting(),
+            resourceProvider.getString(R.string.welcome_greeting),
             UserInfoUiModel(
                 id = userData.id,
                 displayName = userData.displayName,

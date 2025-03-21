@@ -63,18 +63,16 @@ class HomeViewModel @Inject constructor(
     val profileDialogUiEvent: SharedFlow<DownstreamUiEvent> = _profileDialogUiEvent
 
     init {
-        getSignInOrSignedOutStatus()
+        getUserStatus()
     }
 
-    private fun getSignInOrSignedOutStatus() {
+    private fun getUserStatus() {
         viewModelScope.launch(dispatcher) {
             _uiEvent.emit(Loading(true))
-            val userData = signInUseCase.getCurrentUser().getOrNull()
-            if (userData != null) {
-                onSignIn(userData)
-            } else {
-                _uiState.value = UserSignedOut(uiMapper.getGreeting())
-            }
+            signInUseCase.getCurrentUser().fold(
+                onFailure = { _uiState.value = UserSignedOut },
+                onSuccess = { onSignIn(it) }
+            )
             _uiEvent.emit(Loading(false))
         }
     }
@@ -139,7 +137,7 @@ class HomeViewModel @Inject constructor(
     private suspend fun handleSignOutEvent() {
         _uiEvent.emit(Loading(true))
         signInUseCase.signOut()
-        _uiState.value = UserSignedOut(uiMapper.getGreeting())
+        _uiState.value = UserSignedOut
         _uiEvent.emit(Loading(false))
         _uiEvent.emit(ShowSnackBar(uiMapper.getSignOutSuccessMessage()))
     }
@@ -225,7 +223,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun updateHomeInformation() {
-        getSignInOrSignedOutStatus()
+        getUserStatus()
     }
 
     sealed class HomeUiState : UiState() {
@@ -240,6 +238,6 @@ class HomeViewModel @Inject constructor(
                 val graphInfo: CakeGraphUiModel?
             )
         }
-        data class UserSignedOut(val greeting: String) : HomeUiState()
+        data object UserSignedOut : HomeUiState()
     }
 }

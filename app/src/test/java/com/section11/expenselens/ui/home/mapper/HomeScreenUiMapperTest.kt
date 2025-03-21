@@ -27,13 +27,6 @@ class HomeScreenUiMapperTest {
     }
 
     @Test
-    fun `when getting greeting greeting is returned`() {
-        val greeting = mapper.getGreeting()
-
-        assertEquals("Hello", greeting)
-    }
-
-    @Test
     fun `when getUserData then userData model is returned when household null`() {
         val id = "id"
         val name = "name"
