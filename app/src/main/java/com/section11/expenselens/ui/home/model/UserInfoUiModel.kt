@@ -38,3 +38,9 @@ data class CakeGraphUiModel(
         val value: Float
     )
 }
+
+sealed class NoHouseholdInputMode {
+    data object None : NoHouseholdInputMode()
+    data object Create : NoHouseholdInputMode()
+    data object Join : NoHouseholdInputMode()
+}

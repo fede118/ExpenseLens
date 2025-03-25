@@ -304,7 +304,7 @@ class HomeViewModelTest {
         whenever(mapper.getUserSignInModel(any(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mock()))
         mockkStatic(UserSignedIn::class)
-        whenever(mockUiModel.copy(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
+        whenever(mockUiModel.copy(anyOrNull(), anyOrNull())).thenReturn(mockUiModel)
 
         viewModel = HomeViewModel(
             navigationManager,
@@ -505,7 +505,6 @@ class HomeViewModelTest {
         val mockUserData = getUserData(currentHouseHoldId = householdId)
         whenever(signInUseCase.getCurrentUser()).thenReturn(Result.success(mockUserData))
         val mockUiModel: UserSignedIn = mock()
-        whenever(mockUiModel.greeting).thenReturn("Greeting")
         if (withHousehold) {
             val mockHouseholdInfo: UserHousehold = mock()
             whenever(mockHouseholdInfo.id).thenReturn(householdId)

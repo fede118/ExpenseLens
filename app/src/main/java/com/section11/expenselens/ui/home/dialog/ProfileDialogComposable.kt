@@ -62,7 +62,7 @@ fun ProfileDialog(
         val shape = RoundedCornerShape(dimens.m5)
         Image(
             painter = rememberAsyncImagePainter(profileImageUrl),
-            contentDescription = "Profile Picture",
+            contentDescription = stringResource(R.string.content_description_profile_pic),
             modifier = Modifier
                 .size(dimens.m10)
                 .background(Color.Gray, shape = shape)

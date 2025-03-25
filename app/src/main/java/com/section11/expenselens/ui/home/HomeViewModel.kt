@@ -25,6 +25,7 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddExpenseTappe
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.AddManualExpenseTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.JoinHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.SignInTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.AddUserToHouseholdTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
@@ -105,6 +106,7 @@ class HomeViewModel @Inject constructor(
                 is AddUserToHouseholdTapped -> handleInvitingUserToHousehold(homeEvent)
                 is HouseholdInviteTap -> handleHouseholdInviteTap(homeEvent)
                 is ToHouseholdDetailsTapped -> navigationManager.navigate(NavigateToHouseholdDetails)
+                is JoinHouseholdTapped -> { /* TODO */ }
             }
         }
     }
@@ -228,7 +230,6 @@ class HomeViewModel @Inject constructor(
 
     sealed class HomeUiState : UiState() {
         data class UserSignedIn(
-            val greeting: String,
             val user: UserInfoUiModel,
             val householdInfo: HouseholdUiState? = null
         ) : HomeUiState() {

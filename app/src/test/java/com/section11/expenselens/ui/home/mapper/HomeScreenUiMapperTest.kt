@@ -22,7 +22,6 @@ class HomeScreenUiMapperTest {
 
     @Before
     fun setup() {
-        whenever(resourceProvider.getString(R.string.welcome_greeting)).thenReturn("Hello")
         mapper = HomeScreenUiMapper(resourceProvider)
     }
 

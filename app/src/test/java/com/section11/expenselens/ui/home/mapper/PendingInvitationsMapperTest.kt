@@ -76,7 +76,6 @@ class PendingInvitationsMapperTest {
     @Test
     fun `updateInvitesAndHousehold should return user with updated pending invites`() {
         val userSignedInState = UserSignedIn(
-            greeting = "greeting",
             user = UserInfoUiModel(
                 id = "user123",
                 displayName = "John Doe",
@@ -108,7 +107,6 @@ class PendingInvitationsMapperTest {
     fun `updateInvitesAndHousehold should return user with updated pending invites and household`() {
         val householdId = "household456"
         val userSignedInState = UserSignedIn(
-            greeting = "greeting",
             user = UserInfoUiModel(
                 id = "user123",
                 displayName = "John Doe",
@@ -143,7 +141,6 @@ class PendingInvitationsMapperTest {
         val householdName = "Test Household"
         val inviteId = "inviteId"
         val userSignedInState = UserSignedIn(
-            greeting = "greeting",
             user = UserInfoUiModel(
                 id = "user123",
                 displayName = "John Doe",

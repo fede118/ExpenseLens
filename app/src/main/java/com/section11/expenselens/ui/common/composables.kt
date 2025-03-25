@@ -1,12 +1,16 @@
 package com.section11.expenselens.ui.common
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -23,6 +27,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -44,17 +50,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.rememberAsyncImagePainter
 import com.section11.expenselens.R
 import com.section11.expenselens.ui.common.UiConstants.MAX_INPUT_CHARACTERS
-import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.theme.LocalDimens
 
 @Composable
@@ -142,8 +151,10 @@ fun MaxCharsOutlinedTextField(
     title: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    maxLength: Int = MAX_INPUT_CHARACTERS
+    maxLength: Int = MAX_INPUT_CHARACTERS,
+    leadingIcon: @Composable () -> Unit = {}
 ) {
+    val dimens = LocalDimens.current
     OutlinedTextField(
         value = value,
         modifier = modifier,
@@ -154,7 +165,9 @@ fun MaxCharsOutlinedTextField(
         },
         singleLine = true,
         label = { Text(text = title) },
-        supportingText = { Text(text = "${value.length} / $maxLength") }
+        supportingText = { Text(text = "${value.length} / $maxLength") },
+        shape = RoundedCornerShape(dimens.m4),
+        leadingIcon = { leadingIcon() },
     )
 }
 
@@ -170,7 +183,6 @@ fun TransformingButton(
     val keyboardController = LocalSoftwareKeyboardController.current
     val dimens = LocalDimens.current
     var isEditing by remember { mutableStateOf(false) }
-
 
     AnimatedContent(
         targetState = isEditing to isLoading,
@@ -252,15 +264,6 @@ fun RowScope.OutlinedTextFieldWithCallBack(
 }
 
 @Composable
-fun ProfilePictureIcon(user: UserInfoUiModel, modifier: Modifier = Modifier) {
-    Image(
-        painter = rememberAsyncImagePainter(user.profilePic),
-        contentDescription = stringResource(R.string.content_description_profile_pic),
-        modifier = modifier
-    )
-}
-
-@Composable
 fun ContentWithBadge(
     modifier: Modifier = Modifier,
     showBadge: Boolean = false,
@@ -292,10 +295,10 @@ fun RedDot(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BoxFullScreenContainer(
+fun BoxedColumnFullScreenContainer(
     modifier: Modifier = Modifier,
     boxContent: @Composable BoxScope.() -> Unit = {},
-    content: @Composable ColumnScope.() -> Unit
+    columnContent: @Composable ColumnScope.() -> Unit
 ) {
     val dimens = LocalDimens.current
     Box(
@@ -310,8 +313,63 @@ fun BoxFullScreenContainer(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            content()
+            Spacer(Modifier.height(dimens.m13))
+            columnContent()
         }
         boxContent()
+    }
+}
+
+@Composable
+fun LabeledIcon(
+    painterResource: Painter,
+    label: String,
+    modifier: Modifier = Modifier,
+    iconSize: Dp = LocalDimens.current.m6,
+    contentDescription: String = label,
+    colorFilter: ColorFilter? = null,
+    onIconTap: () -> Unit
+) {
+    val dimens = LocalDimens.current
+
+    Column(modifier.width(dimens.m10)) {
+        Image(
+            painter = painterResource,
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .size(iconSize)
+                .clip(CircleShape)
+                .align(Alignment.CenterHorizontally)
+                .clickable { onIconTap() },
+            colorFilter = colorFilter
+        )
+        if (label.isNotBlank()) {
+            Spacer(Modifier.height(dimens.m1))
+            Text(
+                label,
+                Modifier.clickable { onIconTap() },
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun BoxScope.AnimateFromBottom(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val dimens = LocalDimens.current
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it * 2 }),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = dimens.m4)
+            .align(Alignment.BottomCenter)
+    ) {
+        content()
     }
 }

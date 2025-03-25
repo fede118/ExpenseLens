@@ -1,21 +1,25 @@
 package com.section11.expenselens.ui.home.composables
 
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,15 +27,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import coil.compose.rememberAsyncImagePainter
 import com.section11.expenselens.R
-import com.section11.expenselens.ui.common.BoxFullScreenContainer
+import com.section11.expenselens.ui.common.AnimateFromBottom
+import com.section11.expenselens.ui.common.BoxedColumnFullScreenContainer
 import com.section11.expenselens.ui.common.ContentWithBadge
+import com.section11.expenselens.ui.common.LabeledIcon
 import com.section11.expenselens.ui.common.MaxCharsOutlinedTextField
-import com.section11.expenselens.ui.common.ProfilePictureIcon
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
@@ -40,7 +47,12 @@ import com.section11.expenselens.ui.home.dialog.ProfileDialogContent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHouseholdTapped
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
+import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.JoinHouseholdTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
+import com.section11.expenselens.ui.home.model.NoHouseholdInputMode
+import com.section11.expenselens.ui.home.model.NoHouseholdInputMode.Create
+import com.section11.expenselens.ui.home.model.NoHouseholdInputMode.Join
+import com.section11.expenselens.ui.home.model.NoHouseholdInputMode.None
 import com.section11.expenselens.ui.home.model.PendingInvitesUiModel
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
 import com.section11.expenselens.ui.theme.LocalDimens
@@ -64,16 +76,14 @@ fun SignedInUi(
             ExistingHouseholdUi(
                 user,
                 dialogDownstreamUiEvent,
-                greeting,
                 householdInfo,
                 onEvent,
             )
         } else {
-            CreateHouseholdUi(
+            NoHouseholdUi(
                 Modifier.fillMaxWidth(1f),
                 user,
                 dialogDownstreamUiEvent,
-                greeting,
                 onEvent
             )
         }
@@ -81,37 +91,29 @@ fun SignedInUi(
 }
 
 @Composable
-fun ColumnScope.SignedInGreetingAndIcon(
+fun SignedInIcon(
     userInfo: UserInfoUiModel,
     hasHousehold: Boolean,
     dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    greeting: String,
     onEvent: (HomeUpstreamEvent) -> Unit,
     modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
 ) {
-    val dimens = LocalDimens.current
     var showDialog by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         ContentWithBadge(showBadge = userInfo.pendingInvites.isNotEmpty()) {
-            ProfilePictureIcon(
-                user = userInfo,
-                modifier = modifier
-                    .size(dimens.m5)
-                    .clip(CircleShape)
-                    .clickable { showDialog = true }
-            )
+            LabeledIcon(
+                painterResource = rememberAsyncImagePainter(userInfo.profilePic),
+                label = userInfo.displayName.orEmpty(),
+                contentDescription = stringResource(R.string.content_description_profile_pic),
+                modifier = modifier,
+            ) { showDialog = true }
         }
     }
-
-    Greeting(greeting)
-
-    content()
 
     if (showDialog) {
         ProfileDialog(
@@ -129,80 +131,131 @@ fun ColumnScope.SignedInGreetingAndIcon(
 }
 
 @Composable
-fun Greeting(greeting: String) {
-    val dimens = LocalDimens.current
-    Spacer(modifier = Modifier.padding(dimens.m3))
-    Column {
-        Text(
-            modifier = Modifier
-                .padding(horizontal = dimens.m2)
-                .fillMaxWidth(),
-            text = greeting,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
 fun ExistingHouseholdUi(
     userInfo: UserInfoUiModel,
     dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    greeting: String,
     household: HouseholdUiState,
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
     val dimens = LocalDimens.current
-    BoxFullScreenContainer(
+    BoxedColumnFullScreenContainer(
         boxContent = { AddExpenseButton(onEvent = onEvent) }
     ) {
-        SignedInGreetingAndIcon(userInfo, true, dialogDownstreamUiEvent, greeting, onEvent) {
-            Text(stringResource(R.string.home_screen_household_name_prefix, household.name))
-            Spacer(Modifier.height(dimens.m1))
-            household.graphInfo?.let {
-                CakeGraph(
-                    graphUiModel = it,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimens.m40)
-                )
-            }
+        SignedInIcon(userInfo, true, dialogDownstreamUiEvent, onEvent)
+        Spacer(Modifier.height(dimens.m1))
+        household.graphInfo?.let {
+            CakeGraph(
+                graphUiModel = it,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimens.m40)
+            )
         }
     }
 }
 
 @Composable
-fun CreateHouseholdUi(
+fun NoHouseholdUi(
     modifier: Modifier = Modifier,
     userInfo: UserInfoUiModel,
     dialogDownstreamUiEvent: SharedFlow<DownstreamUiEvent>,
-    greeting: String,
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
-    var text by remember { mutableStateOf(String()) }
+    val inputMode = remember { mutableStateOf<NoHouseholdInputMode>(None) }
     val dimens = LocalDimens.current
 
-    BoxFullScreenContainer {
-        SignedInGreetingAndIcon(userInfo, false, dialogDownstreamUiEvent, greeting, onEvent) {
-            Spacer(Modifier.height(dimens.m1))
-            Text(
-                stringResource(R.string.home_screen_no_household_message)
-            )
-            Spacer(Modifier.height(dimens.m1))
-            MaxCharsOutlinedTextField(
-                modifier = modifier,
-                value = text,
-                onValueChange = { text = it },
-                title = stringResource(R.string.home_screen_create_household_name),
-                maxLength = HOUSEHOLD_NAME_MAX_CHARS
-            )
-            TextButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    onEvent(CreateHouseholdTapped(userInfo.id, text))
+    BackHandler(inputMode.value != None) { inputMode.value = None }
+
+    BoxedColumnFullScreenContainer(
+        boxContent = {
+            AnimateFromBottom(inputMode.value == Create) {
+                CreateHouseholdInput { input ->
+                    onEvent(CreateHouseholdTapped(userInfo.id, input))
                 }
-            ) {
-                Text(stringResource(R.string.home_screen_create_household))
             }
+            AnimateFromBottom(inputMode.value == Join) {
+                JoinHouseholdInput { input ->
+                    onEvent(JoinHouseholdTapped(userInfo.id, input))
+                }
+            }
+        }
+    ) {
+        SignedInIcon(userInfo, false, dialogDownstreamUiEvent, onEvent)
+        Spacer(Modifier.height(dimens.m10))
+
+        Row(modifier, horizontalArrangement = Arrangement.Center) {
+            LabeledIcon(
+                painterResource = painterResource(R.drawable.house_icon),
+                label = stringResource(R.string.home_screen_create_household),
+            ) { inputMode.value = Create }
+
+            Spacer(Modifier.width(dimens.m4))
+
+            LabeledIcon(
+                painterResource = painterResource(R.drawable.house_icon),
+                label = stringResource(R.string.home_screen_join_household)
+            ) { inputMode.value = Join }
+        }
+    }
+}
+
+@Composable
+fun CreateHouseholdInput(modifier: Modifier = Modifier, onButtonTap: (String) -> Unit) {
+    val householdName = stringResource(R.string.home_screen_create_household_name)
+    OutlinedTextFieldAndButtonComponent(
+        modifier = modifier,
+        title = householdName,
+        buttonText = stringResource(R.string.home_screen_create_household_button),
+        onButtonTap = { text -> onButtonTap(text) },
+        leadingIcon = { Image(painterResource(R.drawable.house_icon), householdName) }
+    )
+}
+
+@Composable
+fun JoinHouseholdInput(modifier: Modifier = Modifier, onButtonTap: (String) -> Unit) {
+    val joinHousehold = stringResource(R.string.home_screen_join_household)
+    OutlinedTextFieldAndButtonComponent(
+        modifier = modifier,
+        title = joinHousehold,
+        buttonText = stringResource(R.string.home_screen_join_button),
+        onButtonTap = { text -> onButtonTap(text) },
+        leadingIcon = {
+            Image(
+                rememberVectorPainter(Icons.Default.Email),
+                joinHousehold,
+                colorFilter = ColorFilter.tint(colorScheme.contentColorFor(colorScheme.background))
+            )
+        }
+    )
+}
+
+@Composable
+fun OutlinedTextFieldAndButtonComponent(
+    title: String,
+    buttonText: String,
+    modifier: Modifier = Modifier,
+    leadingIcon: @Composable () -> Unit,
+    onButtonTap: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(String()) }
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        MaxCharsOutlinedTextField(
+            value = text,
+            onValueChange = { text = it },
+            title = title,
+            maxLength = HOUSEHOLD_NAME_MAX_CHARS,
+            leadingIcon = { leadingIcon() }
+        )
+        Button(
+            modifier = Modifier.width(LocalDimens.current.m24),
+            onClick = { onButtonTap(text) },
+            colors = ButtonDefaults.textButtonColors().copy(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text(buttonText, color = MaterialTheme.colorScheme.surface)
         }
     }
 }
@@ -231,7 +284,6 @@ fun PendingInvitesSection(
         }
     }
 }
-
 
 @Composable
 fun PendingInviteItem(
@@ -303,11 +355,11 @@ fun SignedInWithHouseholdPreview() {
 
 @DarkAndLightPreviews
 @Composable
-fun SignedInPreview() {
+fun SignedInNoHouseholdPreview() {
     val fakeRepo = FakeRepositoryForPreviews(LocalContext.current)
     Preview {
         HomeScreenContent(
-            homeUiStateFlow =  MutableStateFlow(fakeRepo.getUserSignedInState()),
+            homeUiStateFlow =  MutableStateFlow(fakeRepo.getUserSignedInState(false)),
             dialogDownstreamUiEvent = MutableSharedFlow(),
             downstreamUiEvent = MutableSharedFlow()
         )

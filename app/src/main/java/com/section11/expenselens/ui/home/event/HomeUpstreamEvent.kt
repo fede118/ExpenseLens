@@ -11,6 +11,10 @@ sealed class HomeUpstreamEvent : UpstreamUiEvent() {
         val userId: String,
         val householdName: String
     ) : HomeUpstreamEvent()
+    data class JoinHouseholdTapped(
+        val userId: String,
+        val userEmail: String
+    ) : HomeUpstreamEvent()
     data class HouseholdInviteTap(
         val inviteId: String,
         val householdId: String,
