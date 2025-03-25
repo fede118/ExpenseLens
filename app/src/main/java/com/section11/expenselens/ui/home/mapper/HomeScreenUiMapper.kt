@@ -20,7 +20,6 @@ class HomeScreenUiMapper @Inject constructor(private val resourceProvider: Resou
         pendingInvites: List<HouseholdInvite>?
     ): UserSignedIn {
         return UserSignedIn(
-            resourceProvider.getString(R.string.welcome_greeting),
             UserInfoUiModel(
                 id = userData.id,
                 displayName = userData.displayName,
