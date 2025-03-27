@@ -2,12 +2,14 @@ package com.section11.expenselens.ui.home.composables
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -49,6 +51,7 @@ import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.CreateHousehold
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.JoinHouseholdTapped
 import com.section11.expenselens.ui.home.event.ProfileDialogEvents.SignOutTapped
+import com.section11.expenselens.ui.home.event.ProfileDialogEvents.ToHouseholdDetailsTapped
 import com.section11.expenselens.ui.home.model.NoHouseholdInputMode
 import com.section11.expenselens.ui.home.model.NoHouseholdInputMode.Create
 import com.section11.expenselens.ui.home.model.NoHouseholdInputMode.Join
@@ -101,7 +104,7 @@ fun SignedInIcon(
     var showDialog by remember { mutableStateOf(false) }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -109,8 +112,10 @@ fun SignedInIcon(
             LabeledIcon(
                 painterResource = rememberAsyncImagePainter(userInfo.profilePic),
                 label = userInfo.displayName.orEmpty(),
+                iconSize = LocalDimens.current.m6,
                 contentDescription = stringResource(R.string.content_description_profile_pic),
                 modifier = modifier,
+                colorFilter = null,
             ) { showDialog = true }
         }
     }
@@ -138,19 +143,32 @@ fun ExistingHouseholdUi(
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
     val dimens = LocalDimens.current
-    BoxedColumnFullScreenContainer(
-        boxContent = { AddExpenseButton(onEvent = onEvent) }
-    ) {
-        SignedInIcon(userInfo, true, dialogDownstreamUiEvent, onEvent)
+    BoxedColumnFullScreenContainer() {
+        Row(Modifier.fillMaxWidth(1f), horizontalArrangement = Arrangement.Center) {
+            SignedInIcon(userInfo, true, dialogDownstreamUiEvent, onEvent)
+            Spacer(Modifier.width(dimens.m5))
+            LabeledIcon(
+                painterResource = painterResource(R.drawable.house_icon),
+                label = household.name,
+                contentDescription = stringResource(R.string.home_screen_my_household_label),
+            ) { onEvent(ToHouseholdDetailsTapped) }
+        }
         Spacer(Modifier.height(dimens.m1))
         household.graphInfo?.let {
             CakeGraph(
                 graphUiModel = it,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(colorScheme.surfaceContainer)
+                    .padding(vertical = dimens.m2)
                     .height(dimens.m40)
             )
         }
+        Spacer(Modifier.height(dimens.m4))
+        AddExpenseButtons(
+            modifier = Modifier.padding(bottom = dimens.m2).fillMaxWidth(1f),
+            onEvent = onEvent
+        )
     }
 }
 

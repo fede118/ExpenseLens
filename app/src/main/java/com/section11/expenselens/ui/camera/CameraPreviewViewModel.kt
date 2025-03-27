@@ -1,6 +1,5 @@
 package com.section11.expenselens.ui.camera
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.section11.expenselens.domain.models.SuggestedExpenseInformation
 import com.section11.expenselens.domain.usecase.ExpenseInformationUseCase
@@ -9,13 +8,11 @@ import com.section11.expenselens.framework.navigation.NavigationManager
 import com.section11.expenselens.framework.navigation.NavigationManager.NavigationEvent.NavigateToExpensePreview
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents
 import com.section11.expenselens.ui.camera.event.CameraPreviewEvents.OnCaptureImageTapped
-import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import com.section11.expenselens.ui.common.AbstractViewModel
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Error
 import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,10 +22,7 @@ class CameraPreviewViewModel @Inject constructor(
     private val expenseInformationUseCase: ExpenseInformationUseCase,
     private val navigationManager: NavigationManager,
     private val dispatcher: CoroutineDispatcher
-) : ViewModel() {
-
-    private val _uiEvent = MutableSharedFlow<DownstreamUiEvent>()
-    val uiEvent: SharedFlow<DownstreamUiEvent> = _uiEvent
+) : AbstractViewModel() {
 
     fun onUiEvent(cameraPreviewEvent: CameraPreviewEvents) {
         when (cameraPreviewEvent) {

@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +28,7 @@ import com.github.mikephil.charting.renderer.PieChartRenderer
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.section11.expenselens.ui.common.previewrepository.FakeRepositoryForPreviews
 import com.section11.expenselens.ui.home.model.CakeGraphUiModel
+import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.Preview
 import com.section11.expenselens.ui.utils.formatToTwoDecimal
@@ -58,7 +60,7 @@ fun CakeGraph(
     }
 
     AndroidView(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = LocalDimens.current.m2),
         factory = { context ->
             getPieChart(context, surfaceColor, transparent, valueChangeListener)
         },
