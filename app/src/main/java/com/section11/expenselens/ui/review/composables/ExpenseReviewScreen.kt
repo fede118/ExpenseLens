@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import com.section11.expenselens.BuildConfig
 import com.section11.expenselens.R
 import com.section11.expenselens.framework.utils.toDateString
 import com.section11.expenselens.ui.common.CardDialog
@@ -116,14 +117,14 @@ fun ExpenseReviewSection(
             }
 
         }
-        item { Spacer(modifier = Modifier.padding(dimens.m4)) }
-        item {
-            expenseReviewUiModel.extractedText?.let {
-                ExtractedTextSection(extractedText = it)
-            } ?: ExtractedTextSection(extractedText = "No Extracted Text")
+        if (BuildConfig.DEBUG) {
+            item { Spacer(modifier = Modifier.padding(dimens.m4)) }
+            item {
+                expenseReviewUiModel.extractedText?.let {
+                    ExtractedTextSection(extractedText = it)
+                } ?: ExtractedTextSection(extractedText = "No Extracted Text")
+            }
         }
-
-
     }
 }
 

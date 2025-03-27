@@ -39,6 +39,7 @@ import com.section11.expenselens.ui.theme.LocalDimens
 import com.section11.expenselens.ui.theme.gray30
 import com.section11.expenselens.ui.utils.DarkAndLightPreviews
 import com.section11.expenselens.ui.utils.DownstreamUiEvent
+import com.section11.expenselens.ui.utils.DownstreamUiEvent.Loading
 import com.section11.expenselens.ui.utils.Preview
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -69,7 +70,7 @@ fun CameraScreenContent(
         RequestCameraPermission(cameraPermissionState)
     }
 
-    HandleDownstreamEvents(downstreamUiEvent, Modifier.background(gray30))
+    HandleDownstreamEvents(downstreamUiEvent, Modifier.background(gray30) , Loading(false))
 }
 
 @OptIn(ExperimentalPermissionsApi::class)

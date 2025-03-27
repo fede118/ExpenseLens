@@ -5,12 +5,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -31,7 +29,7 @@ fun LoggedOutUi(modifier: Modifier = Modifier, onEvent: (HomeUpstreamEvent) -> U
     BoxedColumnFullScreenContainer(modifier) {
         Spacer(Modifier.height(dimens.m24))
         Image(
-            painter = painterResource(id = R.drawable.playstore_icon),
+            painter = painterResource(R.drawable.playstore_icon),
             contentDescription = stringResource(R.string.content_description_app_icon),
             modifier = Modifier
                 .size(dimens.m13)
@@ -39,7 +37,8 @@ fun LoggedOutUi(modifier: Modifier = Modifier, onEvent: (HomeUpstreamEvent) -> U
         )
         Spacer(Modifier.height(dimens.m6))
         LabeledIcon(
-            painterResource = rememberVectorPainter(image = Icons.Default.AccountCircle),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            painterResource = painterResource(R.drawable.user_icon),
             label = stringResource(R.string.home_screen_sign_in)
         ) {
             onEvent(SignInTapped(context))

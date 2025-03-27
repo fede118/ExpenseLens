@@ -7,7 +7,6 @@
     <string name="home_screen_expense_history_label">My expenses</string>
     <string name="home_screen_invite_to_household_label">Add user to household</string>
     <string name="home_screen_invite_to_household_placeholder">User email</string>
-    <string name="home_screen_add_expense_label">Add Expense</string>
     <string name="home_screen_create_household">Create household</string>
     <string name="home_screen_create_household_button">Create</string>
     <string name="home_screen_join_household">Join household</string>
@@ -19,8 +18,8 @@
     <string name="home_screen_household_invite_user_not_found">User not found, they need to sign in to the app first</string>
     <string name="home_screen_household_invite_failure">Something went wrong inviting the user to the household, try again later.</string>
     <string name="home_screen_household_invite_success">Invitation Sent! you can invite another user.</string>
-    <string name="home_screen_add_expense_with_camera">Take a Picture of Receipt</string>
-    <string name="home_screen_add_expense_manually">Manual Input</string>
+    <string name="home_screen_add_expense_with_camera">Take picture of receipt</string>
+    <string name="home_screen_add_expense_manually">Upload manually</string>
 
     <!--  Home Screen Cake Graph Strings  -->
     <string name="cake_graph_current_month_expenses">"Current Expenses:&#10;$%s"</string>

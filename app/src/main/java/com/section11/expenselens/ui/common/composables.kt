@@ -10,6 +10,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,9 +40,11 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +60,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -65,6 +69,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.section11.expenselens.R
 import com.section11.expenselens.ui.common.UiConstants.MAX_INPUT_CHARACTERS
 import com.section11.expenselens.ui.theme.LocalDimens
+import com.section11.expenselens.ui.utils.DarkAndLightPreviews
+import com.section11.expenselens.ui.utils.Preview
 
 @Composable
 fun CardDialog(
@@ -305,15 +311,12 @@ fun BoxedColumnFullScreenContainer(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .padding(dimens.m2)
     ) {
         Column(
-            modifier = Modifier
-                .padding(dimens.m2)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(dimens.m13))
+            Spacer(Modifier.height(dimens.m10))
             columnContent()
         }
         boxContent()
@@ -325,30 +328,41 @@ fun LabeledIcon(
     painterResource: Painter,
     label: String,
     modifier: Modifier = Modifier,
-    iconSize: Dp = LocalDimens.current.m6,
+    backgroundSize: Dp = LocalDimens.current.m6,
+    iconSize: Dp = LocalDimens.current.m3,
     contentDescription: String = label,
-    colorFilter: ColorFilter? = null,
+    colorFilter: ColorFilter? = ColorFilter.tint(colorScheme.contentColorFor(colorScheme.background)),
     onIconTap: () -> Unit
 ) {
     val dimens = LocalDimens.current
 
-    Column(modifier.width(dimens.m10)) {
-        Image(
-            painter = painterResource,
-            contentDescription = contentDescription,
+    Column(
+        modifier
+            .width(dimens.m10)
+            .clip(RoundedCornerShape(dimens.m2))
+            .clickable { onIconTap() },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
             modifier = Modifier
-                .size(iconSize)
+                .size(backgroundSize)
                 .clip(CircleShape)
-                .align(Alignment.CenterHorizontally)
-                .clickable { onIconTap() },
-            colorFilter = colorFilter
-        )
+                .background(colorScheme.surfaceContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                modifier = Modifier.size(iconSize),
+                painter = painterResource,
+                contentDescription = contentDescription,
+                colorFilter = colorFilter
+            )
+        }
         if (label.isNotBlank()) {
             Spacer(Modifier.height(dimens.m1))
             Text(
-                label,
-                Modifier.clickable { onIconTap() },
-                textAlign = TextAlign.Center
+                text = label,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
@@ -371,5 +385,21 @@ fun BoxScope.AnimateFromBottom(
             .align(Alignment.BottomCenter)
     ) {
         content()
+    }
+}
+
+@DarkAndLightPreviews
+@Composable
+fun LabeledIconPreview() {
+    Preview {
+        Column(
+            modifier = Modifier.statusBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LabeledIcon(
+                painterResource = painterResource(R.drawable.user_icon),
+                label = "Sign In"
+            ) { }
+        }
     }
 }

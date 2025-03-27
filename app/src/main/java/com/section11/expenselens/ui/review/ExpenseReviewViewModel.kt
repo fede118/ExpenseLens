@@ -53,26 +53,31 @@ class ExpenseReviewViewModel @Inject constructor(
     val uiEvent: SharedFlow<DownstreamUiEvent> = _uiEvent
 
     fun init(suggestedExpenseInformation: SuggestedExpenseInformation?, extractedText: String?) {
-        if (suggestedExpenseInformation != null) {
-            _uiState.value = ShowExpenseReview(
-                expenseReviewUiMapper.mapExpenseInfoToUiModel(
-                    suggestedExpenseInformation,
-                    extractedText
+        viewModelScope.launch(dispatcher) {
+            if (suggestedExpenseInformation != null) {
+                _uiState.value = ShowExpenseReview(
+                    expenseReviewUiMapper.mapExpenseInfoToUiModel(
+                        suggestedExpenseInformation,
+                        extractedText
+                    )
                 )
-            )
-        } else {
-            val (errorMessage, uiModel) = expenseReviewUiMapper.getNoExpenseFoundMessageAndUiModel()
-            viewModelScope.launch(dispatcher) {
+            } else {
+                val (errorMessage, uiModel) = expenseReviewUiMapper.getNoExpenseFoundMessageAndUiModel()
+
                 _uiEvent.emit(ShowSnackBar(errorMessage))
+                _uiState.value = ShowExpenseReview(uiModel)
             }
-            _uiState.value = ShowExpenseReview(uiModel)
+            _uiEvent.emit(Loading(false))
         }
     }
 
     fun initEmpty() {
-        _uiState.value = ShowExpenseReview(
-            expenseReviewUiMapper.getEmptyExpenseReviewUiModel()
-        )
+        viewModelScope.launch(dispatcher) {
+            _uiState.value = ShowExpenseReview(
+                expenseReviewUiMapper.getEmptyExpenseReviewUiModel()
+            )
+            _uiEvent.emit(Loading(false))
+        }
     }
 
     fun onUpstreamEvent(event: ExpenseReviewUpstreamEvent) {

@@ -138,16 +138,18 @@ class ExpenseReviewViewModelTest {
         ).thenReturn("errorMessage" to initialUiModel)
 
         viewModel.init(null, "Extracted text")
+        advanceUntilIdle()
         viewModel.onUpstreamEvent(
             UserInputEvent(
-                CATEGORY_SELECTION,
-                "Transportation"
+                expectedUpdatedRow.section,
+                expectedUpdatedRow.value
             )
         )
+        advanceUntilIdle()
 
         // Then
         val result = viewModel.uiState.value
-        assertEquals(result, ShowExpenseReview(expectedUiModel))
+        assertEquals(ShowExpenseReview(expectedUiModel), result)
     }
 
     @Test
@@ -177,11 +179,13 @@ class ExpenseReviewViewModelTest {
         )
 
         viewModel.init(null, extractedText)
-        viewModel.onUpstreamEvent(UserInputEvent(CATEGORY_SELECTION, "Transportation"))
+        advanceUntilIdle()
+        viewModel.onUpstreamEvent(UserInputEvent(CATEGORY_SELECTION, expectedUpdatedRow1.value))
+        advanceUntilIdle()
 
         // Then
         val result = viewModel.uiState.value
-        assertEquals(result, ShowExpenseReview(expectedUiModel))
+        assertEquals(ShowExpenseReview(expectedUiModel), result)
     }
 
     @Test
@@ -243,7 +247,7 @@ class ExpenseReviewViewModelTest {
     }
 
     @Test
-    fun `initEmpty should call getEmpty from mapper`() {
+    fun `initEmpty should call getEmpty from mapper`() = runTest {
         // Given
         val expectedUiModel = ExpenseReviewUiModel(
             extractedText = "",
@@ -253,10 +257,11 @@ class ExpenseReviewViewModelTest {
 
         // When
         viewModel.initEmpty()
+        advanceUntilIdle()
 
         // Then
         val result = viewModel.uiState.value
-        assertEquals(result, ShowExpenseReview(expectedUiModel))
+        assertEquals(ShowExpenseReview(expectedUiModel), result)
         verify(expenseReviewUiMapper).getEmptyExpenseReviewUiModel()
     }
 
