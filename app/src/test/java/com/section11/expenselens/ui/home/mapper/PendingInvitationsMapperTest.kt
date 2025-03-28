@@ -94,7 +94,7 @@ class PendingInvitationsMapperTest {
             householdInfo = HouseholdUiState(
                 "id",
                 "name",
-                CakeGraphUiModel(emptyList(), "centerText")
+                CakeGraphUiModel(emptyList(), "title", "value")
             )
         )
 
@@ -115,7 +115,7 @@ class PendingInvitationsMapperTest {
             )
         )
         val newHousehold = UserHousehold(householdId, "Test Household")
-        val householdExpenses = HouseholdExpenses(newHousehold, emptyList())
+        val householdExpenses = HouseholdExpenses(newHousehold, "April", emptyList())
         val newInvites = listOf(
             HouseholdInvite(
                 inviteId = "inviteId",

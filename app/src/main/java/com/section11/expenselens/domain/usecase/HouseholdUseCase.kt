@@ -2,6 +2,7 @@ package com.section11.expenselens.domain.usecase
 
 import com.section11.expenselens.domain.exceptions.HouseholdNotFoundException
 import com.section11.expenselens.domain.firstDayOfCurrentMonth
+import com.section11.expenselens.domain.getCurrentMonthName
 import com.section11.expenselens.domain.lastDayOfCurrentMonth
 import com.section11.expenselens.domain.models.ConsolidatedExpenseInformation
 import com.section11.expenselens.domain.models.Expense
@@ -34,7 +35,11 @@ class HouseholdUseCase @Inject constructor(
                 firstDayOfCurrentMonth,
                 lastDayOfCurrentMonth
             ).getOrElse { emptyList() }
-            HouseholdExpenses(household, thisMonthExpenses.sortedByDescending { it.date })
+            HouseholdExpenses(
+                household,
+                getCurrentMonthName(),
+                thisMonthExpenses.sortedByDescending { it.date }
+            )
         }
     }
 

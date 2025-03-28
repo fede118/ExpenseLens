@@ -62,6 +62,7 @@ class ExpenseHistoryViewModelTest {
         )
         val householdExpenses = HouseholdExpenses(
             userHouseHold,
+            "April",
             emptyList()
         )
         val mockUserData: UserData = mock()
@@ -119,6 +120,7 @@ class ExpenseHistoryViewModelTest {
         )
         val householdExpenses = HouseholdExpenses(
             userHouseHold,
+            "April",
             emptyList()
         )
         val mockUserData: UserData = mock()
@@ -153,6 +155,7 @@ class ExpenseHistoryViewModelTest {
         )
         val householdExpenses = HouseholdExpenses(
             userHouseHold,
+            "June",
             emptyList()
         )
         val mockUserData: UserData = mock()

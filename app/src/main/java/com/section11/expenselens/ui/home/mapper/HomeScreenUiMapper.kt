@@ -10,6 +10,7 @@ import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.model.CakeGraphUiModel
 import com.section11.expenselens.ui.home.model.UserInfoUiModel
+import com.section11.expenselens.ui.utils.formatToTwoDecimal
 import javax.inject.Inject
 
 class HomeScreenUiMapper @Inject constructor(private val resourceProvider: ResourceProvider) {
@@ -28,15 +29,19 @@ class HomeScreenUiMapper @Inject constructor(private val resourceProvider: Resou
             ),
             userHousehold?.run {
                 val total = userHousehold.getTotalExpensesValue()
-                HouseholdUiState(
-                    householdInfo.id,
-                    householdInfo.name,
-                    CakeGraphUiModel(
-                        slices = getSlicesByCategory(total),
-                        chartCenterText = resourceProvider
-                            .getString(R.string.cake_graph_current_month_expenses, total)
+                    HouseholdUiState(
+                        householdInfo.id,
+                        householdInfo.name,
+                        CakeGraphUiModel(
+                            slices = getSlicesByCategory(total),
+                            titleLabel = resourceProvider.getString(
+                                R.string.cake_graph_current_expenses_title,
+                                monthOfExpenses
+                            ),
+                            valueLabel = resourceProvider
+                                .getString(R.string.dollar_sign) + total.formatToTwoDecimal()
+                        )
                     )
-                )
             }
         )
     }

@@ -3,6 +3,7 @@ package com.section11.expenselens.ui.common.previewrepository
 import android.content.Context
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.firebase.Timestamp
+import com.section11.expenselens.domain.getCurrentMonthName
 import com.section11.expenselens.domain.models.Category
 import com.section11.expenselens.domain.models.Expense
 import com.section11.expenselens.domain.models.HouseholdDetailsWithUserEmails
@@ -49,6 +50,7 @@ class FakeRepositoryForPreviews(context: Context) {
             userHousehold = if (withHousehold) {
                 HouseholdExpenses(
                     householdInfo = UserHousehold("id", "Fake Repo household"),
+                    monthOfExpenses = getCurrentMonthName(),
                     expenses = getExpenseHistoryList()
                 )
             } else {

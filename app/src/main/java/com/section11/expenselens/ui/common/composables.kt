@@ -303,20 +303,21 @@ fun RedDot(modifier: Modifier = Modifier) {
 @Composable
 fun BoxedColumnFullScreenContainer(
     modifier: Modifier = Modifier,
+    columnVerticalArrengement: Arrangement.Vertical = Arrangement.Top,
+    columnHorizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     boxContent: @Composable BoxScope.() -> Unit = {},
     columnContent: @Composable ColumnScope.() -> Unit
 ) {
-    val dimens = LocalDimens.current
     Box(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = columnVerticalArrengement,
+            horizontalAlignment = columnHorizontalAlignment,
         ) {
-            Spacer(Modifier.height(dimens.m10))
             columnContent()
         }
         boxContent()

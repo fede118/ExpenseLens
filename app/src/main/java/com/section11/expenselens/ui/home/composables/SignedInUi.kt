@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -67,6 +68,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 
 private const val HOUSEHOLD_NAME_MAX_CHARS = 25
+private const val CAKE_GRAPH_SIZE = 0.4f
 
 @Composable
 fun SignedInUi(
@@ -143,7 +145,9 @@ fun ExistingHouseholdUi(
     onEvent: (HomeUpstreamEvent) -> Unit
 ) {
     val dimens = LocalDimens.current
-    BoxedColumnFullScreenContainer() {
+    BoxedColumnFullScreenContainer(
+        columnVerticalArrengement = Arrangement.SpaceEvenly
+    ) {
         Row(Modifier.fillMaxWidth(1f), horizontalArrangement = Arrangement.Center) {
             SignedInIcon(userInfo, true, dialogDownstreamUiEvent, onEvent)
             Spacer(Modifier.width(dimens.m5))
@@ -153,18 +157,16 @@ fun ExistingHouseholdUi(
                 contentDescription = stringResource(R.string.home_screen_my_household_label),
             ) { onEvent(ToHouseholdDetailsTapped) }
         }
-        Spacer(Modifier.height(dimens.m1))
         household.graphInfo?.let {
             CakeGraph(
                 graphUiModel = it,
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(colorScheme.surfaceContainer)
-                    .padding(vertical = dimens.m2)
-                    .height(dimens.m40)
+                    .padding(dimens.m2)
+                    .fillMaxHeight(CAKE_GRAPH_SIZE)
             )
         }
-        Spacer(Modifier.height(dimens.m4))
         AddExpenseButtons(
             modifier = Modifier.padding(bottom = dimens.m2).fillMaxWidth(1f),
             onEvent = onEvent
@@ -198,9 +200,10 @@ fun NoHouseholdUi(
             }
         }
     ) {
+        Spacer(Modifier.height(dimens.m11))
         SignedInIcon(userInfo, false, dialogDownstreamUiEvent, onEvent)
-        Spacer(Modifier.height(dimens.m10))
 
+        Spacer(Modifier.height(dimens.m11))
         Row(modifier, horizontalArrangement = Arrangement.Center) {
             LabeledIcon(
                 painterResource = painterResource(R.drawable.house_icon),

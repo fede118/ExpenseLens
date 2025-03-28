@@ -1,8 +1,7 @@
 package com.section11.expenselens.ui.home.composables
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -26,8 +25,10 @@ fun LoggedOutUi(modifier: Modifier = Modifier, onEvent: (HomeUpstreamEvent) -> U
     val dimens = LocalDimens.current
     val context = LocalContext.current
 
-    BoxedColumnFullScreenContainer(modifier) {
-        Spacer(Modifier.height(dimens.m24))
+    BoxedColumnFullScreenContainer(
+        modifier = modifier,
+        columnVerticalArrengement = Arrangement.spacedBy(dimens.m6, Alignment.CenterVertically)
+    ) {
         Image(
             painter = painterResource(R.drawable.playstore_icon),
             contentDescription = stringResource(R.string.content_description_app_icon),
@@ -35,7 +36,6 @@ fun LoggedOutUi(modifier: Modifier = Modifier, onEvent: (HomeUpstreamEvent) -> U
                 .size(dimens.m13)
                 .clip(CircleShape)
         )
-        Spacer(Modifier.height(dimens.m6))
         LabeledIcon(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             painterResource = painterResource(R.drawable.user_icon),

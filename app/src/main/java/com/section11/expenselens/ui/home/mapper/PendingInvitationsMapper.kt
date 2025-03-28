@@ -13,7 +13,6 @@ import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn
 import com.section11.expenselens.ui.home.HomeViewModel.HomeUiState.UserSignedIn.HouseholdUiState
 import com.section11.expenselens.ui.home.dialog.DialogUiEvent.HouseholdInviteResultEvent
 import com.section11.expenselens.ui.home.event.HomeUpstreamEvent.HouseholdInviteTap
-import com.section11.expenselens.ui.home.model.CakeGraphUiModel
 import com.section11.expenselens.ui.home.model.InviteStatusUiModel
 import com.section11.expenselens.ui.home.model.PendingInvitesUiModel
 import com.section11.expenselens.ui.utils.UiState
@@ -59,14 +58,10 @@ class PendingInvitationsMapper @Inject constructor(private val resourceProvider:
     ): UserSignedIn {
         return userSignedInState.copy(
             householdInfo = household?.let {
-                val totalExpenses = it.getTotalExpensesValue()
                 HouseholdUiState(
                     it.householdInfo.id,
                     it.householdInfo.name,
-                    CakeGraphUiModel(
-                        slices = it.getSlicesByCategory(totalExpenses),
-                        chartCenterText = "Monthly Expenses: \n \$${totalExpenses}"
-                    )
+                    userSignedInState.householdInfo?.graphInfo
                 )
             },
             user = userSignedInState.user.copy(
