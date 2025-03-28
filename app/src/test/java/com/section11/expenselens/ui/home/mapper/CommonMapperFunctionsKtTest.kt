@@ -18,6 +18,7 @@ class CommonMapperFunctionsKtTest {
         whenever(mockExpense1.total).thenReturn(100.0)
         val householdExpenses = HouseholdExpenses(
             householdInfo = mock(),
+            monthOfExpenses = "June",
             expenses = listOf(mockExpense1, mockExpense2)
         )
 
@@ -39,7 +40,8 @@ class CommonMapperFunctionsKtTest {
         whenever(mockExpense1.total).thenReturn(100.0)
         val householdExpenses = HouseholdExpenses(
             householdInfo = mock(),
-            expenses = listOf(mockExpense1, mockExpense2)
+            monthOfExpenses = "June",
+            expenses = listOf(mockExpense1,  mockExpense2)
         )
 
         // When

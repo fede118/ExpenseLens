@@ -7,5 +7,6 @@ data class UserHousehold(
 
 data class HouseholdExpenses(
     val householdInfo: UserHousehold,
+    val monthOfExpenses: String,
     val expenses: List<Expense>
 )

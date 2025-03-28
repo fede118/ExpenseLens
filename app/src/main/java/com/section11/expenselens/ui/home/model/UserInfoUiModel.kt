@@ -31,7 +31,8 @@ enum class InviteStatusUiModel : Parcelable {
 
 data class CakeGraphUiModel(
     val slices: List<Slice>,
-    val chartCenterText: String
+    val titleLabel: String,
+    val valueLabel: String
 ) {
     data class Slice(
         val label: String,

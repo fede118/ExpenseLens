@@ -50,9 +50,9 @@ class HomeScreenUiMapperTest {
     fun `when getUserData then userData model is returned with household info`() {
         val mockUserData = getUserData()
         val household = UserHousehold("id", "name")
-        val householdExpenses = HouseholdExpenses(household, emptyList())
+        val householdExpenses = HouseholdExpenses(household, "June", emptyList())
         whenever(resourceProvider.getString(
-            eq(R.string.cake_graph_current_month_expenses),
+            eq(R.string.cake_graph_current_expenses_title),
             any()
         )).thenReturn("Total expenses")
 
@@ -82,9 +82,9 @@ class HomeScreenUiMapperTest {
     fun `updateSignedInUiWithHousehold should return correct updated model`() {
         val mockUserData = getUserData()
         val household = UserHousehold("id", "name")
-        val householdExpenses = HouseholdExpenses(household, emptyList())
+        val householdExpenses = HouseholdExpenses(household, "June", emptyList())
         whenever(resourceProvider.getString(
-            eq(R.string.cake_graph_current_month_expenses),
+            eq(R.string.cake_graph_current_expenses_title),
             any()
         )).thenReturn("Total expenses")
 

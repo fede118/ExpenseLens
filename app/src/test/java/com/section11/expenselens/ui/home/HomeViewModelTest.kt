@@ -407,7 +407,7 @@ class HomeViewModelTest {
             householdInvitationsUseCase.handleHouseholdInviteResponse(eq(true), any(), any(), any(), any())
         ).thenReturn(Result.success(emptyList()))
         val household = UserHousehold("householdId", "householdName")
-        val householdExpenses = HouseholdExpenses(household, emptyList())
+        val householdExpenses = HouseholdExpenses(household, "June", emptyList())
         val signedInState = mockSignIn()
         whenever(invitesMapper.setPendingInviteLoading(any(), any())).thenReturn(signedInState)
         whenever(invitesMapper.updateInvitesAndHousehold(any(), any(), any())).thenReturn(mock())

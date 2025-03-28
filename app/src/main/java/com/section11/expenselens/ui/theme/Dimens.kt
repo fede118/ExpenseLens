@@ -21,7 +21,9 @@ data class Dimens(
     val m8: Dp = 64.dp,
     val m9: Dp = 72.dp,
     val m10: Dp = 80.dp,
+    val m11: Dp = 88.dp,
     val m13: Dp = 104.dp,
+    val m19: Dp = 152.dp,
     val m24: Dp = 192.dp,
     val m40: Dp = 360.dp,
 

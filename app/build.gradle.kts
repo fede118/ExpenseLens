@@ -33,8 +33,8 @@ android {
         applicationId = "com.section11.expenselens"
         minSdk = 29
         targetSdk = 34
-        versionCode = 10
-        versionName = "0.3.0-beta"
+        versionCode = 11
+        versionName = "0.4.0-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

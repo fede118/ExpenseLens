@@ -22,7 +22,7 @@
     <string name="home_screen_add_expense_manually">Upload manually</string>
 
     <!--  Home Screen Cake Graph Strings  -->
-    <string name="cake_graph_current_month_expenses">"Current Expenses:&#10;$%s"</string>
+    <string name="cake_graph_current_expenses_title">%s Expenses</string>
 
     <!--  Profile Dialog  -->
     <string name="profile_dialog_invitation_prefix">You have been invited to: %s</string>
